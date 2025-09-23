@@ -37,11 +37,12 @@ Add this to your MCP client configuration (e.g., Claude Desktop's `claude_deskto
 ```json
 {
   "mcpServers": {
-    "cursor-agents": {
+    "cursor-background-agents": {
       "command": "npx",
-      "args": ["cursor-agent-mcp"],
+      "args": ["cursor-agent-mcp@latest"],
       "env": {
-        "CURSOR_API_KEY": "your_cursor_api_key_here"
+        "CURSOR_API_KEY": "your_cursor_api_key_here",
+        "CURSOR_API_URL": "https://api.cursor.com"
       }
     }
   }
@@ -72,11 +73,12 @@ Add this server to your MCP client configuration:
 ```json
 {
   "mcpServers": {
-    "cursor-agents": {
+    "cursor-background-agents": {
       "command": "npx",
-      "args": ["cursor-mcp-server"],
+      "args": ["cursor-agent-mcp@latest"],
       "env": {
-        "CURSOR_API_KEY": "your_cursor_api_key_here"
+        "CURSOR_API_KEY": "your_cursor_api_key_here",
+        "CURSOR_API_URL": "https://api.cursor.com"
       }
     }
   }
@@ -89,11 +91,12 @@ For Claude Desktop, add to your `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "cursor-agents": {
+    "cursor-background-agents": {
       "command": "npx",
-      "args": ["cursor-mcp-server"],
+      "args": ["cursor-agent-mcp@latest"],
       "env": {
-        "CURSOR_API_KEY": "your_cursor_api_key_here"
+        "CURSOR_API_KEY": "your_cursor_api_key_here",
+        "CURSOR_API_URL": "https://api.cursor.com"
       }
     }
   }
@@ -110,7 +113,9 @@ If you're running from source code, use this configuration instead:
       "command": "node",
       "args": ["/path/to/cursor-mcp/src/index.js"],
       "env": {
-        "CURSOR_API_KEY": "your_cursor_api_key_here"
+        "CURSOR_API_KEY": "your_cursor_api_key_here",
+        "CURSOR_API_URL":
+        "https://api.cursor.com"
       }
     }
   }
@@ -141,11 +146,12 @@ Add this to your MCP client configuration (e.g., Claude Desktop's `claude_deskto
 ```json
 {
   "mcpServers": {
-    "cursor-agents": {
+    "cursor-background-agents": {
       "command": "npx",
-      "args": ["cursor-mcp-server"],
+      "args": ["cursor-agent-mcp@latest"],
       "env": {
-        "CURSOR_API_KEY": "your_cursor_api_key_here"
+        "CURSOR_API_KEY": "your_cursor_api_key_here",
+        "CURSOR_API_URL": "https://api.cursor.com"
       }
     }
   }
