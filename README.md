@@ -1,6 +1,6 @@
 # 🚀 Cursor MCP Server
 
-A **production-ready MCP (Model Context Protocol) server** that seamlessly integrates with **Cursor's Background Agents API**. This server enables LLMs to programmatically create, manage, and interact with Cursor's powerful background agents for autonomous code development.
+A ** MCP (Model Context Protocol) server** that seamlessly integrates with **Cursor's Background Agents API**. This server enables LLMs to programmatically create, manage, and interact with Cursor's powerful background agents for autonomous code development.
 
 ## ✨ Features
 
