@@ -1,6 +1,6 @@
 {
   "name": "cursor-agent-mcp",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Production-ready MCP server for Cursor Background Agents API - enables LLMs to create, manage, and interact with Cursor's autonomous coding agents",
   "main": "src/mcp-server.js",
   "type": "module",
