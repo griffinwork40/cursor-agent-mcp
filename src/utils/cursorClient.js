@@ -16,7 +16,7 @@ class CursorApiClient {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${config.cursor.apiKey}`,
-        'User-Agent': 'Cursor-MCP-Server/1.0.0',
+        'User-Agent': 'cursor-mcp/1.0.0',
       },
       timeout: 30000, // 30 second timeout
     });

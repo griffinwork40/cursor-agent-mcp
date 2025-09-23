@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import express from 'express';
 import { config } from './config/index.js';
 import { createTools } from './tools/index.js';

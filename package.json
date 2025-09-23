@@ -1,18 +1,44 @@
 {
-  "name": "cursor-mcp-server",
+  "name": "cursor-agent-mcp",
   "version": "1.0.0",
   "description": "MCP server for Cursor Background Agents API",
   "main": "src/index.js",
   "type": "module",
+  "bin": {
+    "cursor-agent-mcp": "src/index.js"
+  },
   "scripts": {
     "start": "node src/index.js",
     "mcp": "node src/mcp-server.js",
     "dev": "nodemon src/index.js",
     "test": "jest"
   },
-  "keywords": ["mcp", "cursor", "ai", "agents"],
-  "author": "Your Name",
+  "keywords": ["mcp", "cursor", "ai", "agents", "background-agents", "automation", "model-context-protocol"],
+  "author": {
+    "name": "Griffin Long",
+    "email": "griffin@example.com",
+    "url": "https://github.com/griffinlong"
+  },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/griffinlong/cursor-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/griffinlong/cursor-mcp/issues"
+  },
+  "homepage": "https://github.com/griffinlong/cursor-mcp#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.18.1",
     "express": "^4.18.2",

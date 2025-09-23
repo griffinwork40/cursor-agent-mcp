@@ -13,6 +13,36 @@ MCP (Model Context Protocol) server implementation for the Cursor Background Age
 
 ## Installation
 
+### Quick Install via npm (Recommended)
+
+```bash
+# Install globally
+npm install -g cursor-agent-mcp
+
+# Or use npx (no installation required)
+npx cursor-agent-mcp
+```
+
+### MCP Client Configuration
+
+Add this to your MCP client configuration (e.g., Claude Desktop's `claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "cursor-agents": {
+      "command": "npx",
+      "args": ["cursor-agent-mcp"],
+      "env": {
+        "CURSOR_API_KEY": "your_cursor_api_key_here"
+      }
+    }
+  }
+}
+```
+
+### Development Installation
+
 1. Clone the repository
 2. Install dependencies:
    ```bash
