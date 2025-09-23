@@ -12,7 +12,6 @@ export const config = {
   },
 };
 
-// Validate required configuration
-if (!config.cursor.apiKey) {
-  throw new Error('CURSOR_API_KEY environment variable is required');
-}
+// Note: Global CURSOR_API_KEY is optional now.
+// For hosted deployments (e.g., Railway) we support per-request API keys.
+// If running in STDIO/local mode, a global key will still be required by the caller.

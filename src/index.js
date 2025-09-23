@@ -8,6 +8,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { config } from './config/index.js';
 import { createTools } from './tools/index.js';
+import { createCursorApiClient, cursorApiClient as defaultCursorClient } from './utils/cursorClient.js';
 import { handleMCPError } from './utils/errorHandler.js';
 import crypto from 'crypto';
 
@@ -48,10 +49,25 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Get tools
-const tools = createTools();
+// Helper to extract Cursor API key from request (do NOT use OAuth Authorization header)
+const extractApiKey = (req) => {
+  return (
+    req.headers['x-cursor-api-key'] ||
+    req.headers['x-api-key'] ||
+    req.query?.api_key ||
+    req.body?.cursor_api_key ||
+    config.cursor.apiKey // fallback to environment/global key
+  );
+};
 
-// Create MCP Server for SSE
+// Lazily create tools per request using provided API key (fallback to default client)
+const getToolsForRequest = (req) => {
+  const apiKey = extractApiKey(req);
+  const client = apiKey ? createCursorApiClient(apiKey) : defaultCursorClient;
+  return createTools(client);
+};
+
+// Create MCP Server for SSE (tools created at connection time)
 const mcpServer = new Server(
   {
     name: 'cursor-background-agents',
@@ -65,7 +81,12 @@ const mcpServer = new Server(
 );
 
 // Setup MCP handlers
-mcpServer.setRequestHandler(ListToolsRequestSchema, async () => {
+mcpServer.setRequestHandler(ListToolsRequestSchema, async (request, context) => {
+  // Read per-request Cursor API key from custom headers/query/body; ignore OAuth Authorization header
+  const req = context?.transport?.req;
+  const apiKey = req ? extractApiKey(req) : config.cursor.apiKey;
+  const client = apiKey ? createCursorApiClient(apiKey) : defaultCursorClient;
+  const tools = createTools(client);
   return {
     tools: tools.map(tool => ({
       name: tool.name,
@@ -75,9 +96,12 @@ mcpServer.setRequestHandler(ListToolsRequestSchema, async () => {
   };
 });
 
-mcpServer.setRequestHandler(CallToolRequestSchema, async (request) => {
+mcpServer.setRequestHandler(CallToolRequestSchema, async (request, context) => {
   const { name, arguments: args } = request.params;
-  
+  const req = context?.transport?.req;
+  const apiKey = req ? extractApiKey(req) : config.cursor.apiKey;
+  const client = apiKey ? createCursorApiClient(apiKey) : defaultCursorClient;
+  const tools = createTools(client);
   const tool = tools.find(t => t.name === name);
   if (!tool) {
     throw new Error(`Tool ${name} not found`);
@@ -176,10 +200,12 @@ app.use((req, res, next) => {
   next();
 });
 
-// SSE endpoint for ChatGPT MCP integration (no auth required for testing)
+// SSE endpoint for ChatGPT MCP integration (supports per-request API key)
 app.use('/sse', (req, res) => {
   console.log(`MCP SSE connection attempt from ${req.ip}`);
   const transport = new SSEServerTransport('/sse', res);
+  // attach req for later header access in handlers
+  transport.req = req;
   mcpServer.connect(transport).catch(error => {
     console.error('MCP SSE connection error:', error);
   });
@@ -196,21 +222,27 @@ app.post('/mcp', async (req, res) => {
     
     switch (method) {
       case 'tools/list':
-        result = {
-          tools: tools.map(tool => ({
-            name: tool.name,
-            description: tool.description,
-            inputSchema: tool.inputSchema
-          }))
-        };
+        {
+          const tools = getToolsForRequest(req);
+          result = {
+            tools: tools.map(tool => ({
+              name: tool.name,
+              description: tool.description,
+              inputSchema: tool.inputSchema
+            }))
+          };
+        }
         break;
         
       case 'tools/call':
-        const tool = tools.find(t => t.name === params.name);
+        {
+          const tools = getToolsForRequest(req);
+          const tool = tools.find(t => t.name === params.name);
         if (!tool) {
           throw new Error(`Tool ${params.name} not found`);
         }
-        result = await tool.handler(params.arguments || {});
+          result = await tool.handler(params.arguments || {});
+        }
         break;
         
       default:
@@ -284,7 +316,7 @@ app.listen(port, () => {
   console.log(`🏥 Health check: http://localhost:${port}/health`);
   console.log(`🔧 MCP endpoint: http://localhost:${port}/mcp`);
   console.log(`📡 SSE endpoint: http://localhost:${port}/sse`);
-  console.log(`📊 Available tools: ${tools.length}`);
+  console.log(`📊 Tools are created per request/connection`);
   console.log(`🔑 API Key configured: ${config.cursor.apiKey ? 'Yes' : 'No'}`);
   console.log(`🔐 MCP Auth token: ${process.env.MCP_SERVER_TOKEN ? 'Set' : 'Not set (unprotected)'}`);
 });

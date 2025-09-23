@@ -1,4 +1,4 @@
-import { cursorApiClient } from '../utils/cursorClient.js';
+import { cursorApiClient as defaultCursorClient } from '../utils/cursorClient.js';
 import { 
   handleMCPError, 
   validateInput, 
@@ -6,7 +6,7 @@ import {
   schemas 
 } from '../utils/errorHandler.js';
 
-export const createTools = () => [
+export const createTools = (client = defaultCursorClient) => [
   {
     name: 'createAgent',
     description: 'Create a new background agent to work on a repository',
@@ -68,7 +68,7 @@ export const createTools = () => [
         // Validate input
         const validatedInput = validateInput(schemas.createAgentRequest, input, 'createAgent');
         
-        const result = await cursorApiClient.createAgent(validatedInput);
+        const result = await client.createAgent(validatedInput);
         
         return createSuccessResponse(
           `✅ Successfully created agent!\n` +
@@ -103,7 +103,7 @@ export const createTools = () => [
         // Validate input
         const validatedInput = validateInput(schemas.listAgentsParams, input, 'listAgents');
         
-        const result = await cursorApiClient.listAgents(validatedInput);
+        const result = await client.listAgents(validatedInput);
         
         const agentList = result.agents.map(agent => 
           `• ${agent.name} (${agent.id}) - ${agent.status} - ${new Date(agent.createdAt).toLocaleDateString()}`
@@ -138,7 +138,7 @@ export const createTools = () => [
         // Validate input
         const validatedInput = validateInput(schemas.agentId, input.id, 'getAgent');
         
-        const result = await cursorApiClient.getAgent(validatedInput);
+        const result = await client.getAgent(validatedInput);
         
         const statusEmoji = {
           'CREATING': '🔄',
@@ -180,7 +180,7 @@ export const createTools = () => [
         // Validate input
         const validatedInput = validateInput(schemas.agentId, input.id, 'deleteAgent');
         
-        const result = await cursorApiClient.deleteAgent(validatedInput);
+        const result = await client.deleteAgent(validatedInput);
         
         return createSuccessResponse(
           `🗑️ Successfully deleted agent!\n` +
@@ -232,7 +232,7 @@ export const createTools = () => [
         const validatedId = validateInput(schemas.agentId, input.id, 'addFollowup');
         const validatedData = validateInput(schemas.addFollowupRequest, input.prompt, 'addFollowup');
         
-        const result = await cursorApiClient.addFollowup(validatedId, validatedData);
+        const result = await client.addFollowup(validatedId, validatedData);
         
         return createSuccessResponse(
           `💬 Successfully added followup!\n` +
@@ -260,7 +260,7 @@ export const createTools = () => [
         // Validate input
         const validatedInput = validateInput(schemas.agentId, input.id, 'getAgentConversation');
         
-        const result = await cursorApiClient.getAgentConversation(validatedInput);
+        const result = await client.getAgentConversation(validatedInput);
         
         const messageCount = result.messages.length;
         const conversationPreview = result.messages.slice(-3).map(msg => 
@@ -291,7 +291,7 @@ export const createTools = () => [
     },
     handler: async () => {
       try {
-        const result = await cursorApiClient.getMe();
+        const result = await client.getMe();
         
         return createSuccessResponse(
           `🔑 API Key Information:\n\n` +
@@ -314,7 +314,7 @@ export const createTools = () => [
     },
     handler: async () => {
       try {
-        const result = await cursorApiClient.listModels();
+        const result = await client.listModels();
         
         const modelList = result.models.map((model, index) => 
           `${index + 1}. ${model}`
@@ -339,7 +339,7 @@ export const createTools = () => [
     },
     handler: async () => {
       try {
-        const result = await cursorApiClient.listRepositories();
+        const result = await client.listRepositories();
         
         const repoList = result.repositories.map((repo, index) => 
           `${index + 1}. ${repo.name} (${repo.owner})\n   🔗 ${repo.repository}`
