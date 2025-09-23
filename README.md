@@ -36,15 +36,15 @@ To integrate this MCP server with Cursor's Background Agents, follow these steps
 3. Generate or copy your API key from the Background Agents section
 4. Keep this key secure - it provides full access to your Cursor account
 
-### 2. 🛠️ MCP Client Configuration
+### 2. 🛠️ MCP Client Configuration (npm install)
 Add this server to your MCP client configuration:
 
 ```json
 {
   "mcpServers": {
     "cursor-agents": {
-      "command": "node",
-      "args": ["/path/to/cursor-mcp-server/src/index.js"],
+      "command": "npx",
+      "args": ["cursor-mcp-server"],
       "env": {
         "CURSOR_API_KEY": "your_cursor_api_key_here"
       }
@@ -60,8 +60,25 @@ For Claude Desktop, add to your `claude_desktop_config.json`:
 {
   "mcpServers": {
     "cursor-agents": {
+      "command": "npx",
+      "args": ["cursor-mcp-server"],
+      "env": {
+        "CURSOR_API_KEY": "your_cursor_api_key_here"
+      }
+    }
+  }
+}
+```
+
+### 🛠️ Development/Local Installation Configuration
+If you're running from source code, use this configuration instead:
+
+```json
+{
+  "mcpServers": {
+    "cursor-agents": {
       "command": "node",
-      "args": ["/path/to/cursor-mcp-server/src/index.js"],
+      "args": ["/path/to/cursor-mcp/src/index.js"],
       "env": {
         "CURSOR_API_KEY": "your_cursor_api_key_here"
       }
@@ -77,11 +94,40 @@ For Claude Desktop, add to your `claude_desktop_config.json`:
 - **Cursor IDE** with Background Agents enabled
 - **Valid Cursor API key**
 
-### Quick Start
+### 🚀 Quick Install via npm (Recommended)
+
+```bash
+# Install globally
+npm install -g cursor-mcp-server
+
+# Or use npx (no installation required)
+npx cursor-mcp-server
+```
+
+### 📝 MCP Client Configuration
+
+Add this to your MCP client configuration (e.g., Claude Desktop's `claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "cursor-agents": {
+      "command": "npx",
+      "args": ["cursor-mcp-server"],
+      "env": {
+        "CURSOR_API_KEY": "your_cursor_api_key_here"
+      }
+    }
+  }
+}
+```
+
+### 🛠️ Development Installation
+
 ```bash
 # 1. Clone the repository
-git clone https://github.com/yourusername/cursor-mcp-server.git
-cd cursor-mcp-server
+git clone https://github.com/griffinlong/cursor-mcp.git
+cd cursor-mcp
 
 # 2. Install dependencies
 npm install
