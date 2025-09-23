@@ -1,0 +1,230 @@
+{
+  "info": {
+    "name": "Cursor MCP Server Tests",
+    "description": "Postman collection for testing the Cursor MCP Server",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/health",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "List Tools",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"tools/list\",\n  \"params\": {}\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/mcp",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["mcp"]
+        }
+      }
+    },
+    {
+      "name": "Get API Key Info",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 2,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"getMe\",\n    \"arguments\": {}\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/mcp",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["mcp"]
+        }
+      }
+    },
+    {
+      "name": "List Models",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 3,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"listModels\",\n    \"arguments\": {}\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/mcp",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["mcp"]
+        }
+      }
+    },
+    {
+      "name": "List Repositories",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 4,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"listRepositories\",\n    \"arguments\": {}\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/mcp",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["mcp"]
+        }
+      }
+    },
+    {
+      "name": "List Agents",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 5,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"listAgents\",\n    \"arguments\": {\n      \"limit\": 5\n    }\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/mcp",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["mcp"]
+        }
+      }
+    },
+    {
+      "name": "Create Agent (Valid)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 6,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"createAgent\",\n    \"arguments\": {\n      \"prompt\": {\n        \"text\": \"Add a README.md file with installation instructions\"\n      },\n      \"source\": {\n        \"repository\": \"https://github.com/test/repo\"\n      },\n      \"model\": \"claude-4-sonnet\"\n    }\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/mcp",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["mcp"]
+        }
+      }
+    },
+    {
+      "name": "Create Agent (Invalid - Empty Text)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 7,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"createAgent\",\n    \"arguments\": {\n      \"prompt\": {\n        \"text\": \"\"\n      },\n      \"source\": {\n        \"repository\": \"https://github.com/test/repo\"\n      }\n    }\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/mcp",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["mcp"]
+        }
+      }
+    },
+    {
+      "name": "Create Agent (Invalid - Missing Repository)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 8,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"createAgent\",\n    \"arguments\": {\n      \"prompt\": {\n        \"text\": \"Add a README.md file\"\n      }\n    }\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/mcp",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["mcp"]
+        }
+      }
+    },
+    {
+      "name": "Invalid Tool Name",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 9,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"invalidTool\",\n    \"arguments\": {}\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/mcp",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["mcp"]
+        }
+      }
+    }
+  ]
+}
