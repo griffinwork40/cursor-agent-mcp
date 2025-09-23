@@ -1,7 +1,7 @@
 {
   "name": "cursor-agent-mcp",
   "version": "1.0.0",
-  "description": "MCP server for Cursor Background Agents API",
+  "description": "Production-ready MCP server for Cursor Background Agents API - enables LLMs to create, manage, and interact with Cursor's autonomous coding agents",
   "main": "src/index.js",
   "type": "module",
   "bin": {
@@ -11,23 +11,39 @@
     "start": "node src/index.js",
     "mcp": "node src/mcp-server.js",
     "dev": "nodemon src/index.js",
-    "test": "jest"
+    "test": "jest",
+    "prepublishOnly": "npm test",
+    "postinstall": "echo '\n🚀 Cursor MCP Server installed successfully!\n\nNext steps:\n1. Get your Cursor API key from Settings → Features → Background Agents\n2. Add to your MCP client config:\n\n{\n  \"mcpServers\": {\n    \"cursor-agents\": {\n      \"command\": \"npx\",\n      \"args\": [\"cursor-mcp-server\"],\n      \"env\": {\n        \"CURSOR_API_KEY\": \"your_api_key_here\"\n      }\n    }\n  }\n}\n\n📚 Full documentation: https://github.com/griffinwork40/cursor-mcp#readme\n'"
   },
-  "keywords": ["mcp", "cursor", "ai", "agents", "background-agents", "automation", "model-context-protocol"],
+  "keywords": [
+    "mcp",
+    "cursor",
+    "ai",
+    "agents",
+    "background-agents",
+    "automation",
+    "model-context-protocol",
+    "llm",
+    "claude",
+    "anthropic",
+    "development",
+    "coding-assistant",
+    "api"
+  ],
   "author": {
     "name": "Griffin Long",
     "email": "griffin@example.com",
-    "url": "https://github.com/griffinlong"
+    "url": "https://github.com/griffinwork40"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/griffinlong/cursor-mcp.git"
+    "url": "git+https://github.com/griffinwork40/cursor-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/griffinlong/cursor-mcp/issues"
+    "url": "https://github.com/griffinwork40/cursor-mcp/issues"
   },
-  "homepage": "https://github.com/griffinlong/cursor-mcp#readme",
+  "homepage": "https://github.com/griffinwork40/cursor-mcp#readme",
   "engines": {
     "node": ">=18.0.0"
   },
