@@ -1,13 +1,14 @@
 import axios from 'axios';
 import { config } from '../config/index.js';
-import { 
-  ApiError, 
-  AuthenticationError, 
-  AuthorizationError, 
-  NotFoundError, 
-  RateLimitError,
-  ConflictError 
-} from './errorHandler.js';
+// Import error classes for future use
+// import { 
+//   ApiError, 
+//   AuthenticationError, 
+//   AuthorizationError, 
+//   NotFoundError, 
+//   RateLimitError,
+//   ConflictError, 
+// } from './errorHandler.js';
 
 class CursorApiClient {
   constructor() {
@@ -30,7 +31,7 @@ class CursorApiClient {
       (error) => {
         console.error('Request interceptor error:', error);
         return Promise.reject(error);
-      }
+      },
     );
 
     // Add response interceptor for error handling
@@ -44,10 +45,10 @@ class CursorApiClient {
           status: error.response?.status,
           statusText: error.response?.statusText,
           url: error.config?.url,
-          message: error.message
+          message: error.message,
         });
         return Promise.reject(error);
-      }
+      },
     );
   }
 

@@ -20,7 +20,7 @@ class CursorMCPServer {
         capabilities: {
           tools: {},
         },
-      }
+      },
     );
 
     this.tools = createTools();
@@ -34,8 +34,8 @@ class CursorMCPServer {
         tools: this.tools.map(tool => ({
           name: tool.name,
           description: tool.description,
-          inputSchema: tool.inputSchema
-        }))
+          inputSchema: tool.inputSchema,
+        })),
       };
     });
 
@@ -56,9 +56,9 @@ class CursorMCPServer {
           content: [
             {
               type: 'text',
-              text: typeof result === 'string' ? result : JSON.stringify(result, null, 2)
-            }
-          ]
+              text: typeof result === 'string' ? result : JSON.stringify(result, null, 2),
+            },
+          ],
         };
       } catch (error) {
         console.error(`Error executing tool ${name}:`, error);
@@ -68,10 +68,10 @@ class CursorMCPServer {
           content: [
             {
               type: 'text',
-              text: `Error: ${errorResponse.error || error.message}`
-            }
+              text: `Error: ${errorResponse.error || error.message}`,
+            },
           ],
-          isError: true
+          isError: true,
         };
       }
     });

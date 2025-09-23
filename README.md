@@ -20,6 +20,13 @@ A **MCP (Model Context Protocol) server** that seamlessly integrates with **Curs
 - Real-time status updates
 - Comprehensive error handling
 
+🛡️ **Quality & Security**
+- Automated CI/CD with GitHub Actions
+- Branch protection rules for main branch
+- Pre-push hooks for local safety
+- ESLint code quality checks
+- Security vulnerability scanning
+
 ### Quick Install via npm
 
 ```bash
@@ -56,6 +63,43 @@ Add this to your MCP client configuration (e.g., Claude Desktop's `claude_deskto
    ```bash
    npm install
    ```
+
+### 🛡️ Branch Protection & Development Workflow
+
+This repository uses **branch protection rules** to ensure code quality and prevent direct pushes to the main branch.
+
+#### Required Workflow:
+1. **Create a feature branch**:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. **Make your changes and commit**:
+   ```bash
+   git add .
+   git commit -m "Add your feature description"
+   ```
+
+3. **Push your feature branch**:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+4. **Create a Pull Request** on GitHub
+
+#### Automated Checks:
+- ✅ **Tests**: All tests must pass
+- ✅ **Linting**: Code must pass ESLint checks
+- ✅ **Security**: Vulnerability scanning
+- ✅ **Integration**: MCP client tests
+
+#### Local Safety:
+A pre-push hook prevents accidental pushes to main and runs tests before any push.
+
+#### Bypassing (Not Recommended):
+```bash
+git push --no-verify  # Bypasses hooks (use with extreme caution)
+```
 
 ## 🔧 Configuring MCP Server in Cursor
 

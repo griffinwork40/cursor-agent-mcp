@@ -21,7 +21,7 @@ app.get('/health', (req, res) => {
     status: 'ok', 
     timestamp: new Date().toISOString(),
     version: '1.0.0',
-    uptime: process.uptime()
+    uptime: process.uptime(),
   });
 });
 
@@ -38,32 +38,32 @@ app.post('/mcp', async (req, res) => {
     let result;
     
     switch (method) {
-      case 'tools/list':
-        result = {
-          tools: tools.map(tool => ({
-            name: tool.name,
-            description: tool.description,
-            inputSchema: tool.inputSchema
-          }))
-        };
-        break;
+    case 'tools/list':
+      result = {
+        tools: tools.map(tool => ({
+          name: tool.name,
+          description: tool.description,
+          inputSchema: tool.inputSchema,
+        })),
+      };
+      break;
         
-      case 'tools/call':
-        const tool = tools.find(t => t.name === params.name);
-        if (!tool) {
-          throw new Error(`Tool ${params.name} not found`);
-        }
-        result = await tool.handler(params.arguments || {});
-        break;
+    case 'tools/call':
+      const tool = tools.find(t => t.name === params.name);
+      if (!tool) {
+        throw new Error(`Tool ${params.name} not found`);
+      }
+      result = await tool.handler(params.arguments || {});
+      break;
         
-      default:
-        throw new Error(`Unknown method: ${method}`);
+    default:
+      throw new Error(`Unknown method: ${method}`);
     }
     
     const response = {
       jsonrpc: '2.0',
       id,
-      result
+      result,
     };
     
     console.log('MCP Response:', JSON.stringify(response, null, 2));
@@ -76,15 +76,15 @@ app.post('/mcp', async (req, res) => {
       error: {
         code: -32603,
         message: error.message || 'Internal error',
-        data: error.stack
-      }
+        data: error.stack,
+      },
     };
     res.status(500).json(errorResponse);
   }
 });
 
 // Global error handler
-app.use((error, req, res, next) => {
+app.use((error, req, res, _next) => {
   console.error('Unhandled error:', error);
   const errorResponse = handleMCPError(error, 'Express middleware');
   res.status(500).json(errorResponse);
@@ -95,8 +95,8 @@ app.use((req, res) => {
   res.status(404).json({
     error: {
       message: `Route ${req.method} ${req.path} not found`,
-      code: 'NOT_FOUND'
-    }
+      code: 'NOT_FOUND',
+    },
   });
 });
 
