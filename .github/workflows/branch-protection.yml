@@ -1,0 +1,19 @@
+name: Branch Protection
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  enforce-protection:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if push is from authorized user
+        run: |
+          if [ "${{ github.actor }}" != "griffinwork40" ]; then
+            echo "❌ Unauthorized push to main branch by ${{ github.actor }}"
+            echo "Only griffinwork40 can push directly to main"
+            exit 1
+          else
+            echo "✅ Authorized push by ${{ github.actor }}"
+          fi

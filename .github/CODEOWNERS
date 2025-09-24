@@ -1,0 +1,8 @@
+# Global code owners - only you can approve changes
+* @griffinwork40
+
+# Specific file ownership (optional - you can customize these)
+/src/ @griffinwork40
+/.github/ @griffinwork40
+/package.json @griffinwork40
+/README.md @griffinwork40
