@@ -103,6 +103,19 @@ For Claude Desktop, add to your `claude_desktop_config.json`:
 }
 ```
 
+### 4. 🔧 Codex CLI Configuration
+For Codex CLI, add to your `~/.codex/config.toml`:
+
+```toml
+# IMPORTANT: the top-level key is `mcp_servers` rather than `mcpServers`.
+[mcp_servers.cursor-background-agents]
+command = "npx"
+args = ["cursor-agent-mcp@latest"]
+env = { "CURSOR_API_KEY" = "your_cursor_api_key_here", "CURSOR_API_URL" = "https://api.cursor.com" }
+```
+
+**Note**: Codex CLI uses TOML format instead of JSON, and the configuration key is `mcp_servers` (with underscore) rather than `mcpServers` (camelCase).
+
 ### 🛠️ Development/Local Installation Configuration
 If you're running from source code, use this configuration instead:
 
