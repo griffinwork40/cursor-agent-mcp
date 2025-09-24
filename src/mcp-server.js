@@ -9,7 +9,7 @@ import {
 import { createTools } from './tools/index.js';
 import { handleMCPError } from './utils/errorHandler.js';
 
-class CursorMCPServer {
+export class CursorMCPServer {
   constructor() {
     this.server = new Server(
       {

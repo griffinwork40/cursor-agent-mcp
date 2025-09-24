@@ -25,14 +25,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/183</span>
+                <span class='fraction'>0/184</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/76</span>
+                <span class='fraction'>0/78</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/178</span>
+                <span class='fraction'>0/179</span>
             </div>
         
             
@@ -555,7 +555,11 @@
 <a name='L490'></a><a href='#L490'>490</a>
 <a name='L491'></a><a href='#L491'>491</a>
 <a name='L492'></a><a href='#L492'>492</a>
-<a name='L493'></a><a href='#L493'>493</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L493'></a><a href='#L493'>493</a>
+<a name='L494'></a><a href='#L494'>494</a>
+<a name='L495'></a><a href='#L495'>495</a>
+<a name='L496'></a><a href='#L496'>496</a>
+<a name='L497'></a><a href='#L497'>497</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1047,6 +1051,10 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">#!/usr/bin/env node
 import express from 'express';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
@@ -1531,22 +1539,26 @@ const mcpServer = <span class="cstat-no" title="statement not covered" >new Serv
 <span class="cstat-no" title="statement not covered" >  process.exit(1);</span>
 });
 &nbsp;
-<span class="cstat-no" title="statement not covered" >app.listen(port, <span class="fstat-no" title="function not covered" >()</span> =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >  console.log(`🚀 Cursor MCP Server listening on port ${port}`);</span>
-<span class="cstat-no" title="statement not covered" >  console.log(`🏥 Health check: http://localhost:${port}/health`);</span>
-<span class="cstat-no" title="statement not covered" >  console.log(`🔧 MCP endpoint: http://localhost:${port}/mcp`);</span>
-<span class="cstat-no" title="statement not covered" >  console.log(`📡 SSE endpoint: http://localhost:${port}/sse`);</span>
-<span class="cstat-no" title="statement not covered" >  console.log('📊 Tools are created per request/connection');</span>
-<span class="cstat-no" title="statement not covered" >  console.log(`🔑 API Key configured: ${config.cursor.apiKey ? 'Yes' : 'No'}`);</span>
-<span class="cstat-no" title="statement not covered" >  console.log(`🔐 MCP Auth token: ${process.env.MCP_SERVER_TOKEN ? 'Set' : 'Not set (unprotected)'}`);</span>
-});</pre></td></tr></table></pre>
+<span class="cstat-no" title="statement not covered" >if (process.env.NODE_ENV !== 'test') {</span>
+<span class="cstat-no" title="statement not covered" >  app.listen(port, <span class="fstat-no" title="function not covered" >()</span> =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    console.log(`🚀 Cursor MCP Server listening on port ${port}`);</span>
+<span class="cstat-no" title="statement not covered" >    console.log(`🏥 Health check: http://localhost:${port}/health`);</span>
+<span class="cstat-no" title="statement not covered" >    console.log(`🔧 MCP endpoint: http://localhost:${port}/mcp`);</span>
+<span class="cstat-no" title="statement not covered" >    console.log(`📡 SSE endpoint: http://localhost:${port}/sse`);</span>
+<span class="cstat-no" title="statement not covered" >    console.log('📊 Tools are created per request/connection');</span>
+<span class="cstat-no" title="statement not covered" >    console.log(`🔑 API Key configured: ${config.cursor.apiKey ? 'Yes' : 'No'}`);</span>
+<span class="cstat-no" title="statement not covered" >    console.log(`🔐 MCP Auth token: ${process.env.MCP_SERVER_TOKEN ? 'Set' : 'Not set (unprotected)'}`);</span>
+  });
+}
+&nbsp;
+export { app };</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
             </div><!-- /wrapper -->
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-24T21:36:14.223Z
+                at 2025-09-24T22:32:18.224Z
             </div>
         <script src="../prettify.js"></script>
         <script>
