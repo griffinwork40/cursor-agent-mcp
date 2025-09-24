@@ -8,14 +8,12 @@
 
 import os from 'os';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { mkdir, readFile, writeFile, stat } from 'fs/promises';
 import fs from 'fs';
 import readline from 'readline';
 import crypto from 'crypto';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Note: __filename removed as it's not used in this file
 
 function getConfigDir() {
   const platform = process.platform;
@@ -48,7 +46,10 @@ async function ensureConfigDir() {
       if (process.platform !== 'win32') {
         fs.chmodSync(CONFIG_DIR, 0o700);
       }
-    } catch {}
+    } catch (error) {
+      // Ignore chmod errors on unsupported platforms
+      console.warn('Could not set directory permissions:', error.message);
+    }
   }
 }
 
@@ -62,14 +63,17 @@ async function saveConfig({ apiKey, apiUrl, mcpToken }) {
   const data = { 
     CURSOR_API_KEY: apiKey, 
     CURSOR_API_URL: apiUrl || 'https://api.cursor.com',
-    MCP_SERVER_TOKEN: mcpToken || existing?.MCP_SERVER_TOKEN || generateMCPToken()
+    MCP_SERVER_TOKEN: mcpToken || existing?.MCP_SERVER_TOKEN || generateMCPToken(),
   };
   await writeFile(CONFIG_PATH, JSON.stringify(data, null, 2), { encoding: 'utf8' });
   try {
     if (process.platform !== 'win32') {
       fs.chmodSync(CONFIG_PATH, 0o600);
     }
-  } catch {}
+  } catch (error) {
+    // Ignore chmod errors on unsupported platforms
+    console.warn('Could not set file permissions:', error.message);
+  }
 }
 
 async function loadConfigFromFile() {
@@ -77,7 +81,10 @@ async function loadConfigFromFile() {
     try {
       const raw = await readFile(CONFIG_PATH, 'utf8');
       return JSON.parse(raw);
-    } catch {}
+    } catch (error) {
+      // Ignore file read/parse errors
+      console.warn('Could not read config file:', error.message);
+    }
   }
   return null;
 }
@@ -92,7 +99,7 @@ async function loadConfig() {
     return { 
       CURSOR_API_KEY: envKey, 
       CURSOR_API_URL: envUrl || 'https://api.cursor.com',
-      MCP_SERVER_TOKEN: envToken
+      MCP_SERVER_TOKEN: envToken,
     };
   }
   
@@ -101,7 +108,7 @@ async function loadConfig() {
     return { 
       CURSOR_API_KEY: fileConfig.CURSOR_API_KEY, 
       CURSOR_API_URL: fileConfig.CURSOR_API_URL || 'https://api.cursor.com',
-      MCP_SERVER_TOKEN: fileConfig.MCP_SERVER_TOKEN
+      MCP_SERVER_TOKEN: fileConfig.MCP_SERVER_TOKEN,
     };
   }
   
@@ -132,16 +139,16 @@ async function promptHidden(question) {
     const onData = (char) => {
       char = char + '';
       switch (char) {
-        case '\u0004':
-        case '\r':
-        case '\n':
-          process.stdin.removeListener('data', onData);
-          break;
-        default:
-          process.stdout.clearLine(0);
-          process.stdout.cursorTo(0);
-          process.stdout.write(question + ' ******');
-          break;
+      case '\u0004':
+      case '\r':
+      case '\n':
+        process.stdin.removeListener('data', onData);
+        break;
+      default:
+        process.stdout.clearLine(0);
+        process.stdout.cursorTo(0);
+        process.stdout.write(question + ' ******');
+        break;
       }
     };
     process.stdin.on('data', onData);
@@ -255,24 +262,24 @@ async function main() {
   const flags = parseArgs(argv.slice(1));
 
   switch (cmd) {
-    case 'init':
-      await cmdInit(flags);
-      break;
-    case 'stdio':
-      await cmdStdio();
-      break;
-    case 'http':
-      await cmdHttp(flags);
-      break;
-    case 'whoami':
-      await cmdWhoAmI();
-      break;
-    case 'config':
-      await cmdShowConfig();
-      break;
-    case 'help':
-    default:
-      printHelp();
+  case 'init':
+    await cmdInit(flags);
+    break;
+  case 'stdio':
+    await cmdStdio();
+    break;
+  case 'http':
+    await cmdHttp(flags);
+    break;
+  case 'whoami':
+    await cmdWhoAmI();
+    break;
+  case 'config':
+    await cmdShowConfig();
+    break;
+  case 'help':
+  default:
+    printHelp();
   }
 }
 

@@ -25,7 +25,7 @@ export function mintTokenFromApiKey(apiKey) {
   const ttlMs = config.token.ttlDays * 24 * 60 * 60 * 1000;
   const payload = {
     k: apiKey,
-    exp: Date.now() + ttlMs
+    exp: Date.now() + ttlMs,
   };
 
   const plaintext = Buffer.from(JSON.stringify(payload), 'utf8');

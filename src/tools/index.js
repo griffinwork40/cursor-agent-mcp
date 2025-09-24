@@ -3,7 +3,7 @@ import {
   handleMCPError, 
   validateInput, 
   createSuccessResponse,
-  schemas 
+  schemas, 
 } from '../utils/errorHandler.js';
 
 export const createTools = (client = defaultCursorClient) => [
@@ -27,41 +27,41 @@ export const createTools = (client = defaultCursorClient) => [
                     type: 'object',
                     properties: {
                       width: { type: 'number' },
-                      height: { type: 'number' }
-                    }
-                  }
-                }
-              }
-            }
+                      height: { type: 'number' },
+                    },
+                  },
+                },
+              },
+            },
           },
-          required: ['text']
+          required: ['text'],
         },
         model: { type: 'string', description: 'The LLM to use (defaults to default if not specified)', default: 'default' },
         source: {
           type: 'object',
           properties: {
             repository: { type: 'string', description: 'The GitHub repository URL' },
-            ref: { type: 'string', description: 'Git ref (branch/tag) to use as the base branch' }
+            ref: { type: 'string', description: 'Git ref (branch/tag) to use as the base branch' },
           },
-          required: ['repository']
+          required: ['repository'],
         },
         target: {
           type: 'object',
           properties: {
             autoCreatePr: { type: 'boolean', description: 'Whether to automatically create a pull request when the agent completes' },
-            branchName: { type: 'string', description: 'Custom branch name for the agent to create' }
-          }
+            branchName: { type: 'string', description: 'Custom branch name for the agent to create' },
+          },
         },
         webhook: {
           type: 'object',
           properties: {
             url: { type: 'string', description: 'URL to receive webhook notifications about agent status changes' },
-            secret: { type: 'string', description: 'Secret key for webhook payload verification' }
+            secret: { type: 'string', description: 'Secret key for webhook payload verification' },
           },
-          required: ['url']
-        }
+          required: ['url'],
+        },
       },
-      required: ['prompt', 'source', 'model']
+      required: ['prompt', 'source', 'model'],
     },
     handler: async (input) => {
       try {
@@ -69,12 +69,12 @@ export const createTools = (client = defaultCursorClient) => [
         const validatedInput = validateInput(schemas.createAgentRequest, input, 'createAgent');
         const inputWithDefaults = {
           ...validatedInput,
-          model: validatedInput.model || 'default'
+          model: validatedInput.model || 'default',
         };
         const result = await client.createAgent(inputWithDefaults);
         
         return createSuccessResponse(
-          `✅ Successfully created agent!\n` +
+          '✅ Successfully created agent!\n' +
           `📋 ID: ${result.id}\n` +
           `📊 Status: ${result.status}\n` +
           `🌐 View: ${result.target.url}\n` +
@@ -83,13 +83,13 @@ export const createTools = (client = defaultCursorClient) => [
             agentId: result.id,
             status: result.status,
             url: result.target.url,
-            createdAt: result.createdAt
-          }
+            createdAt: result.createdAt,
+          },
         );
       } catch (error) {
         return handleMCPError(error, 'createAgent');
       }
-    }
+    },
   },
   {
     name: 'listAgents',
@@ -98,8 +98,8 @@ export const createTools = (client = defaultCursorClient) => [
       type: 'object',
       properties: {
         limit: { type: 'number', description: 'Number of background agents to return (1-100)' },
-        cursor: { type: 'string', description: 'Pagination cursor from the previous response' }
-      }
+        cursor: { type: 'string', description: 'Pagination cursor from the previous response' },
+      },
     },
     handler: async (input) => {
       try {
@@ -109,7 +109,7 @@ export const createTools = (client = defaultCursorClient) => [
         const result = await client.listAgents(validatedInput);
         
         const agentList = result.agents.map(agent => 
-          `• ${agent.name} (${agent.id}) - ${agent.status} - ${new Date(agent.createdAt).toLocaleDateString()}`
+          `• ${agent.name} (${agent.id}) - ${agent.status} - ${new Date(agent.createdAt).toLocaleDateString()}`,
         ).join('\n');
         
         return createSuccessResponse(
@@ -118,13 +118,13 @@ export const createTools = (client = defaultCursorClient) => [
           {
             count: result.agents.length,
             agents: result.agents,
-            nextCursor: result.nextCursor
-          }
+            nextCursor: result.nextCursor,
+          },
         );
       } catch (error) {
         return handleMCPError(error, 'listAgents');
       }
-    }
+    },
   },
   {
     name: 'getAgent',
@@ -132,9 +132,9 @@ export const createTools = (client = defaultCursorClient) => [
     inputSchema: {
       type: 'object',
       properties: {
-        id: { type: 'string', description: 'Unique identifier for the background agent' }
+        id: { type: 'string', description: 'Unique identifier for the background agent' },
       },
-      required: ['id']
+      required: ['id'],
     },
     handler: async (input) => {
       try {
@@ -148,11 +148,11 @@ export const createTools = (client = defaultCursorClient) => [
           'RUNNING': '⚡',
           'FINISHED': '✅',
           'ERROR': '❌',
-          'EXPIRED': '⏰'
+          'EXPIRED': '⏰',
         }[result.status] || '❓';
         
         return createSuccessResponse(
-          `🤖 Agent Details:\n\n` +
+          '🤖 Agent Details:\n\n' +
           `📋 Name: ${result.name}\n` +
           `🆔 ID: ${result.id}\n` +
           `📊 Status: ${statusEmoji} ${result.status}\n` +
@@ -161,12 +161,12 @@ export const createTools = (client = defaultCursorClient) => [
           `🌐 View: ${result.target.url}\n` +
           `🔗 Repository: ${result.source.repository}\n` +
           `🌿 Branch: ${result.target.branchName || 'N/A'}`,
-          result
+          result,
         );
       } catch (error) {
         return handleMCPError(error, 'getAgent');
       }
-    }
+    },
   },
   {
     name: 'deleteAgent',
@@ -174,9 +174,9 @@ export const createTools = (client = defaultCursorClient) => [
     inputSchema: {
       type: 'object',
       properties: {
-        id: { type: 'string', description: 'Unique identifier for the background agent' }
+        id: { type: 'string', description: 'Unique identifier for the background agent' },
       },
-      required: ['id']
+      required: ['id'],
     },
     handler: async (input) => {
       try {
@@ -186,15 +186,15 @@ export const createTools = (client = defaultCursorClient) => [
         const result = await client.deleteAgent(validatedInput);
         
         return createSuccessResponse(
-          `🗑️ Successfully deleted agent!\n` +
+          '🗑️ Successfully deleted agent!\n' +
           `🆔 Agent ID: ${result.id}\n` +
-          `⚠️ This action is permanent and cannot be undone.`,
-          { deletedAgentId: result.id }
+          '⚠️ This action is permanent and cannot be undone.',
+          { deletedAgentId: result.id },
         );
       } catch (error) {
         return handleMCPError(error, 'deleteAgent');
       }
-    }
+    },
   },
   {
     name: 'addFollowup',
@@ -217,17 +217,17 @@ export const createTools = (client = defaultCursorClient) => [
                     type: 'object',
                     properties: {
                       width: { type: 'number' },
-                      height: { type: 'number' }
-                    }
-                  }
-                }
-              }
-            }
+                      height: { type: 'number' },
+                    },
+                  },
+                },
+              },
+            },
           },
-          required: ['text']
-        }
+          required: ['text'],
+        },
       },
-      required: ['id', 'prompt']
+      required: ['id', 'prompt'],
     },
     handler: async (input) => {
       try {
@@ -238,15 +238,15 @@ export const createTools = (client = defaultCursorClient) => [
         const result = await client.addFollowup(validatedId, validatedData);
         
         return createSuccessResponse(
-          `💬 Successfully added followup!\n` +
+          '💬 Successfully added followup!\n' +
           `🆔 Agent ID: ${result.id}\n` +
           `📝 Followup: ${validatedData.text.substring(0, 100)}${validatedData.text.length > 100 ? '...' : ''}`,
-          { agentId: result.id, followupText: validatedData.text }
+          { agentId: result.id, followupText: validatedData.text },
         );
       } catch (error) {
         return handleMCPError(error, 'addFollowup');
       }
-    }
+    },
   },
   {
     name: 'getAgentConversation',
@@ -254,9 +254,9 @@ export const createTools = (client = defaultCursorClient) => [
     inputSchema: {
       type: 'object',
       properties: {
-        id: { type: 'string', description: 'Unique identifier for the background agent' }
+        id: { type: 'string', description: 'Unique identifier for the background agent' },
       },
-      required: ['id']
+      required: ['id'],
     },
     handler: async (input) => {
       try {
@@ -267,7 +267,7 @@ export const createTools = (client = defaultCursorClient) => [
         
         const messageCount = result.messages.length;
         const conversationPreview = result.messages.slice(-3).map(msg => 
-          `${msg.type === 'user_message' ? '👤 User' : '🤖 Assistant'}: ${msg.text.substring(0, 80)}${msg.text.length > 80 ? '...' : ''}`
+          `${msg.type === 'user_message' ? '👤 User' : '🤖 Assistant'}: ${msg.text.substring(0, 80)}${msg.text.length > 80 ? '...' : ''}`,
         ).join('\n');
         
         return createSuccessResponse(
@@ -277,85 +277,85 @@ export const createTools = (client = defaultCursorClient) => [
           {
             agentId: result.id,
             messageCount,
-            messages: result.messages
-          }
+            messages: result.messages,
+          },
         );
       } catch (error) {
         return handleMCPError(error, 'getAgentConversation');
       }
-    }
+    },
   },
   {
     name: 'getMe',
     description: 'Retrieve information about the API key being used for authentication',
     inputSchema: {
       type: 'object',
-      properties: {}
+      properties: {},
     },
     handler: async () => {
       try {
         const result = await client.getMe();
         
         return createSuccessResponse(
-          `🔑 API Key Information:\n\n` +
+          '🔑 API Key Information:\n\n' +
           `📋 Name: ${result.apiKeyName}\n` +
           `📅 Created: ${new Date(result.createdAt).toLocaleString()}\n` +
           `👤 User Email: ${result.userEmail || 'Not available'}`,
-          result
+          result,
         );
       } catch (error) {
         return handleMCPError(error, 'getMe');
       }
-    }
+    },
   },
   {
     name: 'listModels',
     description: 'Retrieve a list of recommended models for background agents',
     inputSchema: {
       type: 'object',
-      properties: {}
+      properties: {},
     },
     handler: async () => {
       try {
         const result = await client.listModels();
         
         const modelList = result.models.map((model, index) => 
-          `${index + 1}. ${model}`
+          `${index + 1}. ${model}`,
         ).join('\n');
         
         return createSuccessResponse(
           `🤖 Available Models:\n\n${modelList}\n\n` +
           `📊 Total: ${result.models.length} models available`,
-          { models: result.models }
+          { models: result.models },
         );
       } catch (error) {
         return handleMCPError(error, 'listModels');
       }
-    }
+    },
   },
   {
     name: 'listRepositories',
     description: 'Retrieve a list of GitHub repositories accessible to the authenticated user',
     inputSchema: {
       type: 'object',
-      properties: {}
+      properties: {},
     },
     handler: async () => {
       try {
         const result = await client.listRepositories();
         
         const repoList = result.repositories.map((repo, index) => 
-          `${index + 1}. ${repo.name} (${repo.owner})\n   🔗 ${repo.repository}`
+          `${index + 1}. ${repo.name} (${repo.owner})\n   🔗 ${repo.repository}`,
         ).join('\n\n');
         
         return createSuccessResponse(
           `📁 Accessible Repositories:\n\n${repoList}\n\n` +
           `📊 Total: ${result.repositories.length} repositories`,
-          { repositories: result.repositories }
+          { repositories: result.repositories },
         );
       } catch (error) {
         return handleMCPError(error, 'listRepositories');
       }
-    }
-  }
+    },
+  },
 ];

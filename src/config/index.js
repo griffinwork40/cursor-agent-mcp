@@ -12,8 +12,8 @@ export const config = {
   },
   token: {
     secret: process.env.TOKEN_SECRET,
-    ttlDays: Number(process.env.TOKEN_TTL_DAYS || 30)
-  }
+    ttlDays: Number(process.env.TOKEN_TTL_DAYS || 30),
+  },
 };
 
 // Note: Global CURSOR_API_KEY is optional now.
