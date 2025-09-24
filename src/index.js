@@ -10,6 +10,7 @@ import { config } from './config/index.js';
 import { createTools } from './tools/index.js';
 import { createCursorApiClient, cursorApiClient as defaultCursorClient } from './utils/cursorClient.js';
 import { handleMCPError } from './utils/errorHandler.js';
+import { mintTokenFromApiKey, decodeTokenToApiKey } from './utils/tokenUtils.js';
 import crypto from 'crypto';
 
 const app = express();
@@ -51,6 +52,11 @@ app.get('/health', (req, res) => {
 
 // Helper to extract Cursor API key from request (do NOT use OAuth Authorization header)
 const extractApiKey = (req) => {
+  // Support zero-storage token in query/header: token=<base64url>
+  const token = req.query?.token || req.headers['x-mcp-token'];
+  const tokenKey = token ? decodeTokenToApiKey(token) : null;
+  if (tokenKey) return tokenKey;
+
   return (
     req.headers['x-cursor-api-key'] ||
     req.headers['x-api-key'] ||
@@ -287,6 +293,50 @@ app.use((req, res) => {
       code: 'NOT_FOUND'
     }
   });
+});
+
+// Minimal connect page and minting endpoint
+app.get('/connect', (req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.end(`<!doctype html>
+<html><head><meta charset="utf-8"><title>Connect Cursor MCP</title></head>
+<body>
+  <h1>Connect your Cursor API key</h1>
+  <form method="POST" action="/connect">
+    <label>Cursor API Key <input name="apiKey" type="password" required></label>
+    <button type="submit">Generate URL</button>
+  </form>
+</body></html>`);
+});
+
+// Lightweight body parser for form posts
+app.use('/connect', express.urlencoded({ extended: false }));
+app.post('/connect', (req, res) => {
+  try {
+    const apiKey = (req.body?.apiKey || '').trim();
+    if (!apiKey) {
+      return res.status(400).send('Missing API key');
+    }
+    const token = mintTokenFromApiKey(apiKey);
+    const host = req.get('host');
+    const isHttps = req.protocol === 'https' || host.includes(':') === false; // best-effort
+    const base = `${isHttps ? 'https' : 'http'}://${host}`;
+    const sseUrl = `${base}/sse?token=${encodeURIComponent(token)}`;
+    const mcpUrl = `${base}/mcp?token=${encodeURIComponent(token)}`;
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.end(`<!doctype html>
+<html><head><meta charset="utf-8"><title>Your MCP URLs</title></head>
+<body>
+  <h1>Connection ready</h1>
+  <p>Share one of these URLs with ChatGPT MCP:</p>
+  <p><strong>SSE URL:</strong> <code>${sseUrl}</code></p>
+  <p><strong>MCP URL:</strong> <code>${mcpUrl}</code></p>
+  <p>Token expires in ${config.token.ttlDays} day(s). You can regenerate anytime.</p>
+</body></html>`);
+  } catch (e) {
+    console.error('Error generating token:', e);
+    res.status(500).send('Internal error generating token');
+  }
 });
 
 // Graceful shutdown handling

@@ -67,16 +67,11 @@ export const createTools = (client = defaultCursorClient) => [
       try {
         // Validate input
         const validatedInput = validateInput(schemas.createAgentRequest, input, 'createAgent');
-        
-        const result = await client.createAgent(validatedInput);
-
-        // Set default model to 'default' if not provided
         const inputWithDefaults = {
           ...validatedInput,
           model: validatedInput.model || 'default'
         };
-        
-        const result = await cursorApiClient.createAgent(inputWithDefaults);
+        const result = await client.createAgent(inputWithDefaults);
         
         return createSuccessResponse(
           `✅ Successfully created agent!\n` +
