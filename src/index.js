@@ -288,6 +288,13 @@ app.get('/.well-known/oauth-protected-resource/sse', (req, res) => {
   });
 });
 
+app.get('/.well-known/oauth-protected-resource', (req, res) => {
+  res.json({
+    resource_registration_endpoint: `https://${req.get('host')}/oauth/resource`,
+    authorization_servers: [`https://${req.get('host')}`]
+  });
+});
+
 // Simplified OAuth endpoints for ChatGPT
 app.get('/oauth/authorize', (req, res) => {
   // For testing, just redirect back with a dummy code
