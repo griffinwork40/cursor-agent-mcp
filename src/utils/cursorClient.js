@@ -111,6 +111,7 @@ class CursorApiClient {
   }
 }
 
+export { CursorApiClient };
 export const createCursorApiClient = (apiKey) => new CursorApiClient(apiKey);
 
 // Backward compatibility for local/stdio mode where a global key is provided
