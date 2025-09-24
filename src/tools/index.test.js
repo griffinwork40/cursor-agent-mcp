@@ -3,7 +3,7 @@ import { createTools } from './index.js';
 
 function makeMockClient(overrides = {}) {
   return {
-    createAgent: jest.fn(async (input) => ({
+    createAgent: jest.fn(async (_input) => ({
       id: 'agent123',
       status: 'CREATING',
       target: { url: 'https://example.com/agent/agent123' },
