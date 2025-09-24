@@ -482,12 +482,16 @@ process.on('unhandledRejection', (reason, promise) => {
   process.exit(1);
 });
 
-app.listen(port, () => {
-  console.log(`🚀 Cursor MCP Server listening on port ${port}`);
-  console.log(`🏥 Health check: http://localhost:${port}/health`);
-  console.log(`🔧 MCP endpoint: http://localhost:${port}/mcp`);
-  console.log(`📡 SSE endpoint: http://localhost:${port}/sse`);
-  console.log('📊 Tools are created per request/connection');
-  console.log(`🔑 API Key configured: ${config.cursor.apiKey ? 'Yes' : 'No'}`);
-  console.log(`🔐 MCP Auth token: ${process.env.MCP_SERVER_TOKEN ? 'Set' : 'Not set (unprotected)'}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(port, () => {
+    console.log(`🚀 Cursor MCP Server listening on port ${port}`);
+    console.log(`🏥 Health check: http://localhost:${port}/health`);
+    console.log(`🔧 MCP endpoint: http://localhost:${port}/mcp`);
+    console.log(`📡 SSE endpoint: http://localhost:${port}/sse`);
+    console.log('📊 Tools are created per request/connection');
+    console.log(`🔑 API Key configured: ${config.cursor.apiKey ? 'Yes' : 'No'}`);
+    console.log(`🔐 MCP Auth token: ${process.env.MCP_SERVER_TOKEN ? 'Set' : 'Not set (unprotected)'}`);
+  });
+}
+
+export { app };

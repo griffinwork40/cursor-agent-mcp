@@ -233,7 +233,8 @@ export const createTools = (client = defaultCursorClient) => [
       try {
         // Validate input
         const validatedId = validateInput(schemas.agentId, input.id, 'addFollowup');
-        const validatedData = validateInput(schemas.addFollowupRequest, input.prompt, 'addFollowup');
+        // Validate the prompt payload directly
+        const validatedData = validateInput(schemas.prompt, input.prompt, 'addFollowup');
         
         const result = await client.addFollowup(validatedId, validatedData);
         
