@@ -233,15 +233,15 @@ export const createTools = (client = defaultCursorClient) => [
       try {
         // Validate input
         const validatedId = validateInput(schemas.agentId, input.id, 'addFollowup');
-        const validatedData = validateInput(schemas.addFollowupRequest, input.prompt, 'addFollowup');
+        const validatedData = validateInput(schemas.addFollowupRequest, input, 'addFollowup');
         
-        const result = await client.addFollowup(validatedId, validatedData);
+        const result = await client.addFollowup(validatedId, validatedData.prompt);
         
         return createSuccessResponse(
           '💬 Successfully added followup!\n' +
           `🆔 Agent ID: ${result.id}\n` +
-          `📝 Followup: ${validatedData.text.substring(0, 100)}${validatedData.text.length > 100 ? '...' : ''}`,
-          { agentId: result.id, followupText: validatedData.text },
+          `📝 Followup: ${validatedData.prompt.text.substring(0, 100)}${validatedData.prompt.text.length > 100 ? '...' : ''}`,
+          { agentId: result.id, followupText: validatedData.prompt.text },
         );
       } catch (error) {
         return handleMCPError(error, 'addFollowup');
