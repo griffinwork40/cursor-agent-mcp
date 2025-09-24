@@ -11,28 +11,14 @@ import { createTools } from './tools/index.js';
 import { createCursorApiClient, cursorApiClient as defaultCursorClient } from './utils/cursorClient.js';
 import { handleMCPError } from './utils/errorHandler.js';
 import { mintTokenFromApiKey, decodeTokenToApiKey } from './utils/tokenUtils.js';
-import crypto from 'crypto';
 
 const app = express();
 const port = config.port;
 
 app.use(express.json());
 
-// Auth middleware for SSE endpoint
-const requireMCPAuth = (req, res, next) => {
-  const expectedToken = process.env.MCP_SERVER_TOKEN;
-  if (!expectedToken) {
-    console.warn('MCP_SERVER_TOKEN not set - SSE endpoint will be unprotected');
-    return next();
-  }
-  
-  const providedToken = req.headers['x-mcp-auth'] || req.headers['authorization']?.replace('Bearer ', '');
-  if (!providedToken || providedToken !== expectedToken) {
-    return res.status(401).json({ error: 'Invalid or missing MCP auth token' });
-  }
-  
-  next();
-};
+// Note: requireMCPAuth middleware removed as it's not currently used
+// It can be re-added to the SSE route if authentication is needed
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -60,12 +46,12 @@ app.get('/', (req, res) => {
       mcp: '/mcp',
       sse: '/sse',
       health: '/health',
-      connect: '/connect'
+      connect: '/connect',
     },
     oauth: {
       authorization_endpoint: '/oauth/authorize',
-      token_endpoint: '/oauth/token'
-    }
+      token_endpoint: '/oauth/token',
+    },
   });
 });
 
@@ -79,60 +65,60 @@ app.post('/', async (req, res) => {
     let result;
     
     switch (method) {
-      case 'initialize':
-        {
-          result = {
-            protocolVersion: "2025-03-26",
-            capabilities: {
-              tools: {}
-            },
-            serverInfo: {
-              name: "cursor-background-agents",
-              version: "1.0.0"
-            }
-          };
-        }
-        break;
+    case 'initialize':
+      {
+        result = {
+          protocolVersion: '2025-03-26',
+          capabilities: {
+            tools: {},
+          },
+          serverInfo: {
+            name: 'cursor-background-agents',
+            version: '1.0.0',
+          },
+        };
+      }
+      break;
         
-      case 'notifications/initialized':
-        {
-          // This is just a notification, no response needed
-          console.log('ChatGPT initialized successfully');
-          return res.status(200).end(); // No response body for notifications
-        }
+    case 'notifications/initialized':
+    {
+      // This is just a notification, no response needed
+      console.log('ChatGPT initialized successfully');
+      return res.status(200).end(); // No response body for notifications
+    }
         
-      case 'tools/list':
-        {
-          const tools = getToolsForRequest(req);
-          result = {
-            tools: tools.map(tool => ({
-              name: tool.name,
-              description: tool.description,
-              inputSchema: tool.inputSchema
-            }))
-          };
-        }
-        break;
+    case 'tools/list':
+      {
+        const tools = getToolsForRequest(req);
+        result = {
+          tools: tools.map(tool => ({
+            name: tool.name,
+            description: tool.description,
+            inputSchema: tool.inputSchema,
+          })),
+        };
+      }
+      break;
         
-      case 'tools/call':
-        {
-          const tools = getToolsForRequest(req);
-          const tool = tools.find(t => t.name === params.name);
+    case 'tools/call':
+      {
+        const tools = getToolsForRequest(req);
+        const tool = tools.find(t => t.name === params.name);
         if (!tool) {
           throw new Error(`Tool ${params.name} not found`);
         }
-          result = await tool.handler(params.arguments || {});
-        }
-        break;
+        result = await tool.handler(params.arguments || {});
+      }
+      break;
         
-      default:
-        throw new Error(`Unknown method: ${method}`);
+    default:
+      throw new Error(`Unknown method: ${method}`);
     }
     
     const response = {
       jsonrpc: '2.0',
       id,
-      result
+      result,
     };
     
     console.log('Root MCP Response:', JSON.stringify(response, null, 2));
@@ -145,8 +131,8 @@ app.post('/', async (req, res) => {
       error: {
         code: -32603,
         message: error.message || 'Internal error',
-        data: error.stack
-      }
+        data: error.stack,
+      },
     };
     res.status(500).json(errorResponse);
   }
@@ -199,7 +185,7 @@ const mcpServer = new Server(
     capabilities: {
       tools: {},
     },
-  }
+  },
 );
 
 // Setup MCP handlers
@@ -215,8 +201,8 @@ mcpServer.setRequestHandler(ListToolsRequestSchema, async (request, context) => 
     tools: tools.map(tool => ({
       name: tool.name,
       description: tool.description,
-      inputSchema: tool.inputSchema
-    }))
+      inputSchema: tool.inputSchema,
+    })),
   };
 });
 
@@ -238,9 +224,9 @@ mcpServer.setRequestHandler(CallToolRequestSchema, async (request, context) => {
       content: [
         {
           type: 'text',
-          text: typeof result === 'string' ? result : JSON.stringify(result, null, 2)
-        }
-      ]
+          text: typeof result === 'string' ? result : JSON.stringify(result, null, 2),
+        },
+      ],
     };
   } catch (error) {
     console.error(`Error executing tool ${name}:`, error);
@@ -250,10 +236,10 @@ mcpServer.setRequestHandler(CallToolRequestSchema, async (request, context) => {
       content: [
         {
           type: 'text',
-          text: `Error: ${errorResponse.error || error.message}`
-        }
+          text: `Error: ${errorResponse.error || error.message}`,
+        },
       ],
-      isError: true
+      isError: true,
     };
   }
 });
@@ -264,9 +250,9 @@ app.get('/.well-known/oauth-authorization-server', (req, res) => {
     issuer: `https://${req.get('host')}`,
     authorization_endpoint: `https://${req.get('host')}/oauth/authorize`,
     token_endpoint: `https://${req.get('host')}/oauth/token`,
-    response_types_supported: ["code"],
-    grant_types_supported: ["authorization_code"],
-    code_challenge_methods_supported: ["S256"]
+    response_types_supported: ['code'],
+    grant_types_supported: ['authorization_code'],
+    code_challenge_methods_supported: ['S256'],
   });
 });
 
@@ -275,23 +261,23 @@ app.get('/.well-known/openid-configuration', (req, res) => {
     issuer: `https://${req.get('host')}`,
     authorization_endpoint: `https://${req.get('host')}/oauth/authorize`,
     token_endpoint: `https://${req.get('host')}/oauth/token`,
-    response_types_supported: ["code"],
-    grant_types_supported: ["authorization_code"],
-    code_challenge_methods_supported: ["S256"]
+    response_types_supported: ['code'],
+    grant_types_supported: ['authorization_code'],
+    code_challenge_methods_supported: ['S256'],
   });
 });
 
 app.get('/.well-known/oauth-protected-resource/sse', (req, res) => {
   res.json({
     resource_registration_endpoint: `https://${req.get('host')}/oauth/resource`,
-    authorization_servers: [`https://${req.get('host')}`]
+    authorization_servers: [`https://${req.get('host')}`],
   });
 });
 
 app.get('/.well-known/oauth-protected-resource', (req, res) => {
   res.json({
     resource_registration_endpoint: `https://${req.get('host')}/oauth/resource`,
-    authorization_servers: [`https://${req.get('host')}`]
+    authorization_servers: [`https://${req.get('host')}`],
   });
 });
 
@@ -308,7 +294,7 @@ app.post('/oauth/token', (req, res) => {
   res.json({
     access_token: 'dummy_access_token',
     token_type: 'Bearer',
-    expires_in: 3600
+    expires_in: 3600,
   });
 });
 
@@ -317,7 +303,7 @@ app.post('/oauth/resource', (req, res) => {
   res.json({
     resource_id: 'mcp-server',
     resource_scopes: ['read', 'write'],
-    resource_uri: `https://${req.get('host')}/sse`
+    resource_uri: `https://${req.get('host')}/sse`,
   });
 });
 
@@ -362,29 +348,29 @@ app.post('/mcp', async (req, res) => {
     let result;
     
     switch (method) {
-      case 'tools/list':
-        {
-          const tools = getToolsForRequest(req);
-          result = {
-            tools: tools.map(tool => ({
-              name: tool.name,
-              description: tool.description,
-              inputSchema: tool.inputSchema
-            }))
-          };
-        }
-        break;
+    case 'tools/list':
+      {
+        const tools = getToolsForRequest(req);
+        result = {
+          tools: tools.map(tool => ({
+            name: tool.name,
+            description: tool.description,
+            inputSchema: tool.inputSchema,
+          })),
+        };
+      }
+      break;
         
-      case 'tools/call':
-        {
-          const tools = getToolsForRequest(req);
-          const tool = tools.find(t => t.name === params.name);
-          if (!tool) {
-            throw new Error(`Tool ${params.name} not found`);
-          }
-          result = await tool.handler(params.arguments || {});
+    case 'tools/call':
+      {
+        const tools = getToolsForRequest(req);
+        const tool = tools.find(t => t.name === params.name);
+        if (!tool) {
+          throw new Error(`Tool ${params.name} not found`);
         }
-        break;
+        result = await tool.handler(params.arguments || {});
+      }
+      break;
         
     default:
       throw new Error(`Unknown method: ${method}`);
@@ -501,7 +487,7 @@ app.listen(port, () => {
   console.log(`🏥 Health check: http://localhost:${port}/health`);
   console.log(`🔧 MCP endpoint: http://localhost:${port}/mcp`);
   console.log(`📡 SSE endpoint: http://localhost:${port}/sse`);
-  console.log(`📊 Tools are created per request/connection`);
+  console.log('📊 Tools are created per request/connection');
   console.log(`🔑 API Key configured: ${config.cursor.apiKey ? 'Yes' : 'No'}`);
   console.log(`🔐 MCP Auth token: ${process.env.MCP_SERVER_TOKEN ? 'Set' : 'Not set (unprotected)'}`);
 });
