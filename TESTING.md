@@ -132,7 +132,7 @@ curl -X POST http://localhost:3000/mcp \
         "source": {
           "repository": "https://github.com/test/repo"
         },
-        "model": "claude-4-sonnet"
+        "model": "auto"
       }
     }
   }'

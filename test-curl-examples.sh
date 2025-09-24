@@ -92,7 +92,7 @@ make_mcp_request "tools/call" '{
         "source": {
             "repository": "https://github.com/test/repo"
         },
-        "model": "claude-4-sonnet"
+        "model": "auto"
     }
 }' "Create Test Agent"
 

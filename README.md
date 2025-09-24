@@ -1,6 +1,6 @@
 # 🚀 Cursor MCP Server
 
-A **production-ready MCP (Model Context Protocol) server** that seamlessly integrates with **Cursor's Background Agents API**. This server enables LLMs to programmatically create, manage, and interact with Cursor's powerful background agents for autonomous code development.
+A **MCP (Model Context Protocol) server** that seamlessly integrates with **Cursor's Background Agents API**. This server enables LLMs to programmatically create, manage, and interact with Cursor's powerful background agents for autonomous code development.
 
 ## ✨ Features
 
@@ -102,6 +102,19 @@ For Claude Desktop, add to your `claude_desktop_config.json`:
   }
 }
 ```
+
+### 4. 🔧 Codex CLI Configuration
+For Codex CLI, add to your `~/.codex/config.toml`:
+
+```toml
+# IMPORTANT: the top-level key is `mcp_servers` rather than `mcpServers`.
+[mcp_servers.cursor-background-agents]
+command = "npx"
+args = ["cursor-agent-mcp@latest"]
+env = { "CURSOR_API_KEY" = "your_cursor_api_key_here", "CURSOR_API_URL" = "https://api.cursor.com" }
+```
+
+**Note**: Codex CLI uses TOML format instead of JSON, and the configuration key is `mcp_servers` (with underscore) rather than `mcpServers` (camelCase).
 
 ### 🛠️ Development/Local Installation Configuration
 If you're running from source code, use this configuration instead:
@@ -222,7 +235,7 @@ This server provides **9 powerful tools** that enable LLMs to fully manage Curso
   "prompt": {
     "text": "Fix all TypeScript errors in the project and add proper type definitions"
   },
-  "model": "claude-3.5-sonnet",
+  "model": "auto",
   "source": {
     "repository": "https://github.com/user/repo",
     "ref": "main"
@@ -322,7 +335,7 @@ const newAgent = await mcp.call('createAgent', {
     3. Update documentation for new features
     4. Optimize performance bottlenecks`
   },
-  model: 'claude-3.5-sonnet',
+  model: 'auto',
   source: {
     repository: 'https://github.com/myuser/my-project',
     ref: 'main'
@@ -366,7 +379,7 @@ console.log('Messages:', conversation.messages.length);
   "prompt": {
     "text": "There's a critical bug in the user authentication flow. Please investigate and fix the login issues reported in GitHub issues #123 and #124."
   },
-  "model": "claude-3.5-sonnet",
+  "model": "auto",
   "source": {
     "repository": "https://github.com/company/webapp",
     "ref": "main"
@@ -384,7 +397,7 @@ console.log('Messages:', conversation.messages.length);
   "prompt": {
     "text": "Implement a new dark mode toggle feature with the following requirements:\n- System preference detection\n- Persistent user choice\n- Smooth transitions\n- Accessibility compliance"
   },
-  "model": "claude-3.5-sonnet",
+  "model": "auto",
   "source": {
     "repository": "https://github.com/company/frontend",
     "ref": "develop"
@@ -402,7 +415,7 @@ console.log('Messages:', conversation.messages.length);
   "prompt": {
     "text": "Update all documentation files:\n- Add comprehensive API documentation\n- Create setup guides for new developers\n- Add code examples for all public methods\n- Update README with latest features"
   },
-  "model": "claude-3.5-sonnet",
+  "model": "auto",
   "source": {
     "repository": "https://github.com/company/api-server"
   },
@@ -419,7 +432,7 @@ console.log('Messages:', conversation.messages.length);
   "prompt": {
     "text": "Improve test coverage by:\n- Adding unit tests for untested components\n- Creating integration tests for API endpoints\n- Adding E2E tests for critical user flows\n- Setting up test data factories"
   },
-  "model": "claude-3.5-sonnet",
+  "model": "auto",
   "source": {
     "repository": "https://github.com/company/app"
   },

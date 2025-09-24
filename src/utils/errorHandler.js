@@ -187,7 +187,7 @@ export const schemas = {
 
   createAgentRequest: z.object({
     prompt: prompt,
-    model: z.string().min(1, 'Model cannot be empty').optional(),
+    model: z.string().min(1, 'Model cannot be empty').default('auto'),
     source: source,
     target: target.optional(),
     webhook: webhook.optional()

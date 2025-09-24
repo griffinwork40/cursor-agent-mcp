@@ -36,7 +36,7 @@ export const createTools = (client = defaultCursorClient) => [
           },
           required: ['text']
         },
-        model: { type: 'string', description: 'The LLM to use' },
+        model: { type: 'string', description: 'The LLM to use (defaults to default if not specified)', default: 'default' },
         source: {
           type: 'object',
           properties: {
@@ -61,7 +61,7 @@ export const createTools = (client = defaultCursorClient) => [
           required: ['url']
         }
       },
-      required: ['prompt', 'source']
+      required: ['prompt', 'source', 'model']
     },
     handler: async (input) => {
       try {
@@ -69,6 +69,14 @@ export const createTools = (client = defaultCursorClient) => [
         const validatedInput = validateInput(schemas.createAgentRequest, input, 'createAgent');
         
         const result = await client.createAgent(validatedInput);
+
+        // Set default model to 'default' if not provided
+        const inputWithDefaults = {
+          ...validatedInput,
+          model: validatedInput.model || 'default'
+        };
+        
+        const result = await cursorApiClient.createAgent(inputWithDefaults);
         
         return createSuccessResponse(
           `✅ Successfully created agent!\n` +
