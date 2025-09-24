@@ -50,6 +50,9 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Quiet favicon requests to avoid console 404s
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
 // Helper to extract Cursor API key from request (do NOT use OAuth Authorization header)
 const extractApiKey = (req) => {
   // Support zero-storage token in query/header: token=<base64url>
@@ -278,24 +281,7 @@ app.post('/mcp', async (req, res) => {
   }
 });
 
-// Global error handler
-app.use((error, req, res, next) => {
-  console.error('Unhandled error:', error);
-  const errorResponse = handleMCPError(error, 'Express middleware');
-  res.status(500).json(errorResponse);
-});
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    error: {
-      message: `Route ${req.method} ${req.path} not found`,
-      code: 'NOT_FOUND'
-    }
-  });
-});
-
-// Minimal connect page and minting endpoint
+// Minimal connect page and minting endpoint (must be before 404 handler)
 app.get('/connect', (req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.end(`<!doctype html>
@@ -337,6 +323,23 @@ app.post('/connect', (req, res) => {
     console.error('Error generating token:', e);
     res.status(500).send('Internal error generating token');
   }
+});
+
+// Global error handler
+app.use((error, req, res, next) => {
+  console.error('Unhandled error:', error);
+  const errorResponse = handleMCPError(error, 'Express middleware');
+  res.status(500).json(errorResponse);
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    error: {
+      message: `Route ${req.method} ${req.path} not found`,
+      code: 'NOT_FOUND'
+    }
+  });
 });
 
 // Graceful shutdown handling
