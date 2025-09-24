@@ -1,32 +1,23 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `src/index.js` hosts the Express MCP server used in local dev; `src/mcp-server.js` wraps the CLI binary published to npm.
-- Modules stay grouped by responsibility: config (`src/config/index.js`), tool definitions (`src/tools/index.js`), and shared utilities (`src/utils/`, e.g., `cursorClient.js` for Cursor API calls).
-- Manual integration scripts (`test-mcp-client.js`, `test-error-handling.js`, `test-curl-examples.sh`) live in the repo root beside doc references (`README.md`, `SIMPLE_SETUP_GUIDE.md`, `TESTING.md`). Keep demo artefacts in `mcp-images/`.
+The production entrypoint is `src/index.js`, which wires the MCP transport, Express server, and token utilities. CLI usage is routed through `src/cli.js`, while `src/mcp-server.js` exposes the server as a standalone MPC process. Configuration defaults live in `src/config/index.js`; shared helpers (Cursor client, error handling, token minting) are under `src/utils/`. Tool definitions are grouped in `src/tools/index.js`. Manual assets such as `mcp-images/generation_history.json` are persisted in `mcp-images/` and treated as runtime artifacts. Test harnesses and examples (`test-mcp-client.js`, `test-curl-examples.sh`, `test-postman-collection.json`) sit at the repo root for quick access during development.
 
 ## Build, Test, and Development Commands
-- `npm install` (Node 18+) sets up dependencies; run once per fresh checkout.
-- `npm start` serves the MCP API at `http://localhost:3000`; `npm run dev` hot-reloads via nodemon.
-- `npm test` calls `jest --passWithNoTests`; extend the suite rather than disabling assertions.
-- `node test-mcp-client.js` exercises full tool flows, while `bash test-curl-examples.sh` or `node test-error-handling.js` spot-check REST and error handling before release.
+- `npm start` — Run the HTTP + MCP server on the configured port (defaults to 3000).
+- `npm run mcp` — Launch only the MCP server process for embedding in external clients.
+- `npm run cli` — Invoke the command-line interface wrapper.
+- `npm run dev` — Start the server with `nodemon` for live reload during local iteration.
+- `npm test` — Execute the Jest suite (`--passWithNoTests` is enabled, so add tests to enforce coverage).
 
 ## Coding Style & Naming Conventions
-- Follow the existing ES module style: two-space indentation, single quotes, trailing semicolons (`src/index.js:1` is the reference).
-- Name functions in camelCase (`createTools`, `handleMCPError`); reserve PascalCase for constructors.
-- Route all configuration through `src/config/index.js`; avoid reaching into `process.env` from feature code and mirror new values in documentation.
+All source files use ES modules and target Node.js ≥18.0.0. Keep two-space indentation, trailing commas only where required, and `'single quotes'` for strings. Prefer `camelCase` for functions/variables, `PascalCase` for classes, and kebab-case for script names. Centralize configuration through `config` exports rather than ad-hoc `process.env` reads inside modules.
 
 ## Testing Guidelines
-- Jest is the automated harness; place specs under `__tests__/` or `test/` and wire mocks beside the subject (`cursorClient.test.js`, etc.).
-- Re-run `npm test` plus at least one integration driver (`node test-mcp-client.js` or `test-curl-examples.sh`) for features that touch Cursor APIs.
-- Document new scenarios in `TESTING.md` when scripts gain options or expected payloads change.
+Jest tests should live alongside source files as `*.test.js` or under a dedicated `__tests__/` folder. Mock Cursor API calls when practical to keep tests deterministic. For end-to-end checks, use the interactive client (`node test-mcp-client.js`) or the cURL script (`./test-curl-examples.sh`); both expect `CURSOR_API_KEY` and optional `MCP_SERVER_TOKEN` to be set. Update `TESTING.md` if new scenarios or tooling are introduced.
 
 ## Commit & Pull Request Guidelines
-- Use short, imperative commit subjects like the current history (`git log --oneline` shows “Update default model…”). Explain detail in the body only when needed.
-- PRs should outline intent, list validation commands, and link issues; include payload snippets or screenshots when changing responses.
-- Prefer squash merges unless coordinating a release train; flag breaking changes explicitly in the PR title.
+Follow the existing history: short (≤72 char) imperative subjects such as “Add root endpoint for ChatGPT discovery”. Reference related issues in the body, and summarize API or configuration changes explicitly. Pull requests should include: purpose and major changes, test evidence (`npm test`, manual script outputs), any new environment variables, and screenshots or logs when behavior is user-facing.
 
-## Security & Configuration Tips
-- Keep secrets out of the repo; load `CURSOR_API_KEY` and peers via `.env`, and surface them through `config.cursor`.
-- Validate new env vars in `src/config/index.js` before use and share defaults in README or this guide.
-- When adding tools, reuse `cursorClient` and `handleMCPError` so telemetry and error formatting stay consistent.
+## Configuration & Security Notes
+Environment settings belong in `.env`; load them via `dotenv` in `src/config/index.js`. Never commit real Cursor API keys or minted tokens. If you introduce new secrets, document placeholder names in `README.md` and ensure sensitive files are covered by `.gitignore`. Use `MCP_SERVER_TOKEN` for securing SSE endpoints in shared deployments.
