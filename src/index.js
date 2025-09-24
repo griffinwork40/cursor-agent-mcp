@@ -50,15 +50,127 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Root endpoint for ChatGPT discovery
+app.get('/', (req, res) => {
+  res.json({
+    name: 'cursor-background-agents',
+    version: '1.0.0',
+    description: 'MCP server for Cursor Background Agents API',
+    endpoints: {
+      mcp: '/mcp',
+      sse: '/sse',
+      health: '/health',
+      connect: '/connect'
+    },
+    oauth: {
+      authorization_endpoint: '/oauth/authorize',
+      token_endpoint: '/oauth/token'
+    }
+  });
+});
+
+app.post('/', async (req, res) => {
+  // Handle MCP requests on root path (ChatGPT sometimes does this)
+  console.log('Root POST request:', JSON.stringify(req.body, null, 2));
+  
+  try {
+    const { method, params, id } = req.body;
+    
+    let result;
+    
+    switch (method) {
+      case 'initialize':
+        {
+          result = {
+            protocolVersion: "2025-03-26",
+            capabilities: {
+              tools: {}
+            },
+            serverInfo: {
+              name: "cursor-background-agents",
+              version: "1.0.0"
+            }
+          };
+        }
+        break;
+        
+      case 'notifications/initialized':
+        {
+          // This is just a notification, no response needed
+          console.log('ChatGPT initialized successfully');
+          return res.status(200).end(); // No response body for notifications
+        }
+        
+      case 'tools/list':
+        {
+          const tools = getToolsForRequest(req);
+          result = {
+            tools: tools.map(tool => ({
+              name: tool.name,
+              description: tool.description,
+              inputSchema: tool.inputSchema
+            }))
+          };
+        }
+        break;
+        
+      case 'tools/call':
+        {
+          const tools = getToolsForRequest(req);
+          const tool = tools.find(t => t.name === params.name);
+        if (!tool) {
+          throw new Error(`Tool ${params.name} not found`);
+        }
+          result = await tool.handler(params.arguments || {});
+        }
+        break;
+        
+      default:
+        throw new Error(`Unknown method: ${method}`);
+    }
+    
+    const response = {
+      jsonrpc: '2.0',
+      id,
+      result
+    };
+    
+    console.log('Root MCP Response:', JSON.stringify(response, null, 2));
+    res.json(response);
+  } catch (error) {
+    console.error('Error handling root MCP request:', error);
+    const errorResponse = {
+      jsonrpc: '2.0',
+      id: req.body.id,
+      error: {
+        code: -32603,
+        message: error.message || 'Internal error',
+        data: error.stack
+      }
+    };
+    res.status(500).json(errorResponse);
+  }
+});
+
 // Quiet favicon requests to avoid console 404s
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
-// Helper to extract Cursor API key from request (do NOT use OAuth Authorization header)
+// Helper to extract Cursor API key from request (UPDATED for ChatGPT compatibility)
 const extractApiKey = (req) => {
   // Support zero-storage token in query/header: token=<base64url>
   const token = req.query?.token || req.headers['x-mcp-token'];
   const tokenKey = token ? decodeTokenToApiKey(token) : null;
   if (tokenKey) return tokenKey;
+
+  // Check Authorization header for ChatGPT compatibility (but avoid OAuth Bearer tokens)
+  const authHeader = req.headers['authorization'];
+  if (authHeader && authHeader.startsWith('Bearer ') && !authHeader.includes('oauth')) {
+    const bearerKey = authHeader.replace('Bearer ', '');
+    // Only use if it looks like a Cursor API key (starts with 'key_')
+    if (bearerKey.startsWith('key_')) {
+      return bearerKey;
+    }
+  }
 
   return (
     req.headers['x-cursor-api-key'] ||
@@ -72,6 +184,7 @@ const extractApiKey = (req) => {
 // Lazily create tools per request using provided API key (fallback to default client)
 const getToolsForRequest = (req) => {
   const apiKey = extractApiKey(req);
+  console.log(`API Key extracted: ${apiKey ? `${apiKey.substring(0, 10)}...` : 'None'}`);
   const client = apiKey ? createCursorApiClient(apiKey) : defaultCursorClient;
   return createTools(client);
 };
@@ -94,8 +207,10 @@ mcpServer.setRequestHandler(ListToolsRequestSchema, async (request, context) => 
   // Read per-request Cursor API key from custom headers/query/body; ignore OAuth Authorization header
   const req = context?.transport?.req;
   const apiKey = req ? extractApiKey(req) : config.cursor.apiKey;
+  console.log(`SSE ListTools - API Key: ${apiKey ? `${apiKey.substring(0, 10)}...` : 'None'}`);
   const client = apiKey ? createCursorApiClient(apiKey) : defaultCursorClient;
   const tools = createTools(client);
+  console.log(`SSE ListTools - Created ${tools.length} tools`);
   return {
     tools: tools.map(tool => ({
       name: tool.name,
@@ -209,15 +324,25 @@ app.use((req, res, next) => {
   next();
 });
 
-// SSE endpoint for ChatGPT MCP integration (supports per-request API key)
+// SSE endpoint for ChatGPT MCP integration (FIXED - no CORS headers)
 app.use('/sse', (req, res) => {
   console.log(`MCP SSE connection attempt from ${req.ip}`);
-  const transport = new SSEServerTransport('/sse', res);
-  // attach req for later header access in handlers
-  transport.req = req;
-  mcpServer.connect(transport).catch(error => {
-    console.error('MCP SSE connection error:', error);
-  });
+  
+  try {
+    const transport = new SSEServerTransport('/sse', res);
+    // attach req for later header access in handlers
+    transport.req = req;
+    
+    mcpServer.connect(transport).catch(error => {
+      console.error('MCP SSE connection error:', error);
+      res.write(`event: error\ndata: ${JSON.stringify({error: error.message})}\n\n`);
+      res.end();
+    });
+  } catch (error) {
+    console.error('SSE setup error:', error);
+    res.write(`event: error\ndata: ${JSON.stringify({error: error.message})}\n\n`);
+    res.end();
+  }
 });
 
 // MCP protocol endpoint
