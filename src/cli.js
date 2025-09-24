@@ -15,7 +15,7 @@ import crypto from 'crypto';
 
 // Note: __filename removed as it's not used in this file
 
-function getConfigDir() {
+export function getConfigDir() {
   const platform = process.platform;
   if (platform === 'win32') {
     const base = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
@@ -30,7 +30,7 @@ function getConfigDir() {
 const CONFIG_DIR = getConfigDir();
 const CONFIG_PATH = path.join(CONFIG_DIR, 'config.json');
 
-async function pathExists(p) {
+export async function pathExists(p) {
   try {
     await stat(p);
     return true;
@@ -39,7 +39,7 @@ async function pathExists(p) {
   }
 }
 
-async function ensureConfigDir() {
+export async function ensureConfigDir() {
   if (!(await pathExists(CONFIG_DIR))) {
     await mkdir(CONFIG_DIR, { recursive: true });
     try {
@@ -53,11 +53,11 @@ async function ensureConfigDir() {
   }
 }
 
-function generateMCPToken() {
+export function generateMCPToken() {
   return 'mcp_' + crypto.randomBytes(32).toString('hex');
 }
 
-async function saveConfig({ apiKey, apiUrl, mcpToken }) {
+export async function saveConfig({ apiKey, apiUrl, mcpToken }) {
   await ensureConfigDir();
   const existing = await loadConfigFromFile();
   const data = { 
@@ -76,7 +76,7 @@ async function saveConfig({ apiKey, apiUrl, mcpToken }) {
   }
 }
 
-async function loadConfigFromFile() {
+export async function loadConfigFromFile() {
   if (await pathExists(CONFIG_PATH)) {
     try {
       const raw = await readFile(CONFIG_PATH, 'utf8');
@@ -89,7 +89,7 @@ async function loadConfigFromFile() {
   return null;
 }
 
-async function loadConfig() {
+export async function loadConfig() {
   // Prefer env vars when set
   const envKey = process.env.CURSOR_API_KEY;
   const envUrl = process.env.CURSOR_API_URL;
@@ -115,7 +115,7 @@ async function loadConfig() {
   return null;
 }
 
-function parseArgs(argv) {
+export function parseArgs(argv) {
   const args = {};
   for (let i = 0; i < argv.length; i++) {
     const token = argv[i];
@@ -133,7 +133,7 @@ function parseArgs(argv) {
   return args;
 }
 
-async function promptHidden(question) {
+export async function promptHidden(question) {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   return await new Promise((resolve) => {
     const onData = (char) => {
@@ -161,7 +161,7 @@ async function promptHidden(question) {
   });
 }
 
-async function cmdInit(flags) {
+export async function cmdInit(flags) {
   const key = flags.apiKey || flags['api-key'] || (await promptHidden('Enter CURSOR_API_KEY: '));
   if (!key || typeof key !== 'string' || key.trim().length < 8) {
     console.error('Invalid API key.');
@@ -178,11 +178,12 @@ async function cmdInit(flags) {
   }
 }
 
-async function ensureEnvFromConfig() {
+export async function ensureEnvFromConfig() {
   const cfg = await loadConfig();
   if (!cfg) {
     console.error('Missing CURSOR_API_KEY. Run: cursor-agent-mcp init');
     process.exit(1);
+    return; // This won't be reached in production, but helps with testing
   }
   process.env.CURSOR_API_KEY = cfg.CURSOR_API_KEY;
   process.env.CURSOR_API_URL = cfg.CURSOR_API_URL || 'https://api.cursor.com';
@@ -191,12 +192,12 @@ async function ensureEnvFromConfig() {
   }
 }
 
-async function cmdStdio() {
+export async function cmdStdio() {
   await ensureEnvFromConfig();
   await import('./mcp-server.js');
 }
 
-async function cmdHttp(flags) {
+export async function cmdHttp(flags) {
   await ensureEnvFromConfig();
   if (flags.port) {
     process.env.PORT = String(flags.port);
@@ -204,7 +205,7 @@ async function cmdHttp(flags) {
   await import('./index.js');
 }
 
-async function cmdWhoAmI() {
+export async function cmdWhoAmI() {
   await ensureEnvFromConfig();
   const { cursorApiClient } = await import('./utils/cursorClient.js');
   try {
@@ -217,7 +218,7 @@ async function cmdWhoAmI() {
   }
 }
 
-async function cmdShowConfig() {
+export async function cmdShowConfig() {
   const cfg = await loadConfig();
   if (!cfg) {
     console.log('No configuration found. Run: cursor-agent-mcp init');
@@ -238,7 +239,7 @@ async function cmdShowConfig() {
   }
 }
 
-function printHelp() {
+export function printHelp() {
   console.log(`
 cursor-agent-mcp <command> [options]
 
