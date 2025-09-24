@@ -11,14 +11,18 @@ import { config } from '../config/index.js';
 // } from './errorHandler.js';
 
 class CursorApiClient {
-  constructor() {
+  constructor(apiKey) {
+    const headers = {
+      'Content-Type': 'application/json',
+      'User-Agent': 'cursor-mcp/1.0.0',
+    };
+    if (apiKey) {
+      headers['Authorization'] = `Bearer ${apiKey}`;
+    }
+
     this.client = axios.create({
       baseURL: config.cursor.apiUrl,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.cursor.apiKey}`,
-        'User-Agent': 'cursor-mcp/1.0.0',
-      },
+      headers,
       timeout: 30000, // 30 second timeout
     });
 
@@ -107,4 +111,7 @@ class CursorApiClient {
   }
 }
 
-export const cursorApiClient = new CursorApiClient();
+export const createCursorApiClient = (apiKey) => new CursorApiClient(apiKey);
+
+// Backward compatibility for local/stdio mode where a global key is provided
+export const cursorApiClient = createCursorApiClient(config.cursor.apiKey);

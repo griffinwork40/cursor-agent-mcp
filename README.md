@@ -147,6 +147,177 @@ For Claude Desktop, add to your `claude_desktop_config.json`:
 }
 ```
 
+### 4. 🔧 Codex CLI Configuration
+For Codex CLI, add to your `~/.codex/config.toml`:
+
+```toml
+# IMPORTANT: the top-level key is `mcp_servers` rather than `mcpServers`.
+[mcp_servers.cursor-background-agents]
+command = "npx"
+args = ["cursor-agent-mcp@latest"]
+env = { "CURSOR_API_KEY" = "your_cursor_api_key_here", "CURSOR_API_URL" = "https://api.cursor.com" }
+```
+
+**Note**: Codex CLI uses TOML format instead of JSON, and the configuration key is `mcp_servers` (with underscore) rather than `mcpServers` (camelCase).
+
+## 🌐 Self-Hosting for OpenAI Platform & ChatGPT
+
+### 🚀 Quick Self-Hosting Setup
+
+For **OpenAI Platform** and **ChatGPT** integration, you can self-host this MCP server and make it accessible via the internet.
+
+#### Prerequisites
+- Node.js 18+
+- Your Cursor API key
+- ngrok (for quick public access) or cloud hosting
+
+#### 🏃‍♂️ Quick Start with ngrok
+
+1. **Clone and setup**:
+   ```bash
+   git clone https://github.com/griffinwork40/cursor-mcp.git
+   cd cursor-mcp
+   npm install
+   ```
+
+2. **Configure your API key**:
+   ```bash
+   # Create .env file
+   echo "CURSOR_API_KEY=your_cursor_api_key_here" > .env
+   echo "PORT=3000" >> .env
+   ```
+
+3. **Start the server**:
+   ```bash
+   npm start
+   ```
+
+4. **Make it public with ngrok**:
+   ```bash
+   # In a new terminal
+   ngrok http 3000
+   ```
+
+5. **Get your public URL** (e.g., `https://abc123.ngrok-free.app`)
+
+#### 📱 ChatGPT Configuration
+
+**In ChatGPT Settings → Connectors:**
+
+- **Name**: `cursor-agent-mcp`
+- **Description**: `MCP server for Cursor Background Agents API`
+- **MCP Server URL**: `https://your-ngrok-url.ngrok-free.app` (base URL only)
+- **Authentication**: **None** (uses global API key from .env)
+- **Trust checkbox**: ✅ Checked
+
+**✅ Working Configuration:**
+```
+✅ URL: https://abc123.ngrok-free.app
+✅ Auth: None
+✅ Trust: Checked
+```
+
+**❌ Common Mistakes:**
+```
+❌ URL: https://abc123.ngrok-free.app/sse?token=...  (don't use SSE endpoint)
+❌ Auth: OAuth  (OAuth is for advanced setups)
+❌ Missing API key in .env
+```
+
+#### 🏗️ OpenAI Platform Configuration
+
+**For OpenAI Platform integration:**
+
+1. **Server URL**: `https://your-ngrok-url.ngrok-free.app`
+2. **Authentication**: None (server uses global API key)
+3. **Available Tools**: 9 Cursor agent management tools
+
+**API Endpoints Available:**
+- `POST /` - Main MCP protocol endpoint
+- `POST /mcp` - Alternative MCP endpoint  
+- `GET /sse` - Server-Sent Events for real-time connections
+- `GET /health` - Health check
+- `GET /.well-known/oauth-authorization-server` - OAuth discovery
+
+#### 🔧 Advanced Configuration Options
+
+**With API Key Authentication** (if you want per-request keys):
+```bash
+# ChatGPT can send API key in Authorization header
+curl -X POST https://your-server.com/ \
+  -H "Authorization: Bearer key_your_cursor_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
+```
+
+**With Token-based URLs** (for sharing):
+```bash
+# Visit your server's /connect endpoint
+curl https://your-server.com/connect
+# Enter your API key to get a tokenized URL
+```
+
+#### 🌍 Production Hosting Options
+
+**Railway** (Recommended):
+```bash
+# Deploy to Railway
+railway login
+railway init
+railway add
+railway deploy
+```
+
+**Heroku**:
+```bash
+# Deploy to Heroku  
+heroku create your-cursor-mcp
+heroku config:set CURSOR_API_KEY=your_key_here
+git push heroku main
+```
+
+**AWS/DigitalOcean/etc.**:
+- Deploy as a standard Node.js app
+- Set environment variables
+- Ensure port 3000 (or your chosen port) is accessible
+- Configure HTTPS for production use
+
+#### 🔐 Security Considerations
+
+**For Production Deployment:**
+
+1. **Use HTTPS**: Always use HTTPS in production
+2. **Secure API Keys**: Use environment variables, never commit keys
+3. **Rate Limiting**: Consider adding rate limiting for public endpoints
+4. **Access Control**: Optionally add IP whitelisting or authentication
+5. **Monitoring**: Set up logging and monitoring for production use
+
+**Optional Security Enhancements**:
+```bash
+# Add MCP_SERVER_TOKEN for SSE endpoint protection
+echo "MCP_SERVER_TOKEN=$(openssl rand -hex 32)" >> .env
+```
+
+#### 🧪 Testing Your Setup
+
+**Test the connection**:
+```bash
+# Health check
+curl https://your-server.com/health
+
+# Test MCP protocol
+curl -X POST https://your-server.com/ \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
+
+# Should return 9 Cursor agent tools
+```
+
+**Verify in ChatGPT**:
+1. Add the connector with base URL
+2. Look for 9 available tools in the tool picker
+3. Test with: "List my cursor agents" or "Create a cursor agent for my repo"
+
 ### 🛠️ Development/Local Installation Configuration
 If you're running from source code, use this configuration instead:
 
@@ -158,8 +329,7 @@ If you're running from source code, use this configuration instead:
       "args": ["/path/to/cursor-mcp/src/index.js"],
       "env": {
         "CURSOR_API_KEY": "your_cursor_api_key_here",
-        "CURSOR_API_URL":
-        "https://api.cursor.com"
+        "CURSOR_API_URL": "https://api.cursor.com"
       }
     }
   }
