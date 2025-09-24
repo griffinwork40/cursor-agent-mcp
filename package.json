@@ -12,7 +12,7 @@
     "mcp": "node src/mcp-server.js",
     "cli": "node src/cli.js",
     "dev": "nodemon src/index.js",
-    "test": "jest --passWithNoTests",
+    "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest --passWithNoTests",
     "lint": "eslint src/ --fix",
     "lint:check": "eslint src/",
     "prepublishOnly": "npm test && npm run lint:check",
