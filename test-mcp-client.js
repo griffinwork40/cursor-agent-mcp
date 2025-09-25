@@ -190,7 +190,7 @@ async function main() {
 
     const runCiTest = async (name, fn, expectError = false) => {
       const response = await fn();
-      const hasError = !response || response.error || response.result?.isError;
+      const hasError = !response || !!response.error || !!response.result?.isError;
 
       if ((expectError && !hasError) || (!expectError && hasError)) {
         failures.push(name);
