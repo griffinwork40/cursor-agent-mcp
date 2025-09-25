@@ -42,7 +42,21 @@ export default [
     },
   },
   {
-    files: ['**/*.test.js', '**/test-*.js'],
+    files: ['**/*.test.js', '**/test-*.js', '**/__tests__/**/*.js'],
+    languageOptions: {
+      globals: {
+        // Jest globals
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        jest: 'readonly',
+      },
+    },
     rules: {
       'no-console': 'off',
     },
