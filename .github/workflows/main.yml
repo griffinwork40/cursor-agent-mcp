@@ -216,11 +216,36 @@ jobs:
     - name: 🖥️ Test MCP server
       run: |
         echo "Testing MCP server startup..."
-        timeout 10s npm run mcp || {
-          echo "❌ MCP server test failed or timed out"
+        
+        # Start the MCP server in the background
+        npm run mcp &
+        SERVER_PID=$!
+        echo "MCP server started with PID: $SERVER_PID"
+        
+        # Wait for server to be ready (check if it's listening on expected port)
+        echo "Waiting for MCP server to be ready..."
+        for i in {1..30}; do
+          if netstat -ln 2>/dev/null | grep -q ":3000" || ss -ln 2>/dev/null | grep -q ":3000"; then
+            echo "✅ MCP server is listening on port 3000"
+            break
+          fi
+          echo "⏳ Waiting for MCP server to start... (attempt $i/30)"
+          sleep 1
+        done
+        
+        # Verify server is actually responding
+        if netstat -ln 2>/dev/null | grep -q ":3000" || ss -ln 2>/dev/null | grep -q ":3000"; then
+          echo "✅ MCP server test completed successfully"
+        else
+          echo "❌ MCP server failed to start or listen on port 3000"
+          kill $SERVER_PID 2>/dev/null || true
           exit 1
-        }
-        echo "✅ MCP server test completed successfully"
+        fi
+        
+        # Clean up - stop the server
+        echo "Stopping MCP server..."
+        kill $SERVER_PID 2>/dev/null || true
+        wait $SERVER_PID 2>/dev/null || true
 
   pipeline-summary:
     name: 📋 Pipeline Summary
