@@ -6,12 +6,12 @@
 // - http: start Express HTTP server (for remote hosting)
 // - whoami: verify the stored key by calling /v0/me
 
-import os from 'os';
-import path from 'path';
+import * as os from 'os';
+import * as path from 'path';
 import { mkdir, readFile, writeFile, stat } from 'fs/promises';
-import fs from 'fs';
-import readline from 'readline';
-import crypto from 'crypto';
+import * as fs from 'fs';
+import * as readline from 'readline';
+import * as crypto from 'crypto';
 import { fileURLToPath } from 'url';
 
 function getConfigDir() {
