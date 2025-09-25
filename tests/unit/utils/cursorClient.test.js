@@ -17,19 +17,55 @@ jest.mock('../../../src/config/index.js', () => ({
   }
 }));
 
-// Mock axios
-jest.mock('axios', () => ({
-  create: jest.fn(() => ({
-    post: jest.fn(),
-    get: jest.fn(),
-    delete: jest.fn(),
-    interceptors: {
-      request: { use: jest.fn() },
-      response: { use: jest.fn() }
+// Mock axios with helper utilities for setting responses
+jest.mock('axios', () => {
+  const mockResponses = new Map();
+
+  const buildKey = (method, url) => `${method.toUpperCase()} ${url}`;
+
+  const handleRequest = (method, url) => {
+    const key = buildKey(method, url);
+    const response = mockResponses.get(key);
+
+    if (!response) {
+      return Promise.resolve({ data: undefined });
+    }
+
+    if (response.type === 'error') {
+      return Promise.reject(response.payload);
+    }
+
+    return Promise.resolve({ data: response.payload });
+  };
+
+  const axiosMock = {
+    create: jest.fn((config = {}) => ({
+      post: jest.fn((url) => handleRequest('post', url)),
+      get: jest.fn((url) => handleRequest('get', url)),
+      delete: jest.fn((url) => handleRequest('delete', url)),
+      interceptors: {
+        request: { use: jest.fn() },
+        response: { use: jest.fn() }
+      },
+      defaults: { ...config }
+    })),
+    __setMockResponse: (method, url, payload) => {
+      mockResponses.set(buildKey(method, url), { type: 'success', payload });
     },
-    defaults: {}
-  }))
-}));
+    __setMockError: (method, url, error) => {
+      mockResponses.set(buildKey(method, url), { type: 'error', payload: error });
+    },
+    __reset: () => {
+      mockResponses.clear();
+    }
+  };
+
+  return {
+    __esModule: true,
+    default: axiosMock,
+    create: axiosMock.create
+  };
+});
 
 describe('CursorApiClient', () => {
   let client;

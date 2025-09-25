@@ -144,10 +144,44 @@ jobs:
       - name: Install performance testing tools
         run: npm install --save-dev artillery@2.0.0-38
 
+      - name: Start application server
+        run: |
+          export CURSOR_API_KEY="ci-placeholder-key"
+          export NODE_ENV="test"
+          npm start &
+          SERVER_PID=$!
+          echo "SERVER_PID=$SERVER_PID" >> "$GITHUB_ENV"
+
+          echo "Waiting for server to be ready..."
+          ready=0
+          for i in {1..30}; do
+            if curl -sf http://localhost:3000/health > /dev/null; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+
+          if [ "$ready" -ne 1 ]; then
+            echo "Server failed to start in time"
+            exit 1
+          fi
+
+          echo "Server is running with PID $SERVER_PID"
+
       - name: Run performance tests
         run: |
           # Basic load test
           npx artillery run tests/performance/load-test.yml
+
+      - name: Stop application server
+        if: always()
+        run: |
+          if [ -n "${SERVER_PID:-}" ]; then
+            echo "Stopping server with PID ${SERVER_PID}"
+            kill "$SERVER_PID" || true
+            wait "$SERVER_PID" || true
+          fi
 
       - name: Upload performance test results
         uses: actions/upload-artifact@v4
@@ -213,10 +247,44 @@ jobs:
       - name: Build package
         run: npm run build --if-present
 
+      - name: Start application server
+        run: |
+          export CURSOR_API_KEY="ci-placeholder-key"
+          export NODE_ENV="test"
+          npm start &
+          SERVER_PID=$!
+          echo "SERVER_PID=$SERVER_PID" >> "$GITHUB_ENV"
+
+          echo "Waiting for server to be ready..."
+          ready=0
+          for i in {1..30}; do
+            if curl -sf http://localhost:3000/health > /dev/null; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+
+          if [ "$ready" -ne 1 ]; then
+            echo "Server failed to start in time"
+            exit 1
+          fi
+
+          echo "Server is running with PID $SERVER_PID"
+
       - name: Run smoke tests
         run: npm run test:smoke
         env:
           CI: true
+
+      - name: Stop application server
+        if: always()
+        run: |
+          if [ -n "${SERVER_PID:-}" ]; then
+            echo "Stopping server with PID ${SERVER_PID}"
+            kill "$SERVER_PID" || true
+            wait "$SERVER_PID" || true
+          fi
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

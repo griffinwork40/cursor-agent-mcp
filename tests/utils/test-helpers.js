@@ -4,8 +4,21 @@
  * Common utilities and helpers for writing tests
  */
 
+import axios from 'axios';
 import nock from 'nock';
 import sinon from 'sinon';
+
+const setAxiosMockResponse = (method, url, payload) => {
+  if (axios && typeof axios.__setMockResponse === 'function') {
+    axios.__setMockResponse(method, url, payload);
+  }
+};
+
+const setAxiosMockError = (method, url, error) => {
+  if (axios && typeof axios.__setMockError === 'function') {
+    axios.__setMockError(method, url, error);
+  }
+};
 
 /**
  * HTTP Request Mocking Utilities
@@ -13,6 +26,8 @@ import sinon from 'sinon';
 export const mockHttp = {
   // Mock successful API responses
   mockApiSuccess: (url, method = 'get', responseData = {}, statusCode = 200) => {
+    setAxiosMockResponse(method, url, responseData);
+
     return nock('https://api.cursor.com')
       .intercept(url, method)
       .reply(statusCode, responseData);
@@ -20,6 +35,14 @@ export const mockHttp = {
 
   // Mock API errors
   mockApiError: (url, method = 'get', errorMessage = 'API Error', statusCode = 500) => {
+    const error = new Error(errorMessage);
+    error.response = {
+      status: statusCode,
+      data: { error: errorMessage }
+    };
+
+    setAxiosMockError(method, url, error);
+
     return nock('https://api.cursor.com')
       .intercept(url, method)
       .replyWithError({
@@ -30,6 +53,10 @@ export const mockHttp = {
 
   // Mock network timeout
   mockTimeout: (url, method = 'get', timeoutMs = 5000) => {
+    const error = new Error(`timeout of ${timeoutMs}ms exceeded`);
+    error.code = 'ECONNABORTED';
+    setAxiosMockError(method, url, error);
+
     return nock('https://api.cursor.com')
       .intercept(url, method)
       .delay(timeoutMs)
@@ -39,6 +66,9 @@ export const mockHttp = {
   // Clean up all mocks
   cleanAll: () => {
     nock.cleanAll();
+    if (axios && typeof axios.__reset === 'function') {
+      axios.__reset();
+    }
   }
 };
 

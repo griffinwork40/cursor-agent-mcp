@@ -4,8 +4,14 @@
  * Global test configuration and setup for all test suites
  */
 
-// Import jest-dom for additional DOM matchers (useful for any DOM testing)
-import '@testing-library/jest-dom';
+// Import jest-dom for additional DOM matchers when a DOM environment is available
+const hasDomEnvironment = typeof window !== 'undefined' && typeof document !== 'undefined';
+
+if (hasDomEnvironment) {
+  import('@testing-library/jest-dom').catch((error) => {
+    console.warn('Failed to load @testing-library/jest-dom matchers:', error);
+  });
+}
 
 // Mock environment variables for consistent testing
 process.env.NODE_ENV = 'test';
