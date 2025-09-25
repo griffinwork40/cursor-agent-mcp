@@ -12,6 +12,7 @@ import { mkdir, readFile, writeFile, stat } from 'fs/promises';
 import fs from 'fs';
 import readline from 'readline';
 import crypto from 'crypto';
+import { fileURLToPath } from 'url';
 
 function getConfigDir() {
   const platform = process.platform;
@@ -281,9 +282,36 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+const currentModulePath = fileURLToPath(import.meta.url);
+const invokedFromCli = process.argv[1] && path.resolve(process.argv[1]) === currentModulePath;
+
+if (invokedFromCli) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}
+
+export {
+  getConfigDir,
+  pathExists,
+  ensureConfigDir,
+  generateMCPToken,
+  saveConfig,
+  loadConfigFromFile,
+  loadConfig,
+  parseArgs,
+  promptHidden,
+  cmdInit,
+  ensureEnvFromConfig,
+  cmdStdio,
+  cmdHttp,
+  cmdWhoAmI,
+  cmdShowConfig,
+  printHelp,
+  main,
+  CONFIG_DIR,
+  CONFIG_PATH,
+};
 
 

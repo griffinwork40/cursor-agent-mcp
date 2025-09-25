@@ -1,21 +1,25 @@
 const { jest, describe, beforeEach, afterEach, test, expect } = require('@jest/globals');
+
+const mockFsPromises = {
+  mkdir: jest.fn(),
+  readFile: jest.fn(),
+  writeFile: jest.fn(),
+  stat: jest.fn(),
+};
+
+jest.mock('fs/promises', () => mockFsPromises);
+
+jest.mock('fs', () => ({
+  chmodSync: jest.fn(),
+  promises: mockFsPromises,
+}));
+
 const fs = require('fs');
 const fsPromises = require('fs/promises');
 const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
 const readline = require('readline');
-
-// Mock all dependencies
-jest.mock('fs', () => ({
-  chmodSync: jest.fn(),
-  promises: {
-    mkdir: jest.fn(),
-    readFile: jest.fn(),
-    writeFile: jest.fn(),
-    stat: jest.fn(),
-  },
-}));
 
 jest.mock('os', () => ({
   homedir: jest.fn(() => '/home/testuser'),
