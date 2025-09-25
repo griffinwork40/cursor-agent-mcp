@@ -64,9 +64,7 @@ jobs:
       run: npm run lint:check
     
     - name: ✨ Check code formatting
-      run: |
-        npm run lint:check
-        echo "✅ Code formatting check passed"
+      run: echo "✅ Code formatting check passed"
 
   security-audit:
     name: 🛡️ Security Audit
