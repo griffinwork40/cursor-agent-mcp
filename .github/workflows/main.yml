@@ -213,37 +213,70 @@ jobs:
         }
         echo "✅ CLI test completed successfully"
     
-    - name: 🖥️ Test MCP server
+    - name: 🖥️ Test MCP server (stdio mode)
       run: |
-        echo "Testing MCP server startup..."
+        echo "Testing MCP server startup (stdio mode)..."
         
         # Start the MCP server in the background
         npm run mcp &
         SERVER_PID=$!
         echo "MCP server started with PID: $SERVER_PID"
         
-        # Wait for server to be ready (check if it's listening on expected port)
+        # Wait for server to be ready (check if process is still running)
         echo "Waiting for MCP server to be ready..."
-        for i in {1..30}; do
-          if netstat -ln 2>/dev/null | grep -q ":3000" || ss -ln 2>/dev/null | grep -q ":3000"; then
-            echo "✅ MCP server is listening on port 3000"
+        for i in {1..10}; do
+          if kill -0 $SERVER_PID 2>/dev/null; then
+            echo "✅ MCP server is running (stdio mode)"
             break
           fi
-          echo "⏳ Waiting for MCP server to start... (attempt $i/30)"
+          echo "⏳ Waiting for MCP server to start... (attempt $i/10)"
           sleep 1
         done
         
-        # Verify server is actually responding
-        if netstat -ln 2>/dev/null | grep -q ":3000" || ss -ln 2>/dev/null | grep -q ":3000"; then
-          echo "✅ MCP server test completed successfully"
+        # Verify server is actually running
+        if kill -0 $SERVER_PID 2>/dev/null; then
+          echo "✅ MCP server test completed successfully (stdio mode)"
         else
-          echo "❌ MCP server failed to start or listen on port 3000"
-          kill $SERVER_PID 2>/dev/null || true
+          echo "❌ MCP server failed to start"
           exit 1
         fi
         
         # Clean up - stop the server
         echo "Stopping MCP server..."
+        kill $SERVER_PID 2>/dev/null || true
+        wait $SERVER_PID 2>/dev/null || true
+
+    - name: 🌐 Test HTTP server startup
+      run: |
+        echo "Testing HTTP server startup..."
+        
+        # Start the HTTP server in the background
+        npm start &
+        SERVER_PID=$!
+        echo "HTTP server started with PID: $SERVER_PID"
+        
+        # Wait for server to be ready (check if it's listening on expected port)
+        echo "Waiting for HTTP server to be ready..."
+        for i in {1..30}; do
+          if curl -sSf http://localhost:3000/health > /dev/null 2>&1; then
+            echo "✅ HTTP server is responding on port 3000"
+            break
+          fi
+          echo "⏳ Waiting for HTTP server to start... (attempt $i/30)"
+          sleep 1
+        done
+        
+        # Verify server is actually responding
+        if curl -sSf http://localhost:3000/health > /dev/null 2>&1; then
+          echo "✅ HTTP server test completed successfully"
+        else
+          echo "❌ HTTP server failed to start or respond on port 3000"
+          kill $SERVER_PID 2>/dev/null || true
+          exit 1
+        fi
+        
+        # Clean up - stop the server
+        echo "Stopping HTTP server..."
         kill $SERVER_PID 2>/dev/null || true
         wait $SERVER_PID 2>/dev/null || true
 
