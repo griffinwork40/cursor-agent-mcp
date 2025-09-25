@@ -141,7 +141,7 @@ describe('MCP Core Protocol Functions', () => {
           method: 'tools/list',
           params: {},
           id: 1,
-        }
+        },
       };
 
       expect(request.body.method).toBe('tools/list');
@@ -154,7 +154,7 @@ describe('MCP Core Protocol Functions', () => {
           method: 'tools/call',
           params: { name: 'testTool', arguments: {} },
           id: 1,
-        }
+        },
       };
 
       expect(request.body.method).toBe('tools/call');
@@ -168,7 +168,7 @@ describe('MCP Core Protocol Functions', () => {
           method: 'initialize',
           params: {},
           id: 1,
-        }
+        },
       };
 
       expect(request.body.method).toBe('initialize');
@@ -180,7 +180,7 @@ describe('MCP Core Protocol Functions', () => {
           jsonrpc: '2.0',
           method: 'notifications/initialized',
           params: {},
-        }
+        },
       };
 
       expect(request.body.method).toBe('notifications/initialized');
@@ -245,7 +245,7 @@ describe('MCP Core Protocol Functions', () => {
       const apiError = new Error('API Error');
       apiError.response = {
         status: 401,
-        data: { error: { message: 'Unauthorized', code: 'UNAUTHORIZED' } }
+        data: { error: { message: 'Unauthorized', code: 'UNAUTHORIZED' } },
       };
 
       // Simulate what happens when a tool handler throws an API error
