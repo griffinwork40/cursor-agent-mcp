@@ -113,7 +113,7 @@ Creates a new background agent to work on a repository.
       "properties": {
         "autoCreatePr": {
           "type": "boolean",
-          "description": "Whether to automatically create a pull request when the agent completes"
+          "description": "Whether to automatically create a pull request when the agent completes. Defaults to true if code changes are detected in the repository."
         },
         "branchName": {
           "type": "string",
@@ -166,7 +166,7 @@ Creates a new background agent to work on a repository.
   "content": [
     {
       "type": "text",
-      "text": "✅ Successfully created agent!\n📋 ID: bc_abc123\n📊 Status: CREATING\n🌐 View: https://cursor.com/agents?id=bc_abc123\n📅 Created: 1/15/2024, 10:30:00 AM"
+      "text": "✅ Successfully created agent!\n📋 ID: bc_abc123\n📊 Status: CREATING\n🌐 View: https://cursor.com/agents?id=bc_abc123\n📅 Created: 1/15/2024, 10:30:00 AM\n🔄 Auto-create PR: Enabled (detected code changes)"
     }
   ]
 }
@@ -650,3 +650,15 @@ Check your Cursor dashboard for current limits and usage.
 - Clean up completed agents to avoid hitting limits
 - Use descriptive prompts for better agent performance
 - Consider webhook notifications for long-running agents
+
+### Auto-Create PR Behavior
+
+The `autoCreatePr` parameter now has intelligent default behavior:
+
+- **When not specified**: The system automatically detects if there are code changes in the repository
+  - If changes are detected: `autoCreatePr` defaults to `true`
+  - If no changes are detected: `autoCreatePr` defaults to `false`
+- **When explicitly set**: The specified value is used regardless of code changes
+- **Detection method**: Uses `git status` for local repositories, defaults to `true` for remote GitHub URLs
+
+This ensures that pull requests are automatically created when agents make meaningful changes to your codebase, while avoiding unnecessary PRs for agents that don't modify code.

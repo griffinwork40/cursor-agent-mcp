@@ -5,11 +5,12 @@ import {
   createSuccessResponse,
   schemas, 
 } from '../utils/errorHandler.js';
+import { hasCodeChanges } from '../utils/gitUtils.js';
 
 export const createTools = (client = defaultCursorClient) => [
   {
     name: 'createAgent',
-    description: 'Create a new background agent to work on a repository',
+    description: 'Create a new background agent to work on a repository. Auto-create PR will default to true if code changes are detected.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -48,7 +49,7 @@ export const createTools = (client = defaultCursorClient) => [
         target: {
           type: 'object',
           properties: {
-            autoCreatePr: { type: 'boolean', description: 'Whether to automatically create a pull request when the agent completes' },
+            autoCreatePr: { type: 'boolean', description: 'Whether to automatically create a pull request when the agent completes. Defaults to true if code changes are detected.' },
             branchName: { type: 'string', description: 'Custom branch name for the agent to create' },
           },
         },
@@ -67,9 +68,22 @@ export const createTools = (client = defaultCursorClient) => [
       try {
         // Validate input
         const validatedInput = validateInput(schemas.createAgentRequest, input, 'createAgent');
+        
+        // Check if autoCreatePr should be set to true based on code changes
+        let shouldAutoCreatePr = validatedInput.target?.autoCreatePr;
+        if (shouldAutoCreatePr === undefined) {
+          // If autoCreatePr is not explicitly set, check for code changes
+          const hasChanges = await hasCodeChanges(validatedInput.source.repository);
+          shouldAutoCreatePr = hasChanges;
+        }
+        
         const inputWithDefaults = {
           ...validatedInput,
           model: validatedInput.model || 'default',
+          target: {
+            ...validatedInput.target,
+            autoCreatePr: shouldAutoCreatePr,
+          },
         };
         const result = await client.createAgent(inputWithDefaults);
         
@@ -78,12 +92,15 @@ export const createTools = (client = defaultCursorClient) => [
           `📋 ID: ${result.id}\n` +
           `📊 Status: ${result.status}\n` +
           `🌐 View: ${result.target.url}\n` +
-          `📅 Created: ${new Date(result.createdAt).toLocaleString()}`,
+          `📅 Created: ${new Date(result.createdAt).toLocaleString()}\n` +
+          `🔄 Auto-create PR: ${shouldAutoCreatePr ? 'Enabled' : 'Disabled'}${shouldAutoCreatePr && validatedInput.target?.autoCreatePr === undefined ? ' (detected code changes)' : ''}`,
           {
             agentId: result.id,
             status: result.status,
             url: result.target.url,
             createdAt: result.createdAt,
+            autoCreatePr: shouldAutoCreatePr,
+            autoCreatePrReason: shouldAutoCreatePr && validatedInput.target?.autoCreatePr === undefined ? 'code-changes-detected' : 'explicitly-set',
           },
         );
       } catch (error) {

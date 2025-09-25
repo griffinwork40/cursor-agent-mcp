@@ -419,6 +419,18 @@ npm test
 
 This server provides **9 powerful tools** that enable LLMs to fully manage Cursor's Background Agents:
 
+### 🎯 Intelligent Auto-Create PR
+
+The `createAgent` tool now features **intelligent auto-create PR behavior**:
+
+- **🔍 Smart Detection**: Automatically detects if there are code changes in the repository
+- **✅ Auto-Enable**: Sets `autoCreatePr: true` when changes are detected
+- **❌ Auto-Disable**: Sets `autoCreatePr: false` when no changes are found
+- **🎛️ Override**: Explicitly set values always take precedence
+- **🛡️ Safe Defaults**: Defaults to `true` for GitHub URLs to ensure PRs are created
+
+This ensures pull requests are automatically created when agents make meaningful changes, while avoiding unnecessary PRs for agents that don't modify code.
+
 ### 🤖 Agent Management Tools
 
 #### 1. `createAgent` - Create Background Agent
@@ -428,7 +440,7 @@ This server provides **9 powerful tools** that enable LLMs to fully manage Curso
 - 🎯 Custom model selection
 - 🌿 Branch and PR configuration
 - 🔔 Webhook notifications
-- ⚙️ Auto-PR creation
+- ⚙️ Auto-PR creation with intelligent defaults
 
 **Example Input**:
 ```json
