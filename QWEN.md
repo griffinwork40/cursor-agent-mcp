@@ -58,8 +58,8 @@ npx cursor-agent-mcp
 ### Development Setup
 ```bash
 # Clone repository
-git clone https://github.com/griffinwork40/cursor-mcp.git
-cd cursor-mcp
+git clone https://github.com/griffinwork40/cursor-agent-mcp.git
+cd cursor-agent-mcp
 
 # Install dependencies
 npm install
@@ -166,7 +166,7 @@ Add to `claude_desktop_config.json`:
   "mcpServers": {
     "cursor-agents": {
       "command": "node",
-      "args": ["/path/to/cursor-mcp/src/index.js"],
+      "args": ["/path/to/cursor-agent-mcp/src/index.js"],
       "env": {
         "CURSOR_API_KEY": "your_cursor_api_key_here",
         "CURSOR_API_URL": "https://api.cursor.com"
