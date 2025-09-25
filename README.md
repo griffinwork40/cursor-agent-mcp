@@ -347,10 +347,10 @@ If you're running from source code, use this configuration instead:
 
 ```bash
 # Install globally
-npm install -g cursor-agent-mcp-server
+npm install -g cursor-agent-mcp
 
 # Or use npx (no installation required)
-npx cursor-agent-mcp-server
+npx cursor-agent-mcp
 ```
 
 ### 📝 MCP Client Configuration
