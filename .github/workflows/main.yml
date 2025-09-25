@@ -198,17 +198,25 @@ jobs:
     - name: 🔨 Verify build
       run: |
         echo "Verifying package build..."
-        npm run prepublishOnly || echo "Pre-publish checks completed"
+        npm run prepublishOnly
     
     - name: 💻 Test CLI
       run: |
         echo "Testing CLI interface..."
-        timeout 5s npm run cli || echo "CLI test completed"
+        timeout 10s npm run cli || {
+          echo "❌ CLI test failed or timed out"
+          exit 1
+        }
+        echo "✅ CLI test completed successfully"
     
     - name: 🖥️ Test MCP server
       run: |
         echo "Testing MCP server startup..."
-        timeout 5s npm run mcp || echo "MCP server test completed"
+        timeout 10s npm run mcp || {
+          echo "❌ MCP server test failed or timed out"
+          exit 1
+        }
+        echo "✅ MCP server test completed successfully"
 
   pipeline-summary:
     name: 📋 Pipeline Summary
