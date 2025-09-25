@@ -3,14 +3,17 @@
  * Tests environment variable loading, default values, validation, and error handling
  */
 
-const { spawnSync } = require('child_process');
-const path = require('path');
-const { pathToFileURL } = require('url');
+import { spawnSync } from 'child_process';
+import path from 'path';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 const CONFIG_ENV_KEYS = ['PORT', 'CURSOR_API_KEY', 'CURSOR_API_URL', 'TOKEN_SECRET', 'TOKEN_TTL_DAYS'];
 const originalProcessEnvSnapshot = { ...process.env };
 const UNDEFINED_TOKEN = '__CONFIG_UNDEFINED__';
 const NAN_TOKEN = '__CONFIG_NAN__';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const configModuleUrl = pathToFileURL(path.resolve(__dirname, 'index.js')).href;
 
