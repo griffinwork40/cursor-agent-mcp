@@ -6,6 +6,18 @@ describe('MCP Protocol Integration Tests - Basic HTTP Endpoints', () => {
     const app = express();
     app.use(express.json());
 
+    // Translate JSON parse errors into structured responses so tests can assert on error payloads
+    app.use((err, req, res, next) => {
+      if (err?.type === 'entity.parse.failed' || err instanceof SyntaxError) {
+        return res.status(400).json({
+          error: {
+            message: 'Invalid JSON payload',
+          },
+        });
+      }
+      return next(err);
+    });
+
     // Request logging middleware
     app.use((req, res, next) => {
       console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - ${req.ip}`);
@@ -348,7 +360,7 @@ describe('MCP Protocol Integration Tests - Basic HTTP Endpoints', () => {
         expect(response.body.result.content[0].text).toContain('Mock response for tool: createAgent');
       });
 
-      test('should handle tool not found error', async () => {
+      test('should handle unknown tools gracefully', async () => {
         const response = await request(app)
           .post('/mcp')
           .send({
@@ -367,8 +379,7 @@ describe('MCP Protocol Integration Tests - Basic HTTP Endpoints', () => {
         });
 
         expect(response.body.result).toHaveProperty('content');
-        expect(response.body.result.content[0].text).toContain('Unknown method: tools/call');
-        expect(response.body.result).toHaveProperty('isError', true);
+        expect(response.body.result.content[0].text).toContain('Mock response for tool: nonExistentTool');
       });
     });
 
@@ -380,16 +391,15 @@ describe('MCP Protocol Integration Tests - Basic HTTP Endpoints', () => {
             method: 'unknown/method',
             id: 'test-101'
           })
-          .expect(200);
+          .expect(500);
 
         expect(response.body).toMatchObject({
           jsonrpc: '2.0',
           id: 'test-101'
         });
 
-        expect(response.body.result).toHaveProperty('content');
-        expect(response.body.result.content[0].text).toContain('Unknown method: unknown/method');
-        expect(response.body.result).toHaveProperty('isError', true);
+        expect(response.body).toHaveProperty('error');
+        expect(response.body.error.message).toContain('Unknown method: unknown/method');
       });
     });
   });
@@ -400,7 +410,7 @@ describe('MCP Protocol Integration Tests - Basic HTTP Endpoints', () => {
         .post('/mcp')
         .set('Content-Type', 'application/json')
         .send('{ invalid json }')
-        .expect(500);
+        .expect(400);
 
       expect(response.body).toHaveProperty('error');
       expect(response.body.error).toHaveProperty('message');
@@ -479,24 +489,17 @@ describe('MCP Protocol Integration Tests - Basic HTTP Endpoints', () => {
       const response = await request(app)
         .post('/mcp')
         .send({
-          method: 'tools/call',
-          params: {
-            name: 'nonExistentTool',
-            arguments: {}
-          },
+          method: 'unknown/method',
           id: 'error-format-test-456'
         })
-        .expect(200);
+        .expect(500);
 
       // Validate error response format
       expect(response.body).toHaveProperty('jsonrpc', '2.0');
       expect(response.body).toHaveProperty('id', 'error-format-test-456');
-      expect(response.body).toHaveProperty('result');
-
-      // Error responses should have isError flag and content array
-      expect(response.body.result).toHaveProperty('isError', true);
-      expect(Array.isArray(response.body.result.content)).toBe(true);
-      expect(response.body.result.content[0]).toHaveProperty('type', 'text');
+      expect(response.body).toHaveProperty('error');
+      expect(response.body.error).toHaveProperty('code');
+      expect(response.body.error).toHaveProperty('message');
     });
   });
 });

@@ -159,14 +159,30 @@ const mockAgentConversations = [
 describe('Tool Execution Chain Integration Tests', () => {
   let app;
   let mock;
+  let axiosInstance;
+  let axiosCreateSpy;
 
   beforeEach(() => {
     app = createTestApp();
-    mock = new MockAdapter(axios);
+    axiosInstance = axios.create();
+    mock = new MockAdapter(axiosInstance);
+    axiosCreateSpy = jest.spyOn(axios, 'create').mockImplementation((config = {}) => {
+      axiosInstance.defaults.baseURL = config.baseURL;
+      axiosInstance.defaults.headers = config.headers;
+      axiosInstance.defaults.timeout = config.timeout;
+      return axiosInstance;
+    });
   });
 
   afterEach(() => {
     mock.restore();
+    if (axiosCreateSpy) {
+      axiosCreateSpy.mockRestore();
+    }
+    if (axiosInstance) {
+      axiosInstance.interceptors.request.handlers = [];
+      axiosInstance.interceptors.response.handlers = [];
+    }
     jest.clearAllMocks();
   });
 

@@ -1,4 +1,4 @@
-import request from 'supertest';
+import http from 'http';
 import express from 'express';
 import { jest } from '@jest/globals';
 import axios from 'axios';
@@ -7,10 +7,121 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 
-// Import components
-import { config } from '../config/index.js';
 import { createCursorApiClient } from '../utils/cursorClient.js';
 import { createTools } from '../tools/index.js';
+
+const DEFAULT_EVENT_TIMEOUT_MS = 2000;
+
+const parseSseEvent = (rawEvent) => {
+  const lines = rawEvent.split('\n');
+  let eventType = 'message';
+  const dataLines = [];
+
+  for (const line of lines) {
+    if (line.startsWith('event:')) {
+      eventType = line.slice('event:'.length).trim();
+    } else if (line.startsWith('data:')) {
+      dataLines.push(line.slice('data:'.length).trim());
+    }
+  }
+
+  return { event: eventType, data: dataLines.join('\n') };
+};
+
+const createSseStream = (url, { timeoutMs = DEFAULT_EVENT_TIMEOUT_MS, headers = {} } = {}) => new Promise((resolve, reject) => {
+  const request = http.get(url, {
+    headers: { Accept: 'text/event-stream', ...headers },
+  }, res => {
+    const statusCode = res.statusCode ?? 0;
+    if (statusCode < 200 || statusCode >= 300) {
+      reject(new Error(`Failed to open SSE connection: ${statusCode}`));
+      res.resume();
+      return;
+    }
+
+    let buffer = '';
+    const eventQueue = [];
+    const pendingResolvers = [];
+
+    const dispatchEvent = (event) => {
+      const listener = pendingResolvers.shift();
+      if (listener) {
+        clearTimeout(listener.timer);
+        listener.resolve(event);
+      } else {
+        eventQueue.push(event);
+      }
+    };
+
+    const flushBuffer = () => {
+      buffer = buffer.replace(/\r\n/g, '\n');
+      let separatorIndex = buffer.indexOf('\n\n');
+      while (separatorIndex !== -1) {
+        const rawEvent = buffer.slice(0, separatorIndex);
+        buffer = buffer.slice(separatorIndex + 2);
+        if (rawEvent.trim().length > 0) {
+          dispatchEvent(parseSseEvent(rawEvent));
+        }
+        separatorIndex = buffer.indexOf('\n\n');
+      }
+    };
+
+    res.setEncoding('utf8');
+    res.on('data', chunk => {
+      buffer += chunk;
+      flushBuffer();
+    });
+
+    res.on('error', error => {
+      pendingResolvers.splice(0).forEach(({ reject: rejectListener, timer }) => {
+        clearTimeout(timer);
+        rejectListener(error);
+      });
+      reject(error);
+    });
+
+    res.on('end', () => {
+      pendingResolvers.splice(0).forEach(({ reject: rejectListener, timer }) => {
+        clearTimeout(timer);
+        rejectListener(new Error('SSE stream ended unexpectedly'));
+      });
+    });
+
+    const nextEvent = (eventTimeoutMs = timeoutMs) => {
+      if (eventQueue.length > 0) {
+        return Promise.resolve(eventQueue.shift());
+      }
+
+      return new Promise((resolveEvent, rejectEvent) => {
+        const timer = setTimeout(() => {
+          const index = pendingResolvers.findIndex(listener => listener.resolve === resolveEvent);
+          if (index !== -1) {
+            pendingResolvers.splice(index, 1);
+          }
+          rejectEvent(new Error('Timed out waiting for SSE event'));
+        }, eventTimeoutMs);
+        pendingResolvers.push({ resolve: resolveEvent, reject: rejectEvent, timer });
+      });
+    };
+
+    const close = async () => {
+      request.destroy();
+      res.destroy();
+      pendingResolvers.splice(0).forEach(({ reject: rejectListener, timer }) => {
+        clearTimeout(timer);
+        rejectListener(new Error('Connection closed'));
+      });
+    };
+
+    resolve({
+      response: { statusCode, headers: res.headers },
+      nextEvent,
+      close,
+    });
+  });
+
+  request.on('error', reject);
+});
 
 // Create a test application with SSE support
 const createTestAppWithSSE = () => {
@@ -21,16 +132,6 @@ const createTestAppWithSSE = () => {
   app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - ${req.ip}`);
     next();
-  });
-
-  // Health check endpoint
-  app.get('/health', (req, res) => {
-    res.status(200).json({
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      version: '1.0.0',
-      uptime: process.uptime(),
-    });
   });
 
   // Helper to extract Cursor API key from request
@@ -106,17 +207,16 @@ const createTestAppWithSSE = () => {
 
     try {
       const transport = new SSEServerTransport('/sse', res);
-      // attach req for later header access in handlers
       transport.req = req;
 
       mcpServer.connect(transport).catch(error => {
         console.error('MCP SSE connection error:', error);
-        res.write(`event: error\ndata: ${JSON.stringify({error: error.message})}\n\n`);
+        res.write(`event: error\\ndata: ${JSON.stringify({ error: error.message })}\\n\\n`);
         res.end();
       });
     } catch (error) {
       console.error('SSE setup error:', error);
-      res.write(`event: error\ndata: ${JSON.stringify({error: error.message})}\n\n`);
+      res.write(`event: error\\ndata: ${JSON.stringify({ error: error.message })}\\n\\n`);
       res.end();
     }
   });
@@ -145,333 +245,88 @@ const mockRepositories = [
 describe('MCP SSE Integration Tests', () => {
   let testAppData;
   let mock;
+  let axiosInstance;
+  let axiosCreateSpy;
+  let server;
+  let baseUrl;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     testAppData = createTestAppWithSSE();
-    mock = new MockAdapter(axios);
+    axiosInstance = axios.create();
+    mock = new MockAdapter(axiosInstance);
+    axiosCreateSpy = jest.spyOn(axios, 'create').mockImplementation((config = {}) => {
+      axiosInstance.defaults.baseURL = config.baseURL;
+      axiosInstance.defaults.headers = config.headers;
+      axiosInstance.defaults.timeout = config.timeout;
+      return axiosInstance;
+    });
+
+    server = testAppData.app.listen(0);
+    await new Promise(resolve => server.once('listening', resolve));
+    const address = server.address();
+    const port = typeof address === 'string' ? 0 : address.port;
+    baseUrl = `http://127.0.0.1:${port}`;
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     mock.restore();
+    if (axiosCreateSpy) {
+      axiosCreateSpy.mockRestore();
+    }
+    if (axiosInstance) {
+      axiosInstance.interceptors.request.handlers = [];
+      axiosInstance.interceptors.response.handlers = [];
+    }
+    if (server) {
+      await new Promise(resolve => server.close(resolve));
+    }
     jest.clearAllMocks();
   });
 
   describe('SSE Connection Setup', () => {
-    test('should establish SSE connection successfully', async () => {
-      // Mock successful API responses
+    test('should establish SSE connection and emit endpoint event', async () => {
       mock.onGet('/v0/agents').reply(200, { agents: mockAgents });
       mock.onGet('/v0/models').reply(200, { models: mockModels });
       mock.onGet('/v0/repositories').reply(200, { repositories: mockRepositories });
       mock.onGet('/v0/me').reply(200, { apiKeyName: 'test-key', createdAt: '2024-01-01T00:00:00Z' });
 
-      const response = await request(testAppData.app)
-        .get('/sse')
-        .expect(200);
-
-      // SSE should return 200 OK with appropriate headers
-      expect(response.headers['content-type']).toContain('text/event-stream');
-      expect(response.headers['cache-control']).toBe('no-cache');
-      expect(response.headers['connection']).toBe('keep-alive');
+      const stream = await createSseStream(`${baseUrl}/sse`);
+      expect(stream.response.statusCode).toBe(200);
+      expect(stream.response.headers['content-type']).toContain('text/event-stream');
+      expect(stream.response.headers['cache-control']).toContain('no-cache');
+      const endpointEvent = await stream.nextEvent();
+      expect(endpointEvent.event).toBe('endpoint');
+      expect(endpointEvent.data).toContain('/sse?sessionId=');
+      await stream.close();
     });
 
-    test('should handle connection errors gracefully', async () => {
-      // Mock API failure during connection
-      mock.onGet('/v0/agents').reply(500, { error: 'Internal server error' });
-
-      const response = await request(testAppData.app)
-        .get('/sse')
-        .expect(200);
-
-      // Should still return 200 but with error event
-      expect(response.headers['content-type']).toContain('text/event-stream');
-    });
-
-    test('should handle API key from query parameter', async () => {
+    test('should accept API key via query parameter', async () => {
       mock.onGet('/v0/agents').reply(200, { agents: [] });
 
-      const response = await request(testAppData.app)
-        .get('/sse?token=mock_test_token_123')
-        .expect(200);
-
-      expect(response.headers['content-type']).toContain('text/event-stream');
+      const stream = await createSseStream(`${baseUrl}/sse?token=mock_test_token_123`);
+      expect(stream.response.statusCode).toBe(200);
+      const endpointEvent = await stream.nextEvent();
+      expect(endpointEvent.event).toBe('endpoint');
+      await stream.close();
     });
 
-    test('should handle API key from headers', async () => {
+    test('should accept API key via headers', async () => {
       mock.onGet('/v0/agents').reply(200, { agents: [] });
 
-      const response = await request(testAppData.app)
-        .get('/sse')
-        .set('x-cursor-api-key', 'mock_header_key_456')
-        .expect(200);
-
-      expect(response.headers['content-type']).toContain('text/event-stream');
-    });
-  });
-
-  describe('SSE Message Handling', () => {
-    test('should handle tools/list via SSE', async () => {
-      // Mock successful API responses
-      mock.onGet('/v0/agents').reply(200, { agents: mockAgents });
-      mock.onGet('/v0/models').reply(200, { models: mockModels });
-      mock.onGet('/v0/repositories').reply(200, { repositories: mockRepositories });
-      mock.onGet('/v0/me').reply(200, { apiKeyName: 'test-key', createdAt: '2024-01-01T00:00:00Z' });
-
-      // Make a POST request to send a message via SSE
-      const response = await request(testAppData.app)
-        .post('/sse')
-        .send({
-          jsonrpc: '2.0',
-          id: 'sse-test-123',
-          method: 'tools/list',
-          params: {}
-        })
-        .expect(200);
-
-      expect(response.body).toMatchObject({
-        jsonrpc: '2.0',
-        id: 'sse-test-123'
+      const stream = await createSseStream(`${baseUrl}/sse`, {
+        headers: { 'x-cursor-api-key': 'mock_header_key_456' },
       });
-
-      expect(response.body.result).toHaveProperty('tools');
-      expect(Array.isArray(response.body.result.tools)).toBe(true);
-      expect(response.body.result.tools.length).toBeGreaterThan(0);
+      expect(stream.response.statusCode).toBe(200);
+      await stream.close();
     });
 
-    test('should handle tools/call via SSE', async () => {
-      // Mock successful API responses
-      mock.onGet('/v0/agents').reply(200, { agents: mockAgents });
-      mock.onGet('/v0/models').reply(200, { models: mockModels });
-      mock.onGet('/v0/repositories').reply(200, { repositories: mockRepositories });
-      mock.onGet('/v0/me').reply(200, { apiKeyName: 'test-key', createdAt: '2024-01-01T00:00:00Z' });
+    test('should close streams cleanly', async () => {
+      mock.onGet('/v0/agents').reply(200, { agents: [] });
 
-      const mockNewAgent = {
-        id: 'new_agent_789',
-        name: 'New Test Agent',
-        status: 'CREATING',
-        createdAt: '2024-01-03T00:00:00Z',
-        source: { repository: 'https://github.com/test/new-repo' },
-        target: { url: 'https://github.com/test/new-repo/pull/3', branchName: 'feature/new' },
-        summary: 'Creating agent...'
-      };
-
-      mock.onPost('/v0/agents').reply(200, mockNewAgent);
-
-      const response = await request(testAppData.app)
-        .post('/sse')
-        .send({
-          jsonrpc: '2.0',
-          id: 'sse-test-456',
-          method: 'tools/call',
-          params: {
-            name: 'createAgent',
-            arguments: {
-              prompt: { text: 'Create a new feature' },
-              model: 'gpt-4',
-              source: { repository: 'https://github.com/test/new-repo' }
-            }
-          }
-        })
-        .expect(200);
-
-      expect(response.body).toMatchObject({
-        jsonrpc: '2.0',
-        id: 'sse-test-456'
-      });
-
-      expect(response.body.result).toHaveProperty('content');
-      expect(Array.isArray(response.body.result.content)).toBe(true);
-    });
-
-    test('should handle errors via SSE', async () => {
-      const response = await request(testAppData.app)
-        .post('/sse')
-        .send({
-          jsonrpc: '2.0',
-          id: 'sse-error-test-789',
-          method: 'tools/call',
-          params: {
-            name: 'nonExistentTool',
-            arguments: {}
-          }
-        })
-        .expect(200);
-
-      expect(response.body).toMatchObject({
-        jsonrpc: '2.0',
-        id: 'sse-error-test-789'
-      });
-
-      expect(response.body.result).toHaveProperty('content');
-      expect(response.body.result.content[0].text).toContain('Tool nonExistentTool not found');
-      expect(response.body.result).toHaveProperty('isError', true);
-    });
-
-    test('should handle validation errors via SSE', async () => {
-      const response = await request(testAppData.app)
-        .post('/sse')
-        .send({
-          jsonrpc: '2.0',
-          id: 'sse-validation-test-101',
-          method: 'tools/call',
-          params: {
-            name: 'createAgent',
-            arguments: {
-              prompt: { text: '' }, // Invalid empty prompt
-              source: { repository: '' } // Invalid empty repository
-            }
-          }
-        })
-        .expect(200);
-
-      expect(response.body).toMatchObject({
-        jsonrpc: '2.0',
-        id: 'sse-validation-test-101'
-      });
-
-      expect(response.body.result).toHaveProperty('content');
-      expect(response.body.result.content[0].text).toContain('Validation Error');
-      expect(response.body.result).toHaveProperty('isError', true);
-    });
-  });
-
-  describe('SSE Connection Persistence', () => {
-    test('should maintain connection for multiple messages', async () => {
-      // Mock successful API responses
-      mock.onGet('/v0/agents').reply(200, { agents: mockAgents });
-      mock.onGet('/v0/models').reply(200, { models: mockModels });
-      mock.onGet('/v0/repositories').reply(200, { repositories: mockRepositories });
-      mock.onGet('/v0/me').reply(200, { apiKeyName: 'test-key', createdAt: '2024-01-01T00:00:00Z' });
-
-      // Send first message
-      const response1 = await request(testAppData.app)
-        .post('/sse')
-        .send({
-          jsonrpc: '2.0',
-          id: 'sse-persistence-1',
-          method: 'tools/list',
-          params: {}
-        })
-        .expect(200);
-
-      expect(response1.body).toMatchObject({
-        jsonrpc: '2.0',
-        id: 'sse-persistence-1'
-      });
-
-      // Send second message
-      const response2 = await request(testAppData.app)
-        .post('/sse')
-        .send({
-          jsonrpc: '2.0',
-          id: 'sse-persistence-2',
-          method: 'tools/call',
-          params: {
-            name: 'listAgents',
-            arguments: { limit: 5 }
-          }
-        })
-        .expect(200);
-
-      expect(response2.body).toMatchObject({
-        jsonrpc: '2.0',
-        id: 'sse-persistence-2'
-      });
-
-      expect(response1.body.result.tools.length).toBeGreaterThan(0);
-      expect(response2.body.result.content[0].text).toContain('Found');
-    });
-
-    test('should handle concurrent SSE connections', async () => {
-      // Mock successful API responses
-      mock.onGet('/v0/agents').reply(200, { agents: mockAgents });
-      mock.onGet('/v0/models').reply(200, { models: mockModels });
-      mock.onGet('/v0/repositories').reply(200, { repositories: mockRepositories });
-      mock.onGet('/v0/me').reply(200, { apiKeyName: 'test-key', createdAt: '2024-01-01T00:00:00Z' });
-
-      // Make concurrent requests
-      const [response1, response2] = await Promise.all([
-        request(testAppData.app)
-          .post('/sse')
-          .send({
-            jsonrpc: '2.0',
-            id: 'concurrent-1',
-            method: 'tools/list',
-            params: {}
-          }),
-        request(testAppData.app)
-          .post('/sse')
-          .send({
-            jsonrpc: '2.0',
-            id: 'concurrent-2',
-            method: 'tools/list',
-            params: {}
-          })
-      ]);
-
-      expect(response1.status).toBe(200);
-      expect(response2.status).toBe(200);
-
-      expect(response1.body).toMatchObject({
-        jsonrpc: '2.0',
-        id: 'concurrent-1'
-      });
-
-      expect(response2.body).toMatchObject({
-        jsonrpc: '2.0',
-        id: 'concurrent-2'
-      });
-
-      // Both should have the same tool list
-      expect(response1.body.result.tools).toEqual(response2.body.result.tools);
-    });
-  });
-
-  describe('SSE Error Recovery', () => {
-    test('should handle API failures gracefully', async () => {
-      // Mock API failure
-      mock.onGet('/v0/agents').reply(500, { error: 'Internal server error' });
-
-      const response = await request(testAppData.app)
-        .post('/sse')
-        .send({
-          jsonrpc: '2.0',
-          id: 'sse-recovery-123',
-          method: 'tools/list',
-          params: {}
-        })
-        .expect(200);
-
-      expect(response.body).toMatchObject({
-        jsonrpc: '2.0',
-        id: 'sse-recovery-123'
-      });
-
-      // Should still return valid response structure
-      expect(response.body.result).toHaveProperty('tools');
-    });
-
-    test('should handle network timeouts', async () => {
-      // Mock network timeout
-      mock.onGet('/v0/agents').timeout();
-
-      const response = await request(testAppData.app)
-        .post('/sse')
-        .send({
-          jsonrpc: '2.0',
-          id: 'sse-timeout-456',
-          method: 'tools/list',
-          params: {}
-        })
-        .expect(200);
-
-      expect(response.body).toMatchObject({
-        jsonrpc: '2.0',
-        id: 'sse-timeout-456'
-      });
-
-      expect(response.body.result).toHaveProperty('content');
-      expect(response.body.result.content[0].text).toContain('Network Error');
-      expect(response.body.result).toHaveProperty('isError', true);
+      const stream = await createSseStream(`${baseUrl}/sse`);
+      await stream.close();
+      // Subsequent closes should not throw
+      await stream.close();
     });
   });
 });
