@@ -9,7 +9,7 @@ on:
 jobs:
   # Code Quality & Testing
   unit-tests:
-    name: 🧪 Unit Tests
+    name: test
     runs-on: ubuntu-latest
     
     strategy:
@@ -44,7 +44,7 @@ jobs:
           test-results/
 
   code-quality:
-    name: 🔍 Code Quality
+    name: lint
     runs-on: ubuntu-latest
     
     steps:
