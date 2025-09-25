@@ -798,6 +798,24 @@ npm start
 
 ---
 
+## 📚 Documentation
+
+### 🔗 API Reference
+Complete API documentation for all MCP tools, including request/response schemas, error codes, and examples:
+- **📖 [API Reference](./docs/api-reference.md)** - Comprehensive tool documentation
+- **🔧 All 9 MCP Tools** - Detailed parameter specifications
+- **🚨 Error Handling** - Complete error code reference
+- **💡 Usage Examples** - Practical implementation examples
+
+### 🔒 Security
+Security best practices and configuration guidance:
+- **🛡️ [Security Documentation](./docs/SECURITY.md)** - Comprehensive security guide
+- **🔑 Authentication Model** - API key security and rotation
+- **🔐 Production Deployment** - Secure configuration examples
+- **🚨 Incident Response** - Security monitoring and response procedures
+
+---
+
 ## 🎉 Why Choose This MCP Server?
 
 ✅ **Production Ready** - Comprehensive error handling and validation  
