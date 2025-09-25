@@ -230,7 +230,7 @@ For **OpenAI Platform** and **ChatGPT** integration, you can self-host this MCP 
 
 1. **Server URL**: `https://your-ngrok-url.ngrok-free.app`
 2. **Authentication**: None (server uses global API key)
-3. **Available Tools**: 9 Cursor agent management tools
+3. **Available Tools**: 10 Cursor agent management tools
 
 **API Endpoints Available:**
 - `POST /` - Main MCP protocol endpoint
@@ -310,7 +310,7 @@ curl -X POST https://your-server.com/ \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
 
-# Should return 9 Cursor agent tools
+# Should return 10 Cursor agent tools
 ```
 
 **Verify in ChatGPT**:
@@ -415,9 +415,9 @@ npm test
 - **`/mcp`** - MCP protocol endpoint for LLM interaction
 - **`/health`** - Health check endpoint with uptime info
 
-## 🛠️ Available MCP Tools (9 Tools)
+## 🛠️ Available MCP Tools (10 Tools)
 
-This server provides **9 powerful tools** that enable LLMs to fully manage Cursor's Background Agents:
+This server provides **10 powerful tools** that enable LLMs to fully manage Cursor's Background Agents:
 
 ### 🤖 Agent Management Tools
 
@@ -511,6 +511,22 @@ This server provides **9 powerful tools** that enable LLMs to fully manage Curso
 - 🔗 Full repository URLs
 - 📊 Access permissions
 - 🌐 Direct GitHub links
+
+#### 10. `documentation` - Self-Documenting Usage Helper
+**Purpose**: Provide structured usage information for LLMs and clients
+**Features**:
+- 📘 Returns endpoints, auth methods, and protocol version
+- 🧰 Lists all available tools with input schemas
+- 🧾 Example `tools/list` and `tools/call` payloads
+- 🧩 Supports `format` argument: `markdown` (default) or `json`
+
+**Example Input**:
+```json
+{ "format": "json" }
+```
+
+**Example Output**:
+Human-readable markdown plus a second content item containing structured data.
 
 ## 🚀 Example Usage - Background Agents API
 
@@ -803,7 +819,7 @@ npm start
 ### 🔗 API Reference
 Complete API documentation for all MCP tools, including request/response schemas, error codes, and examples:
 - **📖 [API Reference](./docs/api-reference.md)** - Comprehensive tool documentation
-- **🔧 All 9 MCP Tools** - Detailed parameter specifications
+- **🔧 All 10 MCP Tools** - Detailed parameter specifications
 - **🚨 Error Handling** - Complete error code reference
 - **💡 Usage Examples** - Practical implementation examples
 

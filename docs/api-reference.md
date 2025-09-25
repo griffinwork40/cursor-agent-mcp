@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Cursor Agent MCP Server provides a Model Context Protocol interface to interact with Cursor's Background Agents API. This server exposes 9 MCP tools that enable LLMs to programmatically create, manage, and monitor background agents for autonomous code development.
+The Cursor Agent MCP Server provides a Model Context Protocol interface to interact with Cursor's Background Agents API. This server exposes 10 MCP tools that enable LLMs to programmatically create, manage, and monitor background agents for autonomous code development.
 
 ### Base Information
 
@@ -545,6 +545,45 @@ Retrieves a list of GitHub repositories accessible to the authenticated user.
       "type": "text",
       "text": "📁 Accessible Repositories:\n\n1. my-project (user1)\n   🔗 https://github.com/user1/my-project\n\n2. shared-repo (company)\n   🔗 https://github.com/company/shared-repo\n\n📊 Total: 2 repositories"
     }
+  ]
+}
+```
+
+---
+
+### 10. `documentation`
+
+Returns self-describing documentation for this MCP server, including endpoints, authentication, protocol, tool list, and example payloads.
+
+#### Request Schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "format": {
+      "type": "string",
+      "enum": ["markdown", "json"],
+      "default": "markdown",
+      "description": "Preferred response format"
+    }
+  }
+}
+```
+
+#### Example Request
+
+```json
+{ "format": "json" }
+```
+
+#### Example Response
+
+```json
+{
+  "content": [
+    { "type": "text", "text": "📘 Cursor MCP Documentation\n..." },
+    { "type": "text", "text": "{\n  \"name\": \"cursor-background-agents\",\n  \"version\": \"1.0.0\",\n  ...\n}" }
   ]
 }
 ```
