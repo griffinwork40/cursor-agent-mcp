@@ -1,20 +1,40 @@
-// Mock the config module before importing tokenUtils
-jest.mock('../config/index.js', () => ({
-  config: {
-    token: {
-      secret: 'test-secret-key-for-testing',
-      ttlDays: 30,
+import { jest } from '@jest/globals';
+
+const defaultTokenConfig = {
+  secret: 'test-secret-key-for-testing',
+  ttlDays: 30,
+};
+
+async function importTokenUtils(overrides = {}) {
+  jest.resetModules();
+  jest.unstable_mockModule('../config/index.js', () => ({
+    config: {
+      token: {
+        ...defaultTokenConfig,
+        ...overrides,
+      },
     },
-  },
-}));
+  }));
 
-// Import tokenUtils after mocking
-const { mintTokenFromApiKey, decodeTokenToApiKey } = require('../utils/tokenUtils.cjs');
+  const tokenUtilsModule = await import('../utils/tokenUtils.js');
+  const { config } = await import('../config/index.js');
 
-// Test constants
+  return {
+    ...tokenUtilsModule,
+    config,
+  };
+}
+
+let mintTokenFromApiKey;
+let decodeTokenToApiKey;
+
 const TEST_API_KEY = 'test-api-key-12345';
 
 describe('Token Utilities', () => {
+  beforeEach(async () => {
+    ({ mintTokenFromApiKey, decodeTokenToApiKey } = await importTokenUtils());
+  });
+
   describe('mintTokenFromApiKey', () => {
     test('should mint a valid token from a valid API key', () => {
       const token = mintTokenFromApiKey(TEST_API_KEY);
@@ -97,7 +117,6 @@ describe('Token Utilities', () => {
     });
 
     test('should return null for token with invalid structure', () => {
-      // Token that's too short (less than IV + TAG + ciphertext)
       const shortToken = Buffer.from('short').toString('base64url');
       const result = decodeTokenToApiKey(shortToken);
       expect(result).toBeNull();
@@ -124,15 +143,13 @@ describe('Token Utilities', () => {
     test('should handle token tampering attempts', () => {
       const originalToken = mintTokenFromApiKey(TEST_API_KEY);
 
-      // Tamper with the token by changing a character
-      const tamperedToken = originalToken.substring(0, 10) + 'X' + originalToken.substring(11);
+      const tamperedToken = `${originalToken.substring(0, 10)}X${originalToken.substring(11)}`;
 
       const result = decodeTokenToApiKey(tamperedToken);
       expect(result).toBeNull();
     });
 
     test('should handle tokens with incorrect format', () => {
-      // Token with wrong buffer structure
       const malformedToken = 'malformed-token-data';
 
       const result = decodeTokenToApiKey(malformedToken);
@@ -142,13 +159,10 @@ describe('Token Utilities', () => {
 
   describe('Security and Edge Cases', () => {
     test('should use AES-256-GCM encryption algorithm', () => {
-      // We can't easily test the exact algorithm without complex mocking,
-      // but we can verify the token structure is correct
       const token = mintTokenFromApiKey(TEST_API_KEY);
       const tokenBuffer = Buffer.from(token, 'base64url');
 
-      // Token should be structured as: IV (12) + auth tag (16) + ciphertext
-      expect(tokenBuffer.length).toBeGreaterThan(12 + 16); // IV + tag + some ciphertext
+      expect(tokenBuffer.length).toBeGreaterThan(12 + 16);
     });
 
     test('should handle very large API keys', () => {
@@ -165,39 +179,23 @@ describe('Token Utilities', () => {
     });
 
     test('should handle decryption failures gracefully', () => {
-      // Create a token with the current implementation
       const token = mintTokenFromApiKey(TEST_API_KEY);
 
-      // Since we can't easily simulate decryption failures without complex mocking,
-      // we'll just verify that the token can be decoded correctly
       const decoded = decodeTokenToApiKey(token);
       expect(decoded).toBe(TEST_API_KEY);
     });
   });
 
   describe('Configuration Integration', () => {
-    test('should respect TTL configuration from config', () => {
-      const config = require('../config/index.js').config;
+    test('should respect TTL configuration from config', async () => {
+      const { config } = await importTokenUtils();
 
       expect(config.token.ttlDays).toBe(30);
     });
 
-    test('should handle missing token secret gracefully', () => {
-      // Mock config without secret
-      jest.doMock('../config/index.js', () => ({
-        config: {
-          token: {
-            secret: null,
-            ttlDays: 30,
-          },
-        },
-      }));
+    test('should handle missing token secret gracefully', async () => {
+      const { mintTokenFromApiKey: mintTokenNew } = await importTokenUtils({ secret: null });
 
-      // Re-import to get new config
-      jest.resetModules();
-      const { mintTokenFromApiKey: mintTokenNew } = require('../utils/tokenUtils.cjs');
-
-      // Should still work but use insecure default
       expect(() => {
         mintTokenNew(TEST_API_KEY);
       }).not.toThrow();
