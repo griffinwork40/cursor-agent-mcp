@@ -1,81 +1,95 @@
 // Core MCP protocol tests - focused on functionality without Express complexity
 // Tests: request validation, tool routing, response formatting, error propagation, protocol compliance
 
-const { describe, it, expect, beforeEach, afterEach } = require('@jest/globals');
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 
-// Use mocked functions directly from jest.mock declarations
-
-// Mock dependencies
-jest.mock('../config/index.js', () => ({
-  config: {
-    port: 3000,
-    cursor: {
-      apiKey: 'mock-cursor-api-key',
-      apiUrl: 'https://api.cursor.com',
-    },
-    token: {
-      secret: 'mock-token-secret',
-      ttlDays: 30,
-    },
+const mockToolHandler = jest.fn().mockResolvedValue('test result');
+const mockCreateTools = jest.fn().mockImplementation(() => ([
+  {
+    name: 'testTool',
+    description: 'Test tool description',
+    inputSchema: { type: 'object' },
+    handler: mockToolHandler,
   },
-}));
+]));
 
-jest.mock('../tools/index.js', () => ({
-  createTools: jest.fn().mockReturnValue([
-    {
-      name: 'testTool',
-      description: 'Test tool description',
-      inputSchema: { type: 'object' },
-      handler: jest.fn().mockResolvedValue('test result'),
-    },
-  ]),
-}));
+const mockCursorClientInstance = {
+  createAgent: jest.fn().mockResolvedValue({ id: 'test-agent-id' }),
+  listAgents: jest.fn().mockResolvedValue({ agents: [] }),
+  getAgent: jest.fn().mockResolvedValue({ id: 'test-agent-id' }),
+  deleteAgent: jest.fn().mockResolvedValue({ id: 'test-agent-id' }),
+  addFollowup: jest.fn().mockResolvedValue({ id: 'test-agent-id' }),
+  getAgentConversation: jest.fn().mockResolvedValue({ messages: [] }),
+  getMe: jest.fn().mockResolvedValue({ apiKeyName: 'test-key' }),
+  listModels: jest.fn().mockResolvedValue({ models: ['model1', 'model2'] }),
+  listRepositories: jest.fn().mockResolvedValue({ repositories: [] }),
+};
 
-jest.mock('../utils/cursorClient.js', () => ({
-  createCursorApiClient: jest.fn().mockReturnValue({
-    createAgent: jest.fn().mockResolvedValue({ id: 'test-agent-id' }),
-    listAgents: jest.fn().mockResolvedValue({ agents: [] }),
-    getAgent: jest.fn().mockResolvedValue({ id: 'test-agent-id' }),
-    deleteAgent: jest.fn().mockResolvedValue({ id: 'test-agent-id' }),
-    addFollowup: jest.fn().mockResolvedValue({ id: 'test-agent-id' }),
-    getAgentConversation: jest.fn().mockResolvedValue({ messages: [] }),
-    getMe: jest.fn().mockResolvedValue({ apiKeyName: 'test-key' }),
-    listModels: jest.fn().mockResolvedValue({ models: ['model1', 'model2'] }),
-    listRepositories: jest.fn().mockResolvedValue({ repositories: [] }),
-  }),
-  cursorApiClient: {
-    createAgent: jest.fn(),
-    listAgents: jest.fn(),
-    getAgent: jest.fn(),
-    deleteAgent: jest.fn(),
-    addFollowup: jest.fn(),
-    getAgentConversation: jest.fn(),
-    getMe: jest.fn(),
-    listModels: jest.fn(),
-    listRepositories: jest.fn(),
+const mockDefaultCursorClient = {
+  createAgent: jest.fn(),
+  listAgents: jest.fn(),
+  getAgent: jest.fn(),
+  deleteAgent: jest.fn(),
+  addFollowup: jest.fn(),
+  getAgentConversation: jest.fn(),
+  getMe: jest.fn(),
+  listModels: jest.fn(),
+  listRepositories: jest.fn(),
+};
+
+const mockCreateCursorApiClient = jest.fn().mockReturnValue(mockCursorClientInstance);
+const mockHandleMCPError = jest.fn().mockReturnValue({
+  content: [{ type: 'text', text: 'Error message' }],
+  isError: true,
+});
+
+class ValidationError extends Error {}
+class ApiError extends Error {}
+
+const mockMintTokenFromApiKey = jest.fn().mockReturnValue('mock-token');
+const mockDecodeTokenToApiKey = jest.fn().mockReturnValue('decoded-api-key');
+
+const mockConfig = {
+  port: 3000,
+  cursor: {
+    apiKey: 'mock-cursor-api-key',
+    apiUrl: 'https://api.cursor.com',
   },
+  token: {
+    secret: 'mock-token-secret',
+    ttlDays: 30,
+  },
+};
+
+jest.unstable_mockModule('../config/index.js', () => ({
+  config: mockConfig,
 }));
 
-jest.mock('../utils/errorHandler.js', () => ({
-  handleMCPError: jest.fn().mockReturnValue({
-    content: [{ type: 'text', text: 'Error message' }],
-    isError: true,
-  }),
-  ValidationError: class ValidationError extends Error {},
-  ApiError: class ApiError extends Error {},
+jest.unstable_mockModule('../tools/index.js', () => ({
+  createTools: mockCreateTools,
 }));
 
-jest.mock('../utils/tokenUtils.js', () => ({
-  mintTokenFromApiKey: jest.fn().mockReturnValue('mock-token'),
-  decodeTokenToApiKey: jest.fn().mockReturnValue('decoded-api-key'),
+jest.unstable_mockModule('../utils/cursorClient.js', () => ({
+  createCursorApiClient: mockCreateCursorApiClient,
+  cursorApiClient: mockDefaultCursorClient,
 }));
 
-// Import mocked modules
-const { createTools } = require('../tools/index.js');
-const { createCursorApiClient, cursorApiClient } = require('../utils/cursorClient.js');
-const { handleMCPError } = require('../utils/errorHandler.js');
-const { mintTokenFromApiKey, decodeTokenToApiKey } = require('../utils/tokenUtils.js');
-const { config } = require('../config/index.js');
+jest.unstable_mockModule('../utils/errorHandler.js', () => ({
+  handleMCPError: mockHandleMCPError,
+  ValidationError,
+  ApiError,
+}));
+
+jest.unstable_mockModule('../utils/tokenUtils.js', () => ({
+  mintTokenFromApiKey: mockMintTokenFromApiKey,
+  decodeTokenToApiKey: mockDecodeTokenToApiKey,
+}));
+
+const { createTools } = await import('../tools/index.js');
+const { createCursorApiClient, cursorApiClient } = await import('../utils/cursorClient.js');
+const { handleMCPError } = await import('../utils/errorHandler.js');
+const { mintTokenFromApiKey, decodeTokenToApiKey } = await import('../utils/tokenUtils.js');
+const { config } = await import('../config/index.js');
 
 describe('MCP Core Protocol Functions', () => {
   beforeEach(() => {
