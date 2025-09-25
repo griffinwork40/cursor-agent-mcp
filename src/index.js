@@ -244,6 +244,16 @@ mcpServer.setRequestHandler(CallToolRequestSchema, async (request, context) => {
   }
 });
 
+// CORS headers for OAuth endpoints (must be before OAuth endpoints)
+app.use((req, res, next) => {
+  if (req.path.startsWith('/oauth') || req.path.startsWith('/.well-known')) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  }
+  next();
+});
+
 // OAuth discovery endpoints for ChatGPT MCP integration
 app.get('/.well-known/oauth-authorization-server', (req, res) => {
   res.json({
@@ -305,16 +315,6 @@ app.post('/oauth/resource', (req, res) => {
     resource_scopes: ['read', 'write'],
     resource_uri: `https://${req.get('host')}/sse`,
   });
-});
-
-// CORS headers for OAuth endpoints
-app.use((req, res, next) => {
-  if (req.path.startsWith('/oauth') || req.path.startsWith('/.well-known')) {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  }
-  next();
 });
 
 // SSE endpoint for ChatGPT MCP integration (FIXED - no CORS headers)
