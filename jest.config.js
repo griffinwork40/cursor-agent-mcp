@@ -17,8 +17,7 @@ export default {
   testEnvironment: 'node',
   testMatch: [
     '<rootDir>/**/__tests__/**/*.{js,jsx,ts,tsx}',
-    '<rootDir>/**/?(*.)(test|spec).{js,jsx,ts,tsx}',
-    '<rootDir>/tests/**/*.{js,jsx,ts,tsx}'
+    '<rootDir>/**/?(*.)(test|spec).{js,jsx,ts,tsx}'
   ],
   testPathIgnorePatterns: [
     '<rootDir>/node_modules/',

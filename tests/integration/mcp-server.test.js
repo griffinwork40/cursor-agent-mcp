@@ -25,48 +25,7 @@ jest.mock('../../src/utils/cursorClient.js', () => ({
   }
 }));
 
-// Mock the tools module
-jest.mock('../../src/tools/index.js', () => ({
-  createTools: jest.fn(() => [
-    {
-      name: 'createAgent',
-      description: 'Create a new background agent',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          prompt: {
-            type: 'object',
-            properties: {
-              text: { type: 'string' }
-            },
-            required: ['text']
-          },
-          source: {
-            type: 'object',
-            properties: {
-              repository: { type: 'string' }
-            },
-            required: ['repository']
-          },
-          model: { type: 'string' }
-        },
-        required: ['prompt', 'source']
-      },
-      handler: jest.fn()
-    },
-    {
-      name: 'listAgents',
-      description: 'List background agents',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          limit: { type: 'number' }
-        }
-      },
-      handler: jest.fn()
-    }
-  ])
-}));
+// Use the real tools module so validation and formatting are exercised end-to-end
 
 describe('MCP Server Integration Tests', () => {
   let server;
@@ -74,8 +33,9 @@ describe('MCP Server Integration Tests', () => {
   let mockAgentData;
   let mockUserData;
   let mockModelsData;
+  let createMCPServer;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Clean up any existing mocks
     mockHttp.cleanAll();
     jest.clearAllMocks();
@@ -98,7 +58,7 @@ describe('MCP Server Integration Tests', () => {
     cursorApiClient.listRepositories.mockResolvedValue({ repositories: [] });
 
     // Import the server after mocking
-    const { createMCPServer } = require('../../src/mcp-server.js');
+    ({ createMCPServer } = await import('../../src/mcp-server.js'));
 
     // Create a test server
     server = createServer(async (req, res) => {

@@ -4,9 +4,12 @@
  * Common utilities and helpers for writing tests
  */
 
+import { randomUUID } from 'node:crypto';
 import axios from 'axios';
 import nock from 'nock';
 import sinon from 'sinon';
+
+const buildId = (prefix) => `${prefix}-${randomUUID()}`;
 
 const setAxiosMockResponse = (method, url, payload) => {
   if (axios && typeof axios.__setMockResponse === 'function') {
@@ -100,18 +103,27 @@ export const asyncHelpers = {
 export const mockData = {
   // Generate mock agent data
   generateAgent: (overrides = {}) => ({
-    id: `agent-${Date.now()}`,
+    id: buildId('agent'),
     name: 'Test Agent',
     prompt: 'Test prompt',
     model: 'claude-3-5-sonnet',
     status: 'active',
     createdAt: new Date().toISOString(),
+    source: {
+      repository: 'https://github.com/test/repo',
+      ref: 'main'
+    },
+    target: {
+      url: 'https://cursor.sh/background-agents/test-agent',
+      branchName: 'agent/test-branch'
+    },
+    summary: 'Test summary',
     ...overrides
   }),
 
   // Generate mock repository data
   generateRepository: (overrides = {}) => ({
-    id: `repo-${Date.now()}`,
+    id: buildId('repo'),
     name: 'test-repo',
     url: 'https://github.com/test/repo',
     description: 'Test repository',
@@ -120,7 +132,7 @@ export const mockData = {
 
   // Generate mock user data
   generateUser: (overrides = {}) => ({
-    id: `user-${Date.now()}`,
+    id: buildId('user'),
     email: 'test@example.com',
     name: 'Test User',
     apiKey: 'test-api-key',

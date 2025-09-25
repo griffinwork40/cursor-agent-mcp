@@ -4,6 +4,34 @@
  * Global test configuration and setup for all test suites
  */
 
+import http from 'node:http';
+
+// Ensure HTTP servers created in tests are listening so Supertest doesn't close them mid-request
+const originalCreateServer = http.createServer;
+http.createServer = (...args) => {
+  const server = originalCreateServer(...args);
+
+  if (!server.listening) {
+    const originalListen = server.listen.bind(server);
+    const originalClose = server.close.bind(server);
+
+    originalListen(0);
+
+    server.listen = (...listenArgs) => {
+      if (server.listening) {
+        if (listenArgs.length === 0) {
+          return server;
+        }
+        originalClose();
+      }
+
+      return originalListen(...listenArgs);
+    };
+  }
+
+  return server;
+};
+
 // Import jest-dom for additional DOM matchers when a DOM environment is available
 const hasDomEnvironment = typeof window !== 'undefined' && typeof document !== 'undefined';
 
