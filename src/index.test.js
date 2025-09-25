@@ -443,32 +443,44 @@ describe('Express server endpoints', () => {
   });
 
   describe('SSE endpoint functionality', () => {
-    test('SSE endpoint responds with proper headers', async () => {
-      // Just verify the endpoint exists and starts properly
-      const agent = request.agent(app);
-      const req = agent.get('/sse');
-      
-      // Set a very short timeout to just verify the connection starts
-      setTimeout(() => req.abort(), 100);
-      
-      try {
-        await req;
-      } catch (error) {
-        // Expected to timeout/abort, just check that it's not a 404 or other error
-        expect(error.status).not.toBe(404);
-      }
+    let server;
+    let agent;
+
+    beforeAll(() => {
+      server = app.listen(0);
+      agent = request(server);
     });
 
-    test('SSE endpoint handles connection attempts', () => {
-      // Simple test to verify the endpoint exists
-      const agent = request.agent(app);
-      const req = agent.get('/sse');
-      
-      // Immediately abort to avoid hanging
-      req.abort();
-      
-      // If we get here without throwing, the endpoint exists
-      expect(true).toBe(true);
+    afterAll(async () => {
+      await new Promise((resolve) => server.close(resolve));
+    });
+
+    test('SSE endpoint responds without hanging', async () => {
+      await new Promise((resolve, reject) => {
+        const req = agent.get('/sse');
+
+        req.on('response', (res) => {
+          try {
+            expect(res.status).toBe(200);
+            expect(res.headers['content-type']).toMatch(/text\/event-stream/);
+            req.abort();
+            resolve();
+          } catch (assertionError) {
+            req.abort();
+            reject(assertionError);
+          }
+        });
+
+        req.on('error', (err) => {
+          req.abort();
+          reject(err);
+        });
+
+        setTimeout(() => {
+          req.abort();
+          resolve();
+        }, 200);
+      });
     });
   });
 
@@ -663,7 +675,7 @@ describe('Express server endpoints', () => {
       await request(app).get('/health');
       
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringMatching(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z - GET \/health - .*/)
+        expect.stringMatching(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z - GET \/health - .*/),
       );
     });
 
@@ -673,7 +685,7 @@ describe('Express server endpoints', () => {
         .send({ jsonrpc: '2.0', method: 'tools/list', id: 1 });
       
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringMatching(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z - POST \/mcp - .*/)
+        expect.stringMatching(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z - POST \/mcp - .*/),
       );
     });
   });
