@@ -2,6 +2,11 @@
 // Tests: request validation, tool routing, response formatting, error propagation, protocol compliance
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import * as Tools from '../tools/index.js';
+import * as CursorClientModule from '../utils/cursorClient.js';
+import * as ErrorHandlerModule from '../utils/errorHandler.js';
+import * as TokenUtilsModule from '../utils/tokenUtils.js';
+import * as ConfigModule from '../config/index.js';
 
 const mockToolHandler = jest.fn().mockResolvedValue('test result');
 const mockCreateTools = jest.fn().mockImplementation(() => ([
@@ -61,40 +66,26 @@ const mockConfig = {
   },
 };
 
-jest.unstable_mockModule('../config/index.js', () => ({
-  config: mockConfig,
-}));
-
-jest.unstable_mockModule('../tools/index.js', () => ({
-  createTools: mockCreateTools,
-}));
-
-jest.unstable_mockModule('../utils/cursorClient.js', () => ({
-  createCursorApiClient: mockCreateCursorApiClient,
-  cursorApiClient: mockDefaultCursorClient,
-}));
-
-jest.unstable_mockModule('../utils/errorHandler.js', () => ({
-  handleMCPError: mockHandleMCPError,
-  ValidationError,
-  ApiError,
-}));
-
-jest.unstable_mockModule('../utils/tokenUtils.js', () => ({
-  mintTokenFromApiKey: mockMintTokenFromApiKey,
-  decodeTokenToApiKey: mockDecodeTokenToApiKey,
-}));
-
-import { createTools } from '../tools/index.js';
-import { createCursorApiClient, cursorApiClient } from '../utils/cursorClient.js';
-import { handleMCPError } from '../utils/errorHandler.js';
-import { mintTokenFromApiKey, decodeTokenToApiKey } from '../utils/tokenUtils.js';
-import { config } from '../config/index.js';
+// Set up spies on module exports so we can assert calls without relying on
+// unstable ESM module mocking patterns.
+beforeEach(() => {
+  jest.clearAllMocks();
+  jest.spyOn(Tools, 'createTools').mockImplementation(mockCreateTools);
+  jest
+    .spyOn(CursorClientModule, 'createCursorApiClient')
+    .mockImplementation(mockCreateCursorApiClient);
+  jest
+    .spyOn(ErrorHandlerModule, 'handleMCPError')
+    .mockImplementation(mockHandleMCPError);
+  jest
+    .spyOn(TokenUtilsModule, 'mintTokenFromApiKey')
+    .mockImplementation(mockMintTokenFromApiKey);
+  jest
+    .spyOn(TokenUtilsModule, 'decodeTokenToApiKey')
+    .mockImplementation(mockDecodeTokenToApiKey);
+});
 
 describe('MCP Core Protocol Functions', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
 
   describe('Request Validation', () => {
     it('should validate MCP request structure', () => {
@@ -122,7 +113,7 @@ describe('MCP Core Protocol Functions', () => {
     });
 
     it('should validate tool names', () => {
-      const tools = createTools();
+      const tools = Tools.createTools();
       const validTool = tools.find(t => t.name === 'testTool');
 
       expect(validTool).toBeDefined();
@@ -234,8 +225,8 @@ describe('MCP Core Protocol Functions', () => {
       try {
         throw toolError;
       } catch (error) {
-        const errorResponse = handleMCPError(error, 'failingTool');
-        expect(handleMCPError).toHaveBeenCalledWith(toolError, 'failingTool');
+        const errorResponse = ErrorHandlerModule.handleMCPError(error, 'failingTool');
+        expect(ErrorHandlerModule.handleMCPError).toHaveBeenCalledWith(toolError, 'failingTool');
         expect(errorResponse).toHaveProperty('content');
         expect(errorResponse).toHaveProperty('isError', true);
       }
@@ -252,8 +243,8 @@ describe('MCP Core Protocol Functions', () => {
       try {
         throw apiError;
       } catch (error) {
-        const errorResponse = handleMCPError(error, 'apiFailingTool');
-        expect(handleMCPError).toHaveBeenCalledWith(apiError, 'apiFailingTool');
+        const errorResponse = ErrorHandlerModule.handleMCPError(error, 'apiFailingTool');
+        expect(ErrorHandlerModule.handleMCPError).toHaveBeenCalledWith(apiError, 'apiFailingTool');
         expect(errorResponse).toHaveProperty('content');
         expect(errorResponse).toHaveProperty('isError', true);
       }
@@ -313,12 +304,12 @@ describe('MCP Core Protocol Functions', () => {
   describe('API Key Extraction', () => {
     const extractApiKey = (req) => {
       // Support zero-storage token in query/header: token=<base64url>
-      const token = req.query?.token || req.headers['x-mcp-token'];
-      const tokenKey = token ? decodeTokenToApiKey(token) : null;
+      const token = req.query?.token || req.headers?.['x-mcp-token'];
+      const tokenKey = token ? TokenUtilsModule.decodeTokenToApiKey(token) : null;
       if (tokenKey) return tokenKey;
 
       // Check Authorization header for ChatGPT compatibility (but avoid OAuth Bearer tokens)
-      const authHeader = req.headers['authorization'];
+      const authHeader = req.headers?.['authorization'];
       if (authHeader && authHeader.startsWith('Bearer ') && !authHeader.includes('oauth')) {
         const bearerKey = authHeader.replace('Bearer ', '');
         // Only use if it looks like a Cursor API key (starts with 'key_')
@@ -328,19 +319,19 @@ describe('MCP Core Protocol Functions', () => {
       }
 
       return (
-        req.headers['x-cursor-api-key'] ||
-        req.headers['x-api-key'] ||
+        req.headers?.['x-cursor-api-key'] ||
+        req.headers?.['x-api-key'] ||
         req.query?.api_key ||
         req.body?.cursor_api_key ||
-        config.cursor.apiKey // fallback to environment/global key
+        ConfigModule.config.cursor.apiKey // fallback to environment/global key
       );
     };
 
     it('should extract API key from token query parameter', () => {
-      const req = { query: { token: 'mock-token' } };
+      const req = { query: { token: 'mock-token' }, headers: {} };
       const result = extractApiKey(req);
 
-      expect(decodeTokenToApiKey).toHaveBeenCalledWith('mock-token');
+      expect(TokenUtilsModule.decodeTokenToApiKey).toHaveBeenCalledWith('mock-token');
       expect(result).toBe('decoded-api-key');
     });
 
@@ -348,7 +339,7 @@ describe('MCP Core Protocol Functions', () => {
       const req = { headers: { 'x-mcp-token': 'mock-token' } };
       const result = extractApiKey(req);
 
-      expect(decodeTokenToApiKey).toHaveBeenCalledWith('mock-token');
+      expect(TokenUtilsModule.decodeTokenToApiKey).toHaveBeenCalledWith('mock-token');
       expect(result).toBe('decoded-api-key');
     });
 
@@ -391,24 +382,24 @@ describe('MCP Core Protocol Functions', () => {
       const req = { headers: {}, query: {}, body: {} };
       const result = extractApiKey(req);
 
-      expect(result).toBe('mock-cursor-api-key');
+      expect(result).toBe('mock_test_api_key');
     });
   });
 
   describe('Tool Creation', () => {
     it('should create tools with API key when available', () => {
       const apiKey = 'test-api-key';
-      const tools = createTools(createCursorApiClient(apiKey));
+      const tools = Tools.createTools(CursorClientModule.createCursorApiClient(apiKey));
 
-      expect(createCursorApiClient).toHaveBeenCalledWith(apiKey);
-      expect(createTools).toHaveBeenCalled();
+      expect(CursorClientModule.createCursorApiClient).toHaveBeenCalledWith(apiKey);
+      expect(Tools.createTools).toHaveBeenCalled();
       expect(tools).toHaveLength(1);
     });
 
     it('should create tools with default client when no API key', () => {
-      const tools = createTools(cursorApiClient);
+      const tools = Tools.createTools(CursorClientModule.cursorApiClient);
 
-      expect(createTools).toHaveBeenCalledWith(cursorApiClient);
+      expect(Tools.createTools).toHaveBeenCalledWith(CursorClientModule.cursorApiClient);
       expect(tools).toHaveLength(1);
     });
   });
@@ -416,17 +407,17 @@ describe('MCP Core Protocol Functions', () => {
   describe('Token Utilities', () => {
     it('should mint token from API key', () => {
       const apiKey = 'test-api-key-123';
-      const token = mintTokenFromApiKey(apiKey);
+      const token = TokenUtilsModule.mintTokenFromApiKey(apiKey);
 
-      expect(mintTokenFromApiKey).toHaveBeenCalledWith(apiKey);
+      expect(TokenUtilsModule.mintTokenFromApiKey).toHaveBeenCalledWith(apiKey);
       expect(token).toBe('mock-token');
     });
 
     it('should decode token to API key', () => {
       const token = 'mock-token';
-      const apiKey = decodeTokenToApiKey(token);
+      const apiKey = TokenUtilsModule.decodeTokenToApiKey(token);
 
-      expect(decodeTokenToApiKey).toHaveBeenCalledWith(token);
+      expect(TokenUtilsModule.decodeTokenToApiKey).toHaveBeenCalledWith(token);
       expect(apiKey).toBe('decoded-api-key');
     });
   });
