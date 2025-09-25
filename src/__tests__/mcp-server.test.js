@@ -1,5 +1,3 @@
-import { jest } from '@jest/globals';
-
 describe('MCP Server Integration Tests', () => {
   test('placeholder test - MCP server tests require complex setup', () => {
     // This is a placeholder test. The MCP server tests require complex

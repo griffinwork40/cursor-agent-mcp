@@ -335,7 +335,7 @@ describe('Error Handler Utilities', () => {
 
       const validWithDimension = {
         data: 'base64data',
-        dimension: { width: 1920, height: 1080 }
+        dimension: { width: 1920, height: 1080 },
       };
       expect(() => validateInput(image, validWithDimension)).not.toThrow();
 

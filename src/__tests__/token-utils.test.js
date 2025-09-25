@@ -1,5 +1,4 @@
 import { mintTokenFromApiKey, decodeTokenToApiKey } from '../utils/tokenUtils.js';
-import crypto from 'crypto';
 import { jest } from '@jest/globals';
 
 describe('Token Utilities', () => {
@@ -93,7 +92,7 @@ describe('Token Utilities', () => {
         'key_with_unicode_🔑✨🚀',
       ];
 
-      testCases.forEach((apiKey, index) => {
+      testCases.forEach((apiKey) => {
         const token = mintTokenFromApiKey(apiKey);
         const decoded = decodeTokenToApiKey(token);
         expect(decoded).toBe(apiKey);
