@@ -100,11 +100,11 @@ describe('CLI Filesystem Operations', () => {
 
       expect(fsPromises.mkdir).toHaveBeenCalledWith(
         '/home/testuser/.config/cursor-agent-mcp',
-        { recursive: true }
+        { recursive: true },
       );
       expect(fs.chmodSync).toHaveBeenCalledWith(
         '/home/testuser/.config/cursor-agent-mcp',
-        0o700
+        0o700,
       );
     });
 
@@ -133,7 +133,7 @@ describe('CLI Filesystem Operations', () => {
 
       expect(console.warn).toHaveBeenCalledWith(
         'Could not set directory permissions:',
-        'Permission denied'
+        'Permission denied',
       );
 
       console.warn = originalConsoleWarn;
@@ -191,7 +191,7 @@ describe('CLI Filesystem Operations', () => {
 
       expect(fs.chmodSync).toHaveBeenCalledWith(
         '/home/testuser/.config/cursor-agent-mcp/config.json',
-        0o600
+        0o600,
       );
     });
 
@@ -217,7 +217,7 @@ describe('CLI Filesystem Operations', () => {
 
       expect(console.warn).toHaveBeenCalledWith(
         'Could not set file permissions:',
-        'Permission denied'
+        'Permission denied',
       );
 
       console.warn = originalConsoleWarn;
@@ -279,7 +279,7 @@ describe('CLI Filesystem Operations', () => {
       expect(result).toBeNull();
       expect(console.warn).toHaveBeenCalledWith(
         'Could not read config file:',
-        expect.any(SyntaxError)
+        expect.any(SyntaxError),
       );
 
       console.warn = originalConsoleWarn;
@@ -297,7 +297,7 @@ describe('CLI Filesystem Operations', () => {
       expect(result).toBeNull();
       expect(console.warn).toHaveBeenCalledWith(
         'Could not read config file:',
-        'File read error'
+        'File read error',
       );
 
       console.warn = originalConsoleWarn;

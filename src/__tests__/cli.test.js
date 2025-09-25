@@ -227,7 +227,7 @@ describe('CLI Module', () => {
           CURSOR_API_URL: 'https://custom.api.url',
           MCP_SERVER_TOKEN: 'test-token',
         }, null, 2),
-        { encoding: 'utf8' }
+        { encoding: 'utf8' },
       );
     });
 
@@ -242,7 +242,7 @@ describe('CLI Module', () => {
       expect(fsPromises.writeFile).toHaveBeenCalledWith(
         expect.any(String),
         expect.stringContaining('"CURSOR_API_URL": "https://api.cursor.com"'),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -256,7 +256,7 @@ describe('CLI Module', () => {
       expect(fsPromises.writeFile).toHaveBeenCalledWith(
         expect.any(String),
         expect.stringMatching(/"MCP_SERVER_TOKEN": "mcp_[a-f0-9]{64}"/),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -443,12 +443,12 @@ describe('CLI Module', () => {
       expect(fsPromises.writeFile).toHaveBeenCalledWith(
         expect.any(String),
         expect.stringContaining('"CURSOR_API_KEY": "flag-key"'),
-        expect.any(Object)
+        expect.any(Object),
       );
       expect(fsPromises.writeFile).toHaveBeenCalledWith(
         expect.any(String),
         expect.stringContaining('"CURSOR_API_URL": "https://flag.url"'),
-        expect.any(Object)
+        expect.any(Object),
       );
       expect(console.log).toHaveBeenCalledWith('✅ Saved credentials to local config with restricted permissions.');
     });
@@ -468,7 +468,7 @@ describe('CLI Module', () => {
       expect(fsPromises.writeFile).toHaveBeenCalledWith(
         expect.any(String),
         expect.stringContaining('"CURSOR_API_KEY": "prompted-key"'),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -508,7 +508,7 @@ describe('CLI Module', () => {
       expect(fsPromises.writeFile).toHaveBeenCalledWith(
         expect.any(String),
         expect.stringMatching(/"MCP_SERVER_TOKEN": "mcp_[a-f0-9]{64}"/),
-        expect.any(Object)
+        expect.any(Object),
       );
       expect(console.log).toHaveBeenCalledWith('✅ Saved credentials to local config with restricted permissions.');
       expect(console.log).toHaveBeenCalledWith('🔐 Generated MCP server token for remote access.');
@@ -525,7 +525,7 @@ describe('CLI Module', () => {
       expect(fsPromises.writeFile).toHaveBeenCalledWith(
         expect.any(String),
         expect.not.stringMatching(/MCP_SERVER_TOKEN/),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   });
