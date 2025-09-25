@@ -1,0 +1,83 @@
+# Artillery Load Test Configuration
+# Tests the MCP server under various load conditions
+
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      name: "Warm up - 5 requests/sec for 1 minute"
+    - duration: 120
+      arrivalRate: 10
+      name: "Normal load - 10 requests/sec for 2 minutes"
+    - duration: 60
+      arrivalRate: 20
+      name: "High load - 20 requests/sec for 1 minute"
+    - duration: 30
+      arrivalRate: 50
+      name: "Spike test - 50 requests/sec for 30 seconds"
+
+  defaults:
+    headers:
+      Content-Type: 'application/json'
+
+scenarios:
+  # Test tools listing
+  - name: 'List Tools'
+    weight: 40
+    flow:
+      - post:
+          url: "/mcp"
+          json:
+            jsonrpc: "2.0"
+            id: "{{ $randomInt(1, 100000) }}"
+            method: "tools/list"
+            params: {}
+
+  # Test agent creation
+  - name: 'Create Agent'
+    weight: 30
+    flow:
+      - post:
+          url: "/mcp"
+          json:
+            jsonrpc: "2.0"
+            id: "{{ $randomInt(1, 100000) }}"
+            method: "tools/call"
+            params:
+              name: "createAgent"
+              arguments:
+                prompt:
+                  text: "Create a comprehensive README file with installation instructions, usage examples, and API documentation."
+                source:
+                  repository: "https://github.com/test/performance-test-repo"
+                model: "claude-3-5-sonnet"
+
+  # Test agent listing
+  - name: 'List Agents'
+    weight: 20
+    flow:
+      - post:
+          url: "/mcp"
+          json:
+            jsonrpc: "2.0"
+            id: "{{ $randomInt(1, 100000) }}"
+            method: "tools/call"
+            params:
+              name: "listAgents"
+              arguments:
+                limit: 10
+
+  # Test model listing
+  - name: 'List Models'
+    weight: 10
+    flow:
+      - post:
+          url: "/mcp"
+          json:
+            jsonrpc: "2.0"
+            id: "{{ $randomInt(1, 100000) }}"
+            method: "tools/call"
+            params:
+              name: "listModels"
+              arguments: {}

@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Cursor MCP Server Tests" tests="43" failures="29" errors="0" time="3.062">
+  <testsuite name="smoke" errors="0" failures="0" skipped="0" timestamp="2025-09-25T04:56:36" time="0.895" tests="2">
+    <testcase classname="smoke truthiness" name="smoke truthiness" time="0.008">
+    </testcase>
+    <testcase classname="smoke math works" name="smoke math works" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="Basic Test Examples" errors="0" failures="0" skipped="0" timestamp="2025-09-25T04:56:36" time="1.037" tests="4">
+    <testcase classname="Basic Test Examples should create mock data correctly" name="Basic Test Examples should create mock data correctly" time="0.007">
+    </testcase>
+    <testcase classname="Basic Test Examples should generate different IDs for different objects" name="Basic Test Examples should generate different IDs for different objects" time="0.004">
+    </testcase>
+    <testcase classname="Basic Test Examples should handle user data generation" name="Basic Test Examples should handle user data generation" time="0.002">
+    </testcase>
+    <testcase classname="Basic Test Examples should handle repository data generation" name="Basic Test Examples should handle repository data generation" time="0.002">
+    </testcase>
+  </testsuite>
+  <testsuite name="CursorApiClient" errors="0" failures="15" skipped="0" timestamp="2025-09-25T04:56:37" time="1.069" tests="23">
+    <testcase classname="CursorApiClient constructor should create axios instance with correct configuration" name="CursorApiClient constructor should create axios instance with correct configuration" time="0.003">
+      <failure>Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: &quot;https://api.cursor.com&quot;
+Received: undefined
+    at Object.toBe (/workspace/tests/unit/utils/cursorClient.test.js:55:49)
+    at Promise.then.completed (/workspace/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (/workspace/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/workspace/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/workspace/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/workspace/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/workspace/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/workspace/node_modules/jest-circus/build/run.js:121:9)
+    at run (/workspace/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/workspace/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/workspace/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/workspace/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/workspace/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/workspace/node_modules/jest-runner/build/testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="CursorApiClient constructor should handle missing API key gracefully" name="CursorApiClient constructor should handle missing API key gracefully" time="0.002">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;Authorization&apos;)
+    at Object.&lt;anonymous&gt; (/workspace/tests/unit/utils/cursorClient.test.js:64:54)
+    at Promise.then.completed (/workspace/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (/workspace/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/workspace/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/workspace/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/workspace/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/workspace/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/workspace/node_modules/jest-circus/build/run.js:121:9)
+    at run (/workspace/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/workspace/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/workspace/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/workspace/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/workspace/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/workspace/node_modules/jest-runner/build/testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="CursorApiClient createAgent should successfully create an agent" name="CursorApiClient createAgent should successfully create an agent" time="0.003">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;data&apos;)
+    at CursorApiClient.data (/workspace/src/utils/cursorClient.js:62:21)
+    at Generator.call (/workspace/src/utils/cursorClient.js:2:1)
+    at Generator._invoke [as next] (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="CursorApiClient createAgent should handle API errors when creating agent" name="CursorApiClient createAgent should handle API errors when creating agent" time="0.002">
+    </testcase>
+    <testcase classname="CursorApiClient listAgents should successfully list agents" name="CursorApiClient listAgents should successfully list agents" time="0.002">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;data&apos;)
+    at CursorApiClient.data (/workspace/src/utils/cursorClient.js:68:21)
+    at Generator.call (/workspace/src/utils/cursorClient.js:2:1)
+    at Generator._invoke [as next] (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="CursorApiClient listAgents should pass query parameters correctly" name="CursorApiClient listAgents should pass query parameters correctly" time="0.001">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;data&apos;)
+    at CursorApiClient.data (/workspace/src/utils/cursorClient.js:68:21)
+    at Generator.call (/workspace/src/utils/cursorClient.js:2:1)
+    at Generator._invoke [as next] (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="CursorApiClient listAgents should handle empty agents list" name="CursorApiClient listAgents should handle empty agents list" time="0.001">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;data&apos;)
+    at CursorApiClient.data (/workspace/src/utils/cursorClient.js:68:21)
+    at Generator.call (/workspace/src/utils/cursorClient.js:2:1)
+    at Generator._invoke [as next] (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="CursorApiClient getAgent should successfully get agent details" name="CursorApiClient getAgent should successfully get agent details" time="0.002">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;data&apos;)
+    at CursorApiClient.data (/workspace/src/utils/cursorClient.js:74:21)
+    at Generator.call (/workspace/src/utils/cursorClient.js:2:1)
+    at Generator._invoke [as next] (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="CursorApiClient getAgent should handle agent not found" name="CursorApiClient getAgent should handle agent not found" time="0.002">
+    </testcase>
+    <testcase classname="CursorApiClient deleteAgent should successfully delete an agent" name="CursorApiClient deleteAgent should successfully delete an agent" time="0.001">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;data&apos;)
+    at CursorApiClient.data (/workspace/src/utils/cursorClient.js:80:21)
+    at Generator.call (/workspace/src/utils/cursorClient.js:2:1)
+    at Generator._invoke [as next] (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="CursorApiClient deleteAgent should handle delete non-existent agent" name="CursorApiClient deleteAgent should handle delete non-existent agent" time="0.002">
+    </testcase>
+    <testcase classname="CursorApiClient addFollowup should successfully add followup to agent" name="CursorApiClient addFollowup should successfully add followup to agent" time="0.002">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;data&apos;)
+    at CursorApiClient.data (/workspace/src/utils/cursorClient.js:86:21)
+    at Generator.call (/workspace/src/utils/cursorClient.js:2:1)
+    at Generator._invoke [as next] (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="CursorApiClient addFollowup should handle followup to non-existent agent" name="CursorApiClient addFollowup should handle followup to non-existent agent" time="0.002">
+    </testcase>
+    <testcase classname="CursorApiClient getAgentConversation should successfully get agent conversation" name="CursorApiClient getAgentConversation should successfully get agent conversation" time="0.001">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;data&apos;)
+    at CursorApiClient.data (/workspace/src/utils/cursorClient.js:92:21)
+    at Generator.call (/workspace/src/utils/cursorClient.js:2:1)
+    at Generator._invoke [as next] (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="CursorApiClient getAgentConversation should handle agent with no conversation" name="CursorApiClient getAgentConversation should handle agent with no conversation" time="0.001">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;data&apos;)
+    at CursorApiClient.data (/workspace/src/utils/cursorClient.js:92:21)
+    at Generator.call (/workspace/src/utils/cursorClient.js:2:1)
+    at Generator._invoke [as next] (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="CursorApiClient getMe should successfully get user information" name="CursorApiClient getMe should successfully get user information" time="0.001">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;data&apos;)
+    at CursorApiClient.data (/workspace/src/utils/cursorClient.js:98:21)
+    at Generator.call (/workspace/src/utils/cursorClient.js:2:1)
+    at Generator._invoke [as next] (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="CursorApiClient getMe should handle authentication errors" name="CursorApiClient getMe should handle authentication errors" time="0.001">
+    </testcase>
+    <testcase classname="CursorApiClient listModels should successfully list available models" name="CursorApiClient listModels should successfully list available models" time="0.001">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;data&apos;)
+    at CursorApiClient.data (/workspace/src/utils/cursorClient.js:104:21)
+    at Generator.call (/workspace/src/utils/cursorClient.js:2:1)
+    at Generator._invoke [as next] (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="CursorApiClient listModels should handle empty models list" name="CursorApiClient listModels should handle empty models list" time="0.001">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;data&apos;)
+    at CursorApiClient.data (/workspace/src/utils/cursorClient.js:104:21)
+    at Generator.call (/workspace/src/utils/cursorClient.js:2:1)
+    at Generator._invoke [as next] (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="CursorApiClient listRepositories should successfully list repositories" name="CursorApiClient listRepositories should successfully list repositories" time="0.001">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;data&apos;)
+    at CursorApiClient.data (/workspace/src/utils/cursorClient.js:110:21)
+    at Generator.call (/workspace/src/utils/cursorClient.js:2:1)
+    at Generator._invoke [as next] (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at asyncGeneratorStep (/workspace/src/utils/cursorClient.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="CursorApiClient listRepositories should handle API errors" name="CursorApiClient listRepositories should handle API errors" time="0.015">
+    </testcase>
+    <testcase classname="CursorApiClient error handling and timeouts should handle network timeouts" name="CursorApiClient error handling and timeouts should handle network timeouts" time="0.001">
+    </testcase>
+    <testcase classname="CursorApiClient error handling and timeouts should handle rate limiting" name="CursorApiClient error handling and timeouts should handle rate limiting" time="0.002">
+    </testcase>
+  </testsuite>
+  <testsuite name="MCP Server Integration Tests" errors="0" failures="14" skipped="0" timestamp="2025-09-25T04:56:36" time="2.341" tests="14">
+    <testcase classname="MCP Server Integration Tests MCP Protocol Compliance should handle tools/list request" name="MCP Server Integration Tests MCP Protocol Compliance should handle tools/list request" time="0.724">
+      <failure>Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 200
+Received: 400
+    at toBe (/workspace/tests/integration/mcp-server.test.js:151:31)
+    at Generator.call (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at Generator._invoke [as next] (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="MCP Server Integration Tests MCP Protocol Compliance should handle tools/call - createAgent" name="MCP Server Integration Tests MCP Protocol Compliance should handle tools/call - createAgent" time="0.026">
+      <failure>Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 200
+Received: 400
+    at toBe (/workspace/tests/integration/mcp-server.test.js:186:31)
+    at Generator.call (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at Generator._invoke [as next] (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="MCP Server Integration Tests MCP Protocol Compliance should handle tools/call - listAgents" name="MCP Server Integration Tests MCP Protocol Compliance should handle tools/call - listAgents" time="0.023">
+      <failure>Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 200
+Received: 400
+    at toBe (/workspace/tests/integration/mcp-server.test.js:219:31)
+    at Generator.call (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at Generator._invoke [as next] (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="MCP Server Integration Tests MCP Protocol Compliance should handle tools/call - getMe" name="MCP Server Integration Tests MCP Protocol Compliance should handle tools/call - getMe" time="0.022">
+      <failure>Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 200
+Received: 400
+    at toBe (/workspace/tests/integration/mcp-server.test.js:241:31)
+    at Generator.call (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at Generator._invoke [as next] (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="MCP Server Integration Tests MCP Protocol Compliance should handle tools/call - listModels" name="MCP Server Integration Tests MCP Protocol Compliance should handle tools/call - listModels" time="0.03">
+      <failure>Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 200
+Received: 400
+    at toBe (/workspace/tests/integration/mcp-server.test.js:263:31)
+    at Generator.call (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at Generator._invoke [as next] (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="MCP Server Integration Tests MCP Protocol Compliance should handle tools/call - listRepositories" name="MCP Server Integration Tests MCP Protocol Compliance should handle tools/call - listRepositories" time="0.022">
+      <failure>Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 200
+Received: 400
+    at toBe (/workspace/tests/integration/mcp-server.test.js:285:31)
+    at Generator.call (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at Generator._invoke [as next] (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="MCP Server Integration Tests MCP Protocol Compliance should handle tools/call with validation errors" name="MCP Server Integration Tests MCP Protocol Compliance should handle tools/call with validation errors" time="0.04">
+      <failure>Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 200
+Received: 400
+    at toBe (/workspace/tests/integration/mcp-server.test.js:312:31)
+    at Generator.call (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at Generator._invoke [as next] (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="MCP Server Integration Tests MCP Protocol Compliance should handle unknown tool names" name="MCP Server Integration Tests MCP Protocol Compliance should handle unknown tool names" time="0.019">
+      <failure>Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 200
+Received: 400
+    at toBe (/workspace/tests/integration/mcp-server.test.js:330:31)
+    at Generator.call (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at Generator._invoke [as next] (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="MCP Server Integration Tests MCP Protocol Compliance should handle malformed JSON-RPC requests" name="MCP Server Integration Tests MCP Protocol Compliance should handle malformed JSON-RPC requests" time="0.023">
+      <failure>Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 200
+Received: 400
+    at toBe (/workspace/tests/integration/mcp-server.test.js:346:31)
+    at Generator.call (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at Generator._invoke [as next] (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="MCP Server Integration Tests MCP Protocol Compliance should handle missing required parameters" name="MCP Server Integration Tests MCP Protocol Compliance should handle missing required parameters" time="0.038">
+      <failure>Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 200
+Received: 400
+    at toBe (/workspace/tests/integration/mcp-server.test.js:368:31)
+    at Generator.call (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at Generator._invoke [as next] (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="MCP Server Integration Tests Error Handling should handle API client errors gracefully" name="MCP Server Integration Tests Error Handling should handle API client errors gracefully" time="0.023">
+      <failure>Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 200
+Received: 400
+    at toBe (/workspace/tests/integration/mcp-server.test.js:398:31)
+    at Generator.call (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at Generator._invoke [as next] (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="MCP Server Integration Tests Error Handling should handle network timeouts" name="MCP Server Integration Tests Error Handling should handle network timeouts" time="0.028">
+      <failure>Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 200
+Received: 400
+    at toBe (/workspace/tests/integration/mcp-server.test.js:426:31)
+    at Generator.call (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at Generator._invoke [as next] (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="MCP Server Integration Tests Performance and Reliability should handle concurrent requests" name="MCP Server Integration Tests Performance and Reliability should handle concurrent requests" time="0.027">
+      <failure>Error: read ECONNRESET
+    at TCP.onStreamRead (node:internal/stream_base_commons:216:20)</failure>
+    </testcase>
+    <testcase classname="MCP Server Integration Tests Performance and Reliability should handle large payloads" name="MCP Server Integration Tests Performance and Reliability should handle large payloads" time="0.024">
+      <failure>Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 200
+Received: 400
+    at toBe (/workspace/tests/integration/mcp-server.test.js:479:31)
+    at Generator.call (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at Generator._invoke [as next] (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at asyncGeneratorStep (/workspace/tests/integration/mcp-server.test.js:2:1)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+  </testsuite>
+</testsuites>
