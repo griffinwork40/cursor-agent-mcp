@@ -30,41 +30,14 @@ const mockCursorClientInstance = {
   listRepositories: jest.fn().mockResolvedValue({ repositories: [] }),
 };
 
-const mockDefaultCursorClient = {
-  createAgent: jest.fn(),
-  listAgents: jest.fn(),
-  getAgent: jest.fn(),
-  deleteAgent: jest.fn(),
-  addFollowup: jest.fn(),
-  getAgentConversation: jest.fn(),
-  getMe: jest.fn(),
-  listModels: jest.fn(),
-  listRepositories: jest.fn(),
-};
-
 const mockCreateCursorApiClient = jest.fn().mockReturnValue(mockCursorClientInstance);
 const mockHandleMCPError = jest.fn().mockReturnValue({
   content: [{ type: 'text', text: 'Error message' }],
   isError: true,
 });
 
-class ValidationError extends Error {}
-class ApiError extends Error {}
-
 const mockMintTokenFromApiKey = jest.fn().mockReturnValue('mock-token');
 const mockDecodeTokenToApiKey = jest.fn().mockReturnValue('decoded-api-key');
-
-const mockConfig = {
-  port: 3000,
-  cursor: {
-    apiKey: 'mock-cursor-api-key',
-    apiUrl: 'https://api.cursor.com',
-  },
-  token: {
-    secret: 'mock-token-secret',
-    ttlDays: 30,
-  },
-};
 
 // Set up spies on module exports so we can assert calls without relying on
 // unstable ESM module mocking patterns.
