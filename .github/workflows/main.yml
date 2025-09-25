@@ -157,12 +157,8 @@ jobs:
     - name: 🛑 Stop MCP server
       if: always()
       run: |
-        if [[ -n "${SERVER_PID}" && "${SERVER_PID}" =~ ^[0-9]+$ ]]; then
-          if kill -0 "${SERVER_PID}" 2>/dev/null; then
-            kill "${SERVER_PID}" || true
-            wait "${SERVER_PID}" || true
-          fi
-        fi
+        echo "Stopping MCP server with pkill..."
+        pkill -f 'npm start' || true
 
   build-verification:
     name: 🏗️ Build Verification
