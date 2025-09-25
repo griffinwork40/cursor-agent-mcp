@@ -3,64 +3,100 @@
  * Tests environment variable loading, default values, validation, and error handling
  */
 
-const originalProcessEnv = process.env;
-const originalConsoleWarn = console.warn;
+const { spawnSync } = require('child_process');
+const path = require('path');
+const { pathToFileURL } = require('url');
 
-// Helper function to create config object (simulating the actual config logic)
-function createConfig(env = {}) {
-  // Set up environment variables
-  Object.keys(env).forEach(key => {
-    process.env[key] = env[key];
-  });
+const CONFIG_ENV_KEYS = ['PORT', 'CURSOR_API_KEY', 'CURSOR_API_URL', 'TOKEN_SECRET', 'TOKEN_TTL_DAYS'];
+const originalProcessEnvSnapshot = { ...process.env };
+const UNDEFINED_TOKEN = '__CONFIG_UNDEFINED__';
+const NAN_TOKEN = '__CONFIG_NAN__';
 
-  // Mock console.warn
-  const mockConsoleWarn = jest.fn();
-  console.warn = mockConsoleWarn;
+const configModuleUrl = pathToFileURL(path.resolve(__dirname, 'index.js')).href;
 
-  // Simulate the config creation logic from the actual module
-  const config = {
-    port: process.env.PORT || 3000,
-    cursor: {
-      apiKey: process.env.CURSOR_API_KEY,
-      apiUrl: process.env.CURSOR_API_URL || 'https://api.cursor.com',
-    },
-    token: {
-      secret: process.env.TOKEN_SECRET,
-      ttlDays: Number(process.env.TOKEN_TTL_DAYS || 30),
-    },
-  };
-
-  // Simulate the warning logic
-  if (!config.token.secret) {
-    console.warn('TOKEN_SECRET not set - token-based connections will be ephemeral per process and cannot be revoked across restarts.');
+function restoreUndefinedValues(value) {
+  if (value === UNDEFINED_TOKEN) {
+    return undefined;
   }
 
-  // Restore environment
-  Object.keys(env).forEach(key => {
-    delete process.env[key];
-  });
+  if (value === NAN_TOKEN) {
+    return Number.NaN;
+  }
 
-  return { config, warnings: mockConsoleWarn.mock.calls.length };
+  if (Array.isArray(value)) {
+    return value.map(item => restoreUndefinedValues(item));
+  }
+
+  if (value && typeof value === 'object') {
+    Object.keys(value).forEach(key => {
+      value[key] = restoreUndefinedValues(value[key]);
+    });
+  }
+
+  return value;
 }
 
-beforeEach(() => {
-  // Clear all mocks before each test
-  jest.clearAllMocks();
+function runConfigProcess(overrides = {}) {
+  const env = { ...originalProcessEnvSnapshot };
+  CONFIG_ENV_KEYS.forEach(key => {
+    delete env[key];
+  });
+  Object.entries(overrides).forEach(([key, value]) => {
+    env[key] = value;
+  });
 
-  // Reset process.env to original state
-  process.env = { ...originalProcessEnv };
-});
+  const script = `
+    import { config } from '${configModuleUrl}';
+    const UNDEFINED_TOKEN = '${UNDEFINED_TOKEN}';
+    const NAN_TOKEN = '${NAN_TOKEN}';
+    const json = JSON.stringify(config, (_, value) => {
+      if (value === undefined) {
+        return UNDEFINED_TOKEN;
+      }
 
-afterEach(() => {
-  // Restore original console.warn
-  console.warn = originalConsoleWarn;
-  process.env = { ...originalProcessEnv };
-});
+      if (typeof value === 'number' && Number.isNaN(value)) {
+        return NAN_TOKEN;
+      }
+
+      return value;
+    });
+    console.log(json);
+  `;
+
+  const result = spawnSync(process.execPath, ['--input-type=module', '--eval', script], {
+    env,
+    encoding: 'utf-8'
+  });
+
+  if (result.error) {
+    throw result.error;
+  }
+
+  if (result.status !== 0) {
+    throw new Error(result.stderr || `Process exited with code ${result.status}`);
+  }
+
+  const stdout = result.stdout.trim();
+  const parsedConfig = stdout ? JSON.parse(stdout) : {};
+  const config = restoreUndefinedValues(parsedConfig);
+  const warningsCount = result.stderr
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean).length;
+
+  return { config, warningsCount };
+}
+
+async function loadConfig(overrides = {}) {
+  return runConfigProcess(overrides);
+}
+
+// Tests remain similar to original but using loadConfig helper
 
 describe('Configuration Module', () => {
   describe('Environment Variable Loading', () => {
-    it('should load environment variables from process.env', () => {
-      const { config } = createConfig({
+    it('should load environment variables from process.env', async () => {
+      const { config } = await loadConfig({
         PORT: '4000',
         CURSOR_API_KEY: 'test-api-key',
         CURSOR_API_URL: 'https://test-api.cursor.com',
@@ -77,61 +113,61 @@ describe('Configuration Module', () => {
   });
 
   describe('Default Values', () => {
-    it('should use default port 3000 when PORT is not set', () => {
-      const { config } = createConfig({});
+    it('should use default port 3000 when PORT is not set', async () => {
+      const { config } = await loadConfig({});
       expect(config.port).toBe(3000);
     });
 
-    it('should use default CURSOR_API_URL when not set', () => {
-      const { config } = createConfig({});
+    it('should use default CURSOR_API_URL when not set', async () => {
+      const { config } = await loadConfig({});
       expect(config.cursor.apiUrl).toBe('https://api.cursor.com');
     });
 
-    it('should use default TOKEN_TTL_DAYS when not set', () => {
-      const { config } = createConfig({});
+    it('should use default TOKEN_TTL_DAYS when not set', async () => {
+      const { config } = await loadConfig({});
       expect(config.token.ttlDays).toBe(30);
     });
 
-    it('should handle string to number conversion for TOKEN_TTL_DAYS', () => {
-      const { config } = createConfig({ TOKEN_TTL_DAYS: '45' });
+    it('should handle string to number conversion for TOKEN_TTL_DAYS', async () => {
+      const { config } = await loadConfig({ TOKEN_TTL_DAYS: '45' });
       expect(config.token.ttlDays).toBe(45);
       expect(typeof config.token.ttlDays).toBe('number');
     });
 
-    it('should handle invalid TOKEN_TTL_DAYS gracefully', () => {
-      const { config } = createConfig({ TOKEN_TTL_DAYS: 'invalid' });
+    it('should handle invalid TOKEN_TTL_DAYS gracefully', async () => {
+      const { config } = await loadConfig({ TOKEN_TTL_DAYS: 'invalid' });
       // Number('invalid') is NaN, not 30
       expect(config.token.ttlDays).toBeNaN();
     });
   });
 
   describe('Required Configuration Validation', () => {
-    it('should handle missing CURSOR_API_KEY', () => {
-      const { config } = createConfig({});
+    it('should handle missing CURSOR_API_KEY', async () => {
+      const { config } = await loadConfig({});
       expect(config.cursor.apiKey).toBeUndefined();
     });
 
-    it('should handle missing TOKEN_SECRET', () => {
-      const { config } = createConfig({});
+    it('should handle missing TOKEN_SECRET', async () => {
+      const { config } = await loadConfig({});
       expect(config.token.secret).toBeUndefined();
     });
   });
 
   describe('Warning Messages', () => {
-    it('should warn when TOKEN_SECRET is missing', () => {
-      const { warnings } = createConfig({});
-      expect(warnings).toBe(1);
+    it('should warn when TOKEN_SECRET is missing', async () => {
+      const { warningsCount } = await loadConfig({});
+      expect(warningsCount).toBe(1);
     });
 
-    it('should not warn when TOKEN_SECRET is set', () => {
-      const { warnings } = createConfig({ TOKEN_SECRET: 'test-secret' });
-      expect(warnings).toBe(0);
+    it('should not warn when TOKEN_SECRET is set', async () => {
+      const { warningsCount } = await loadConfig({ TOKEN_SECRET: 'test-secret' });
+      expect(warningsCount).toBe(0);
     });
   });
 
   describe('Configuration Structure', () => {
-    it('should export config object with correct structure', () => {
-      const { config } = createConfig({});
+    it('should export config object with correct structure', async () => {
+      const { config } = await loadConfig({});
       expect(config).toBeDefined();
       expect(config).toHaveProperty('port');
       expect(config).toHaveProperty('cursor');
@@ -144,16 +180,16 @@ describe('Configuration Module', () => {
       expect(config.token).toHaveProperty('ttlDays');
     });
 
-    it('should have correct data types', () => {
-      const { config } = createConfig({});
+    it('should have correct data types', async () => {
+      const { config } = await loadConfig({});
       expect(typeof config.port).toBe('number');
       expect(typeof config.cursor).toBe('object');
       expect(typeof config.token).toBe('object');
       expect(typeof config.token.ttlDays).toBe('number');
     });
 
-    it('should handle environment variables with different cases', () => {
-      const { config } = createConfig({
+    it('should handle environment variables with different cases', async () => {
+      const { config } = await loadConfig({
         CURSOR_API_KEY: 'test-key',
         cursor_api_url: 'https://lowercase-url.com',
         token_secret: 'lowercase-secret'
@@ -167,8 +203,8 @@ describe('Configuration Module', () => {
   });
 
   describe('Error Handling and Edge Cases', () => {
-    it('should handle empty environment variables', () => {
-      const { config } = createConfig({
+    it('should handle empty environment variables', async () => {
+      const { config } = await loadConfig({
         PORT: '',
         CURSOR_API_URL: '',
         TOKEN_TTL_DAYS: ''
@@ -179,8 +215,8 @@ describe('Configuration Module', () => {
       expect(config.token.ttlDays).toBe(30); // default
     });
 
-    it('should handle whitespace-only environment variables', () => {
-      const { config } = createConfig({
+    it('should handle whitespace-only environment variables', async () => {
+      const { config } = await loadConfig({
         PORT: '   ',
         CURSOR_API_URL: '  https://whitespace.com  ',
         TOKEN_TTL_DAYS: '  45  '
@@ -191,16 +227,16 @@ describe('Configuration Module', () => {
       expect(config.token.ttlDays).toBe(45); // trims whitespace for number conversion
     });
 
-    it('should handle extremely large numbers for TOKEN_TTL_DAYS', () => {
-      const { config } = createConfig({
+    it('should handle extremely large numbers for TOKEN_TTL_DAYS', async () => {
+      const { config } = await loadConfig({
         TOKEN_TTL_DAYS: '999999'
       });
 
       expect(config.token.ttlDays).toBe(999999);
     });
 
-    it('should handle zero values', () => {
-      const { config } = createConfig({
+    it('should handle zero values', async () => {
+      const { config } = await loadConfig({
         PORT: '0',
         TOKEN_TTL_DAYS: '0'
       });
@@ -211,8 +247,8 @@ describe('Configuration Module', () => {
   });
 
   describe('Integration Tests', () => {
-    it('should work correctly with all environment variables set', () => {
-      const { config, warnings } = createConfig({
+    it('should work correctly with all environment variables set', async () => {
+      const { config, warningsCount } = await loadConfig({
         PORT: '8080',
         CURSOR_API_KEY: 'integration-test-key',
         CURSOR_API_URL: 'https://integration-test.cursor.com',
@@ -225,11 +261,11 @@ describe('Configuration Module', () => {
       expect(config.cursor.apiUrl).toBe('https://integration-test.cursor.com');
       expect(config.token.secret).toBe('integration-test-secret');
       expect(config.token.ttlDays).toBe(90);
-      expect(warnings).toBe(0);
+      expect(warningsCount).toBe(0);
     });
 
-    it('should work correctly with minimal environment variables', () => {
-      const { config, warnings } = createConfig({
+    it('should work correctly with minimal environment variables', async () => {
+      const { config, warningsCount } = await loadConfig({
         CURSOR_API_KEY: 'minimal-test-key',
         TOKEN_SECRET: 'minimal-test-secret'
       });
@@ -239,11 +275,11 @@ describe('Configuration Module', () => {
       expect(config.cursor.apiUrl).toBe('https://api.cursor.com');
       expect(config.token.secret).toBe('minimal-test-secret');
       expect(config.token.ttlDays).toBe(30);
-      expect(warnings).toBe(0);
+      expect(warningsCount).toBe(0);
     });
 
-    it('should work correctly with only defaults and missing TOKEN_SECRET', () => {
-      const { config, warnings } = createConfig({
+    it('should work correctly with only defaults and missing TOKEN_SECRET', async () => {
+      const { config, warningsCount } = await loadConfig({
         CURSOR_API_KEY: 'defaults-test-key'
       });
 
@@ -252,13 +288,13 @@ describe('Configuration Module', () => {
       expect(config.cursor.apiUrl).toBe('https://api.cursor.com');
       expect(config.token.secret).toBeUndefined();
       expect(config.token.ttlDays).toBe(30);
-      expect(warnings).toBe(1);
+      expect(warningsCount).toBe(1);
     });
   });
 
   describe('Configuration Logic', () => {
-    it('should handle boolean evaluation of environment variables', () => {
-      const { config } = createConfig({
+    it('should handle boolean evaluation of environment variables', async () => {
+      const { config } = await loadConfig({
         PORT: '0', // falsy but valid port
         CURSOR_API_URL: 'https://test.cursor.com'
       });
@@ -267,8 +303,8 @@ describe('Configuration Module', () => {
       expect(config.cursor.apiUrl).toBe('https://test.cursor.com');
     });
 
-    it('should handle NaN conversion for invalid numbers', () => {
-      const { config } = createConfig({
+    it('should handle NaN conversion for invalid numbers', async () => {
+      const { config } = await loadConfig({
         TOKEN_TTL_DAYS: 'not-a-number'
       });
 
@@ -276,8 +312,8 @@ describe('Configuration Module', () => {
       expect(config.token.ttlDays).toBeNaN();
     });
 
-    it('should handle very large numbers', () => {
-      const { config } = createConfig({
+    it('should handle very large numbers', async () => {
+      const { config } = await loadConfig({
         TOKEN_TTL_DAYS: '999999999999'
       });
 
