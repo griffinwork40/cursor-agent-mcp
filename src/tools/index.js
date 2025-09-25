@@ -235,7 +235,7 @@ export const createTools = (client = defaultCursorClient) => [
         const validatedId = validateInput(schemas.agentId, input.id, 'addFollowup');
         const validatedData = validateInput(schemas.addFollowupRequest, input, 'addFollowup');
         
-        const result = await client.addFollowup(validatedId, validatedData.prompt);
+        const result = await client.addFollowup(validatedId, validatedData);
         
         return createSuccessResponse(
           '💬 Successfully added followup!\n' +

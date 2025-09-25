@@ -61,7 +61,7 @@ const validatedData = validateInput(schemas.addFollowupRequest, input.prompt, 'a
 ## Solution Implemented
 
 ### Fix Applied
-Changed the validation in `src/tools/index.js` from:
+Changed the validation and API call in `src/tools/index.js` from:
 
 ```javascript
 // BEFORE (broken)
@@ -74,14 +74,14 @@ To:
 ```javascript
 // AFTER (fixed)
 const validatedData = validateInput(schemas.addFollowupRequest, input, 'addFollowup');
-const result = await client.addFollowup(validatedId, validatedData.prompt);
+const result = await client.addFollowup(validatedId, validatedData);
 ```
 
 ### Why This Fix Works
 1. **Correct Schema Validation**: Now validates the full input object against the `addFollowupRequest` schema
-2. **Proper Data Extraction**: Extracts `validatedData.prompt` to pass to the API client
+2. **Proper API Data Structure**: Sends the complete validated data structure `{ prompt: { text: string } }` to the Cursor API
 3. **Consistent Error Messages**: Provides clear validation errors for missing or invalid fields
-4. **Maintains API Contract**: The API client still receives the expected prompt data structure
+4. **Maintains API Contract**: The Cursor API receives the expected data structure
 
 ## Testing Results
 
@@ -139,8 +139,8 @@ const result = await client.addFollowup(validatedId, validatedData.prompt);
 ## Files Modified
 
 1. **`src/tools/index.js`**
-   - Line 236: Fixed validation logic
-   - Line 238: Updated API call to use `validatedData.prompt`
+   - Line 236: Fixed validation logic to validate full input
+   - Line 238: Updated API call to send complete validated data structure
    - Lines 243-244: Updated response message to use `validatedData.prompt.text`
 
 ## Prevention Measures
