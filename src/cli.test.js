@@ -247,7 +247,7 @@ describe('CLI Module', () => {
           CURSOR_API_URL: 'https://api.cursor.com',
           MCP_SERVER_TOKEN: 'test-mcp-token',
         }, null, 2),
-        { encoding: 'utf8' }
+        { encoding: 'utf8' },
       );
       expect(mockChmodSync).toHaveBeenCalledWith(expect.stringContaining('config.json'), 0o600);
     });
@@ -268,7 +268,7 @@ describe('CLI Module', () => {
       expect(mockWriteFile).toHaveBeenCalledWith(
         expect.any(String),
         expect.stringContaining('mcp_'),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -290,7 +290,7 @@ describe('CLI Module', () => {
       expect(mockWriteFile).toHaveBeenCalledWith(
         expect.any(String),
         expect.stringContaining('existing-token'),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -550,7 +550,7 @@ describe('CLI Module', () => {
         expect(mockWriteFile).toHaveBeenCalledWith(
           expect.any(String),
           expect.stringContaining('https://api.cursor.com'),
-          expect.any(Object)
+          expect.any(Object),
         );
       });
     });
@@ -854,7 +854,7 @@ describe('CLI Module', () => {
         expect(mockWriteFile).toHaveBeenCalledWith(
           expect.stringContaining('config.json'),
           expect.stringContaining('prompted-api-key'),
-          expect.any(Object)
+          expect.any(Object),
         );
         expect(mockConsoleLog).toHaveBeenCalledWith('✅ Saved credentials to local config with restricted permissions.');
       } finally {
