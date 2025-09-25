@@ -24,7 +24,10 @@ make_mcp_request() {
     echo "Request: $method"
     echo ""
     
-    curl -X POST http://localhost:3000/mcp \
+    local response_file
+    response_file=$(mktemp)
+    local http_status
+    http_status=$(curl -X POST http://localhost:3000/mcp \
         -H "Content-Type: application/json" \
         -d "{
             \"jsonrpc\": \"2.0\",
@@ -32,9 +35,23 @@ make_mcp_request() {
             \"method\": \"$method\",
             \"params\": $params
         }" \
-        -w "\nHTTP Status: %{http_code}\n" \
-        -s | jq '.' 2>/dev/null || echo "Response received (jq not available for formatting)"
-    
+        -s -o "$response_file" \
+        -w "%{http_code}")
+
+    if command -v jq >/dev/null 2>&1; then
+        jq '.' "$response_file"
+    else
+        cat "$response_file"
+    fi
+
+    echo "HTTP Status: $http_status"
+    rm -f "$response_file"
+
+    if [[ "$http_status" -ge 400 ]]; then
+        echo -e "${RED}❌ Request failed with status $http_status${NC}"
+        return 1
+    fi
+
     echo ""
     echo "----------------------------------------"
     echo ""
