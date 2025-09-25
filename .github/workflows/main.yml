@@ -121,13 +121,20 @@ jobs:
     - name: 📦 Install dependencies
       run: npm ci
 
-    - name: 🚀 Start MCP server
+    - name: 🔍 Check integration test prerequisites
+      id: integration-precheck
       run: |
         if [ -z "${CURSOR_API_KEY}" ]; then
-          echo "::error::CURSOR_API_KEY secret is not configured for integration tests."
-          exit 1
+          echo "::warning::CURSOR_API_KEY secret is not configured; skipping integration tests."
+          echo "run-tests=false" >> "$GITHUB_OUTPUT"
+        else
+          echo "✅ CURSOR_API_KEY configured - running integration tests"
+          echo "run-tests=true" >> "$GITHUB_OUTPUT"
         fi
 
+    - name: 🚀 Start MCP server
+      if: steps.integration-precheck.outputs.run-tests == 'true'
+      run: |
         npm start &
         SERVER_PID=$!
         echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
@@ -147,23 +154,20 @@ jobs:
         fi
 
     - name: 🔌 Test MCP client integration
+      if: steps.integration-precheck.outputs.run-tests == 'true'
       env:
         CI: 'true'
       run: |
         echo "Testing MCP client integration..."
-        if [ -z "${CURSOR_API_KEY}" ]; then
-          echo "⚠️ CURSOR_API_KEY not configured - skipping integration tests"
-          echo "✅ Integration tests skipped (API key required)"
-        else
-          echo "✅ CURSOR_API_KEY configured - running integration tests"
-          timeout 10s node test-mcp-client.js || echo "MCP client test completed"
-        fi
+        timeout 10s node test-mcp-client.js
     - name: 🚨 Test error handling
+      if: steps.integration-precheck.outputs.run-tests == 'true'
       run: |
         echo "Testing error handling..."
         node test-error-handling.js
 
     - name: 🌐 Test curl examples
+      if: steps.integration-precheck.outputs.run-tests == 'true'
       run: |
         echo "Testing curl examples..."
         # Make scripts executable
@@ -172,7 +176,7 @@ jobs:
         bash -c 'timeout 30s bash test-curl-examples.sh'
 
     - name: 🛑 Stop MCP server
-      if: always()
+      if: always() && steps.integration-precheck.outputs.run-tests == 'true'
       run: |
         echo "Stopping MCP server with pkill..."
         pkill -f 'npm start' || true
@@ -231,18 +235,38 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
         echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
-        echo "| 🧪 Unit Tests | ${{ needs['unit-tests'].result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| 🔍 Code Quality | ${{ needs['code-quality'].result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| 🛡️ Security Audit | ${{ needs['security-audit'].result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| 🔗 Integration Tests | ${{ needs['integration-tests'].result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| 🏗️ Build Verification | ${{ needs['build-verification'].result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        format_status() {
+          case "$1" in
+            success)
+              echo "✅ Passed"
+              ;;
+            skipped)
+              echo "⚪ Skipped"
+              ;;
+            *)
+              echo "❌ Failed"
+              ;;
+          esac
+        }
+
+        UNIT_STATUS="${{ needs['unit-tests'].result }}"
+        QUALITY_STATUS="${{ needs['code-quality'].result }}"
+        SECURITY_STATUS="${{ needs['security-audit'].result }}"
+        INTEGRATION_STATUS="${{ needs['integration-tests'].result }}"
+        BUILD_STATUS="${{ needs['build-verification'].result }}"
+
+        echo "| 🧪 Unit Tests | $(format_status "$UNIT_STATUS") |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🔍 Code Quality | $(format_status "$QUALITY_STATUS") |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🛡️ Security Audit | $(format_status "$SECURITY_STATUS") |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🔗 Integration Tests | $(format_status "$INTEGRATION_STATUS") |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🏗️ Build Verification | $(format_status "$BUILD_STATUS") |" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
 
-        UNIT_TESTS_RESULT="${{ needs['unit-tests'].result }}"
-        CODE_QUALITY_RESULT="${{ needs['code-quality'].result }}"
-        SECURITY_AUDIT_RESULT="${{ needs['security-audit'].result }}"
-        INTEGRATION_TESTS_RESULT="${{ needs['integration-tests'].result }}"
-        BUILD_VERIFICATION_RESULT="${{ needs['build-verification'].result }}"
+        UNIT_TESTS_RESULT="$UNIT_STATUS"
+        CODE_QUALITY_RESULT="$QUALITY_STATUS"
+        SECURITY_AUDIT_RESULT="$SECURITY_STATUS"
+        INTEGRATION_TESTS_RESULT="$INTEGRATION_STATUS"
+        BUILD_VERIFICATION_RESULT="$BUILD_STATUS"
 
         if [[ "$UNIT_TESTS_RESULT" == "success" ]] && \
            [[ "$CODE_QUALITY_RESULT" == "success" ]] && \
@@ -250,6 +274,8 @@ jobs:
            [[ "$INTEGRATION_TESTS_RESULT" == "success" ]] && \
            [[ "$BUILD_VERIFICATION_RESULT" == "success" ]]; then
           echo "🎉 All checks passed! Ready for merge." >> $GITHUB_STEP_SUMMARY
+        elif [[ "$INTEGRATION_TESTS_RESULT" == "skipped" ]]; then
+          echo "⚠️ Integration tests skipped (missing CURSOR_API_KEY secret). Please verify critical flows manually." >> $GITHUB_STEP_SUMMARY
         else
           echo "⚠️ Some checks failed. Please review and fix before merging." >> $GITHUB_STEP_SUMMARY
         fi
