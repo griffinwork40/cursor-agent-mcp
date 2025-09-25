@@ -217,7 +217,17 @@ jobs:
         echo "| 🏗️ Build Verification | ${{ needs['build-verification'].result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
 
-        if [[ "${{ needs['unit-tests'].result }}" == "success" && "${{ needs['code-quality'].result }}" == "success" && "${{ needs['security-audit'].result }}" == "success" && "${{ needs['integration-tests'].result }}" == "success" && "${{ needs['build-verification'].result }}" == "success" ]]; then
+        UNIT_TESTS_RESULT="${{ needs['unit-tests'].result }}"
+        CODE_QUALITY_RESULT="${{ needs['code-quality'].result }}"
+        SECURITY_AUDIT_RESULT="${{ needs['security-audit'].result }}"
+        INTEGRATION_TESTS_RESULT="${{ needs['integration-tests'].result }}"
+        BUILD_VERIFICATION_RESULT="${{ needs['build-verification'].result }}"
+
+        if [[ "$UNIT_TESTS_RESULT" == "success" ]] && \
+           [[ "$CODE_QUALITY_RESULT" == "success" ]] && \
+           [[ "$SECURITY_AUDIT_RESULT" == "success" ]] && \
+           [[ "$INTEGRATION_TESTS_RESULT" == "success" ]] && \
+           [[ "$BUILD_VERIFICATION_RESULT" == "success" ]]; then
           echo "🎉 All checks passed! Ready for merge." >> $GITHUB_STEP_SUMMARY
         else
           echo "⚠️ Some checks failed. Please review and fix before merging." >> $GITHUB_STEP_SUMMARY
