@@ -119,9 +119,13 @@ jobs:
     - name: 🔌 Test MCP client integration
       run: |
         echo "Testing MCP client integration..."
-        # Note: This would require CURSOR_API_KEY for full testing
-        # For now, we'll just verify the client can start
-        timeout 10s node test-mcp-client.js || echo "MCP client test completed"
+        if [ -z "${CURSOR_API_KEY}" ]; then
+          echo "⚠️ CURSOR_API_KEY not configured - skipping integration tests"
+          echo "✅ Integration tests skipped (API key required)"
+        else
+          echo "✅ CURSOR_API_KEY configured - running integration tests"
+          timeout 10s node test-mcp-client.js || echo "MCP client test completed"
+        fi
     
     - name: 🚨 Test error handling
       run: |
