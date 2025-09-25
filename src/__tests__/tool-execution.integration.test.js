@@ -5,7 +5,6 @@ import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 
 // Import components
-import { config } from '../config/index.js';
 import { createCursorApiClient } from '../utils/cursorClient.js';
 import { createTools } from '../tools/index.js';
 
@@ -46,32 +45,32 @@ const createTestApp = () => {
       let result;
 
       switch (method) {
-        case 'tools/list':
-          {
-            const tools = getToolsForRequest(req);
-            result = {
-              tools: tools.map(tool => ({
-                name: tool.name,
-                description: tool.description,
-                inputSchema: tool.inputSchema,
-              })),
-            };
-          }
-          break;
+      case 'tools/list':
+        {
+          const tools = getToolsForRequest(req);
+          result = {
+            tools: tools.map(tool => ({
+              name: tool.name,
+              description: tool.description,
+              inputSchema: tool.inputSchema,
+            })),
+          };
+        }
+        break;
 
-        case 'tools/call':
-          {
-            const tools = getToolsForRequest(req);
-            const tool = tools.find(t => t.name === params.name);
-            if (!tool) {
-              throw new Error(`Tool ${params.name} not found`);
-            }
-            result = await tool.handler(params.arguments || {});
+      case 'tools/call':
+        {
+          const tools = getToolsForRequest(req);
+          const tool = tools.find(t => t.name === params.name);
+          if (!tool) {
+            throw new Error(`Tool ${params.name} not found`);
           }
-          break;
+          result = await tool.handler(params.arguments || {});
+        }
+        break;
 
-        default:
-          throw new Error(`Unknown method: ${method}`);
+      default:
+        throw new Error(`Unknown method: ${method}`);
       }
 
       const response = {
@@ -109,7 +108,7 @@ const mockAgents = [
     createdAt: '2024-01-01T00:00:00Z',
     source: { repository: 'https://github.com/test/repo1' },
     target: { url: 'https://github.com/test/repo1/pull/1', branchName: 'feature/test' },
-    summary: 'Completed successfully'
+    summary: 'Completed successfully',
   },
   {
     id: 'agent_456',
@@ -118,7 +117,7 @@ const mockAgents = [
     createdAt: '2024-01-02T00:00:00Z',
     source: { repository: 'https://github.com/test/repo2' },
     target: { url: 'https://github.com/test/repo2/pull/2', branchName: 'feature/test2' },
-    summary: 'Currently running'
+    summary: 'Currently running',
   },
   {
     id: 'agent_789',
@@ -127,15 +126,15 @@ const mockAgents = [
     createdAt: '2024-01-03T00:00:00Z',
     source: { repository: 'https://github.com/test/repo3' },
     target: { url: 'https://github.com/test/repo3/pull/3', branchName: 'feature/test3' },
-    summary: 'Error occurred'
-  }
+    summary: 'Error occurred',
+  },
 ];
 
 const mockModels = ['gpt-4', 'gpt-3.5-turbo', 'claude-3-opus', 'claude-3-sonnet'];
 const mockRepositories = [
   { name: 'repo1', owner: 'test', repository: 'https://github.com/test/repo1' },
   { name: 'repo2', owner: 'test', repository: 'https://github.com/test/repo2' },
-  { name: 'repo3', owner: 'test', repository: 'https://github.com/test/repo3' }
+  { name: 'repo3', owner: 'test', repository: 'https://github.com/test/repo3' },
 ];
 
 const mockAgentConversations = [
@@ -145,15 +144,15 @@ const mockAgentConversations = [
       {
         type: 'user_message',
         text: 'Create a new feature for user authentication',
-        timestamp: '2024-01-01T00:00:00Z'
+        timestamp: '2024-01-01T00:00:00Z',
       },
       {
         type: 'assistant_message',
         text: 'I understand you want to create a user authentication feature. Let me start working on this...',
-        timestamp: '2024-01-01T00:01:00Z'
-      }
-    ]
-  }
+        timestamp: '2024-01-01T00:01:00Z',
+      },
+    ],
+  },
 ];
 
 describe('Tool Execution Chain Integration Tests', () => {
@@ -204,7 +203,7 @@ describe('Tool Execution Chain Integration Tests', () => {
         createdAt: '2024-01-04T00:00:00Z',
         source: { repository: 'https://github.com/test/chain-repo' },
         target: { url: 'https://github.com/test/chain-repo/pull/4', branchName: 'feature/chain' },
-        summary: 'Creating agent...'
+        summary: 'Creating agent...',
       };
 
       mock.onPost('/v0/agents').reply(200, mockNewAgent);
@@ -219,16 +218,16 @@ describe('Tool Execution Chain Integration Tests', () => {
               prompt: { text: 'Create a user authentication system' },
               model: 'gpt-4',
               source: { repository: 'https://github.com/test/chain-repo' },
-              target: { autoCreatePr: true, branchName: 'feature/auth' }
-            }
+              target: { autoCreatePr: true, branchName: 'feature/auth' },
+            },
           },
-          id: 'chain-test-1'
+          id: 'chain-test-1',
         })
         .expect(200);
 
       expect(createResponse.body).toMatchObject({
         jsonrpc: '2.0',
-        id: 'chain-test-1'
+        id: 'chain-test-1',
       });
       expect(createResponse.body.result.content[0].text).toContain('Successfully created agent');
       expect(createResponse.body.result.content[0].text).toContain('chain_test_agent');
@@ -243,15 +242,15 @@ describe('Tool Execution Chain Integration Tests', () => {
           method: 'tools/call',
           params: {
             name: 'getAgent',
-            arguments: { id: 'chain_test_agent' }
+            arguments: { id: 'chain_test_agent' },
           },
-          id: 'chain-test-2'
+          id: 'chain-test-2',
         })
         .expect(200);
 
       expect(getResponse.body).toMatchObject({
         jsonrpc: '2.0',
-        id: 'chain-test-2'
+        id: 'chain-test-2',
       });
       expect(getResponse.body.result.content[0].text).toContain('Chain Test Agent');
       expect(getResponse.body.result.content[0].text).toContain('RUNNING');
@@ -268,16 +267,16 @@ describe('Tool Execution Chain Integration Tests', () => {
             name: 'addFollowup',
             arguments: {
               id: 'chain_test_agent',
-              prompt: { text: 'Add email verification to the authentication system' }
-            }
+              prompt: { text: 'Add email verification to the authentication system' },
+            },
           },
-          id: 'chain-test-3'
+          id: 'chain-test-3',
         })
         .expect(200);
 
       expect(followupResponse.body).toMatchObject({
         jsonrpc: '2.0',
-        id: 'chain-test-3'
+        id: 'chain-test-3',
       });
       expect(followupResponse.body.result.content[0].text).toContain('Successfully added followup');
 
@@ -290,15 +289,15 @@ describe('Tool Execution Chain Integration Tests', () => {
           method: 'tools/call',
           params: {
             name: 'getAgent',
-            arguments: { id: 'chain_test_agent' }
+            arguments: { id: 'chain_test_agent' },
           },
-          id: 'chain-test-4'
+          id: 'chain-test-4',
         })
         .expect(200);
 
       expect(getAfterFollowupResponse.body).toMatchObject({
         jsonrpc: '2.0',
-        id: 'chain-test-4'
+        id: 'chain-test-4',
       });
       expect(getAfterFollowupResponse.body.result.content[0].text).toContain('Chain Test Agent');
     });
@@ -312,7 +311,7 @@ describe('Tool Execution Chain Integration Tests', () => {
         createdAt: '2024-01-04T00:00:00Z',
         source: { repository: 'https://github.com/test/error-chain-repo' },
         target: { url: 'https://github.com/test/error-chain-repo/pull/5', branchName: 'feature/error' },
-        summary: 'Creating agent...'
+        summary: 'Creating agent...',
       };
 
       mock.onPost('/v0/agents').reply(200, mockNewAgent);
@@ -326,10 +325,10 @@ describe('Tool Execution Chain Integration Tests', () => {
             arguments: {
               prompt: { text: 'Create a buggy feature' },
               model: 'gpt-4',
-              source: { repository: 'https://github.com/test/error-chain-repo' }
-            }
+              source: { repository: 'https://github.com/test/error-chain-repo' },
+            },
           },
-          id: 'error-chain-1'
+          id: 'error-chain-1',
         })
         .expect(200);
 
@@ -345,9 +344,9 @@ describe('Tool Execution Chain Integration Tests', () => {
           method: 'tools/call',
           params: {
             name: 'getAgent',
-            arguments: { id: 'error_chain_agent' }
+            arguments: { id: 'error_chain_agent' },
           },
-          id: 'error-chain-2'
+          id: 'error-chain-2',
         })
         .expect(200);
 
@@ -366,10 +365,10 @@ describe('Tool Execution Chain Integration Tests', () => {
             name: 'addFollowup',
             arguments: {
               id: 'error_chain_agent',
-              prompt: { text: 'Fix the error in the buggy feature' }
-            }
+              prompt: { text: 'Fix the error in the buggy feature' },
+            },
           },
-          id: 'error-chain-3'
+          id: 'error-chain-3',
         })
         .expect(200);
 
@@ -384,9 +383,9 @@ describe('Tool Execution Chain Integration Tests', () => {
           method: 'tools/call',
           params: {
             name: 'getAgentConversation',
-            arguments: { id: 'error_chain_agent' }
+            arguments: { id: 'error_chain_agent' },
           },
-          id: 'error-chain-4'
+          id: 'error-chain-4',
         })
         .expect(200);
 
@@ -402,9 +401,9 @@ describe('Tool Execution Chain Integration Tests', () => {
           method: 'tools/call',
           params: {
             name: 'listAgents',
-            arguments: { limit: 10 }
+            arguments: { limit: 10 },
           },
-          id: 'lifecycle-1'
+          id: 'lifecycle-1',
         })
         .expect(200);
 
@@ -418,7 +417,7 @@ describe('Tool Execution Chain Integration Tests', () => {
         createdAt: '2024-01-04T00:00:00Z',
         source: { repository: 'https://github.com/test/delete-repo' },
         target: { url: 'https://github.com/test/delete-repo/pull/6', branchName: 'feature/delete' },
-        summary: 'Ready for deletion'
+        summary: 'Ready for deletion',
       };
 
       mock.onPost('/v0/agents').reply(200, mockNewAgent);
@@ -433,10 +432,10 @@ describe('Tool Execution Chain Integration Tests', () => {
             arguments: {
               prompt: { text: 'Create a feature that will be deleted' },
               model: 'gpt-4',
-              source: { repository: 'https://github.com/test/delete-repo' }
-            }
+              source: { repository: 'https://github.com/test/delete-repo' },
+            },
           },
-          id: 'lifecycle-2'
+          id: 'lifecycle-2',
         })
         .expect(200);
 
@@ -449,9 +448,9 @@ describe('Tool Execution Chain Integration Tests', () => {
           method: 'tools/call',
           params: {
             name: 'listAgents',
-            arguments: { limit: 10 }
+            arguments: { limit: 10 },
           },
-          id: 'lifecycle-3'
+          id: 'lifecycle-3',
         })
         .expect(200);
 
@@ -466,9 +465,9 @@ describe('Tool Execution Chain Integration Tests', () => {
           method: 'tools/call',
           params: {
             name: 'deleteAgent',
-            arguments: { id: 'delete_test_agent' }
+            arguments: { id: 'delete_test_agent' },
           },
-          id: 'lifecycle-4'
+          id: 'lifecycle-4',
         })
         .expect(200);
 
@@ -484,9 +483,9 @@ describe('Tool Execution Chain Integration Tests', () => {
           method: 'tools/call',
           params: {
             name: 'listAgents',
-            arguments: { limit: 10 }
+            arguments: { limit: 10 },
           },
-          id: 'lifecycle-5'
+          id: 'lifecycle-5',
         })
         .expect(200);
 
@@ -511,7 +510,7 @@ describe('Tool Execution Chain Integration Tests', () => {
         createdAt: '2024-01-04T00:00:00Z',
         source: { repository: 'https://github.com/test/image-repo' },
         target: { url: 'https://github.com/test/image-repo/pull/7', branchName: 'feature/image' },
-        summary: 'Creating agent with image prompt...'
+        summary: 'Creating agent with image prompt...',
       };
 
       mock.onPost('/v0/agents').reply(200, mockNewAgent);
@@ -527,25 +526,25 @@ describe('Tool Execution Chain Integration Tests', () => {
                 text: 'Create a UI component based on the provided design',
                 images: [{
                   data: 'base64_encoded_image_data',
-                  dimension: { width: 800, height: 600 }
-                }]
+                  dimension: { width: 800, height: 600 },
+                }],
               },
               model: 'gpt-4',
               source: { repository: 'https://github.com/test/image-repo' },
               target: { autoCreatePr: true, branchName: 'feature/ui-component' },
               webhook: {
                 url: 'https://example.com/webhook',
-                secret: 'super_secret_webhook_key_12345678901234567890'
-              }
-            }
+                secret: 'super_secret_webhook_key_12345678901234567890',
+              },
+            },
           },
-          id: 'complex-1'
+          id: 'complex-1',
         })
         .expect(200);
 
       expect(response.body).toMatchObject({
         jsonrpc: '2.0',
-        id: 'complex-1'
+        id: 'complex-1',
       });
       expect(response.body.result.content[0].text).toContain('Successfully created agent');
       expect(response.body.result.content[0].text).toContain('image_webhook_agent');
@@ -559,7 +558,7 @@ describe('Tool Execution Chain Integration Tests', () => {
         createdAt: '2024-01-04T00:00:00Z',
         source: { repository: 'https://github.com/test/concurrent-repo-1' },
         target: { url: 'https://github.com/test/concurrent-repo-1/pull/8', branchName: 'feature/concurrent-1' },
-        summary: 'Creating concurrent agent 1...'
+        summary: 'Creating concurrent agent 1...',
       };
 
       const mockNewAgent2 = {
@@ -569,7 +568,7 @@ describe('Tool Execution Chain Integration Tests', () => {
         createdAt: '2024-01-04T00:00:00Z',
         source: { repository: 'https://github.com/test/concurrent-repo-2' },
         target: { url: 'https://github.com/test/concurrent-repo-2/pull/9', branchName: 'feature/concurrent-2' },
-        summary: 'Creating concurrent agent 2...'
+        summary: 'Creating concurrent agent 2...',
       };
 
       // Mock concurrent API calls
@@ -586,10 +585,10 @@ describe('Tool Execution Chain Integration Tests', () => {
               arguments: {
                 prompt: { text: 'Create feature 1' },
                 model: 'gpt-4',
-                source: { repository: 'https://github.com/test/concurrent-repo-1' }
-              }
+                source: { repository: 'https://github.com/test/concurrent-repo-1' },
+              },
             },
-            id: 'concurrent-1'
+            id: 'concurrent-1',
           }),
         request(app)
           .post('/mcp')
@@ -600,11 +599,11 @@ describe('Tool Execution Chain Integration Tests', () => {
               arguments: {
                 prompt: { text: 'Create feature 2' },
                 model: 'gpt-4',
-                source: { repository: 'https://github.com/test/concurrent-repo-2' }
-              }
+                source: { repository: 'https://github.com/test/concurrent-repo-2' },
+              },
             },
-            id: 'concurrent-2'
-          })
+            id: 'concurrent-2',
+          }),
       ]);
 
       expect(response1.status).toBe(200);
@@ -630,16 +629,16 @@ describe('Tool Execution Chain Integration Tests', () => {
             arguments: {
               prompt: { text: '' }, // Invalid empty prompt
               model: 'invalid-model', // Invalid model
-              source: { repository: '' } // Invalid empty repository
-            }
+              source: { repository: '' }, // Invalid empty repository
+            },
           },
-          id: 'error-propagation-1'
+          id: 'error-propagation-1',
         })
         .expect(200);
 
       expect(response.body).toMatchObject({
         jsonrpc: '2.0',
-        id: 'error-propagation-1'
+        id: 'error-propagation-1',
       });
       expect(response.body.result).toHaveProperty('isError', true);
       expect(response.body.result.content[0].text).toContain('Validation Error');
@@ -654,7 +653,7 @@ describe('Tool Execution Chain Integration Tests', () => {
         createdAt: '2024-01-04T00:00:00Z',
         source: { repository: 'https://github.com/test/api-error-repo' },
         target: { url: 'https://github.com/test/api-error-repo/pull/10', branchName: 'feature/api-error' },
-        summary: 'Creating agent...'
+        summary: 'Creating agent...',
       };
 
       mock.onPost('/v0/agents').reply(200, mockNewAgent);
@@ -668,10 +667,10 @@ describe('Tool Execution Chain Integration Tests', () => {
             arguments: {
               prompt: { text: 'Create a feature that will fail' },
               model: 'gpt-4',
-              source: { repository: 'https://github.com/test/api-error-repo' }
-            }
+              source: { repository: 'https://github.com/test/api-error-repo' },
+            },
           },
-          id: 'api-error-1'
+          id: 'api-error-1',
         })
         .expect(200);
 
@@ -686,9 +685,9 @@ describe('Tool Execution Chain Integration Tests', () => {
           method: 'tools/call',
           params: {
             name: 'getAgent',
-            arguments: { id: 'api_error_agent' }
+            arguments: { id: 'api_error_agent' },
           },
-          id: 'api-error-2'
+          id: 'api-error-2',
         })
         .expect(200);
 
@@ -701,8 +700,8 @@ describe('Tool Execution Chain Integration Tests', () => {
       mock.onPost('/v0/agents').reply(429, {
         error: {
           message: 'Too many requests. Please try again later.',
-          code: 'RATE_LIMIT_EXCEEDED'
-        }
+          code: 'RATE_LIMIT_EXCEEDED',
+        },
       });
 
       const response = await request(app)
@@ -714,16 +713,16 @@ describe('Tool Execution Chain Integration Tests', () => {
             arguments: {
               prompt: { text: 'Create a feature' },
               model: 'gpt-4',
-              source: { repository: 'https://github.com/test/rate-limit-repo' }
-            }
+              source: { repository: 'https://github.com/test/rate-limit-repo' },
+            },
           },
-          id: 'rate-limit-1'
+          id: 'rate-limit-1',
         })
         .expect(200);
 
       expect(response.body).toMatchObject({
         jsonrpc: '2.0',
-        id: 'rate-limit-1'
+        id: 'rate-limit-1',
       });
       expect(response.body.result).toHaveProperty('isError', true);
       expect(response.body.result.content[0].text).toContain('API Error (429)');
@@ -749,7 +748,7 @@ describe('Tool Execution Chain Integration Tests', () => {
         createdAt: '2024-01-04T00:00:00Z',
         source: { repository: 'https://github.com/test/large-prompt-repo' },
         target: { url: 'https://github.com/test/large-prompt-repo/pull/11', branchName: 'feature/large' },
-        summary: 'Creating agent with large prompt...'
+        summary: 'Creating agent with large prompt...',
       };
 
       mock.onPost('/v0/agents').reply(200, mockNewAgent);
@@ -763,16 +762,16 @@ describe('Tool Execution Chain Integration Tests', () => {
             arguments: {
               prompt: { text: largePrompt },
               model: 'gpt-4',
-              source: { repository: 'https://github.com/test/large-prompt-repo' }
-            }
+              source: { repository: 'https://github.com/test/large-prompt-repo' },
+            },
           },
-          id: 'edge-case-1'
+          id: 'edge-case-1',
         })
         .expect(200);
 
       expect(response.body).toMatchObject({
         jsonrpc: '2.0',
-        id: 'edge-case-1'
+        id: 'edge-case-1',
       });
       expect(response.body.result.content[0].text).toContain('Successfully created agent');
     });
@@ -786,7 +785,7 @@ describe('Tool Execution Chain Integration Tests', () => {
         createdAt: '2024-01-04T00:00:00Z',
         source: { repository: 'https://github.com/test/special-chars-repo' },
         target: { url: 'https://github.com/test/special-chars-repo/pull/12', branchName: 'feature/special' },
-        summary: 'Creating agent with special characters...'
+        summary: 'Creating agent with special characters...',
       };
 
       mock.onPost('/v0/agents').reply(200, mockNewAgent);
@@ -800,16 +799,16 @@ describe('Tool Execution Chain Integration Tests', () => {
             arguments: {
               prompt: { text: specialPrompt },
               model: 'gpt-4',
-              source: { repository: 'https://github.com/test/special-chars-repo' }
-            }
+              source: { repository: 'https://github.com/test/special-chars-repo' },
+            },
           },
-          id: 'edge-case-2'
+          id: 'edge-case-2',
         })
         .expect(200);
 
       expect(response.body).toMatchObject({
         jsonrpc: '2.0',
-        id: 'edge-case-2'
+        id: 'edge-case-2',
       });
       expect(response.body.result.content[0].text).toContain('Successfully created agent');
     });
@@ -822,7 +821,7 @@ describe('Tool Execution Chain Integration Tests', () => {
         createdAt: '2024-01-04T00:00:00Z',
         source: { repository: 'https://github.com/test/empty-data-repo' },
         target: { url: 'https://github.com/test/empty-data-repo/pull/13', branchName: 'feature/empty' },
-        summary: 'Creating agent with empty data...'
+        summary: 'Creating agent with empty data...',
       };
 
       mock.onPost('/v0/agents').reply(200, mockNewAgent);
@@ -837,16 +836,16 @@ describe('Tool Execution Chain Integration Tests', () => {
               prompt: { text: 'Create a feature', images: [] }, // Empty images array
               model: 'gpt-4',
               source: { repository: 'https://github.com/test/empty-data-repo' },
-              target: {} // Empty target object
-            }
+              target: {}, // Empty target object
+            },
           },
-          id: 'edge-case-3'
+          id: 'edge-case-3',
         })
         .expect(200);
 
       expect(response.body).toMatchObject({
         jsonrpc: '2.0',
-        id: 'edge-case-3'
+        id: 'edge-case-3',
       });
       expect(response.body.result.content[0].text).toContain('Successfully created agent');
     });
@@ -864,17 +863,17 @@ describe('Tool Execution Chain Integration Tests', () => {
               source: { repository: 'https://github.com/test/malformed-repo' },
               webhook: {
                 url: 'https://example.com/webhook',
-                secret: '' // Empty secret - should trigger validation error
-              }
-            }
+                secret: '', // Empty secret - should trigger validation error
+              },
+            },
           },
-          id: 'edge-case-4'
+          id: 'edge-case-4',
         })
         .expect(200);
 
       expect(response.body).toMatchObject({
         jsonrpc: '2.0',
-        id: 'edge-case-4'
+        id: 'edge-case-4',
       });
       expect(response.body.result).toHaveProperty('isError', true);
       expect(response.body.result.content[0].text).toContain('Validation Error');

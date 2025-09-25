@@ -121,52 +121,52 @@ describe('MCP Protocol Integration Tests - Basic HTTP Endpoints', () => {
         let result;
 
         switch (method) {
-          case 'tools/list':
-            result = {
-              tools: [
-                {
-                  name: 'createAgent',
-                  description: 'Create a new background agent to work on a repository',
-                  inputSchema: {
-                    type: 'object',
-                    properties: {
-                      prompt: { type: 'object', properties: { text: { type: 'string' } }, required: ['text'] },
-                      model: { type: 'string' },
-                      source: { type: 'object', properties: { repository: { type: 'string' } }, required: ['repository'] },
-                      target: { type: 'object', properties: { autoCreatePr: { type: 'boolean' }, branchName: { type: 'string' } } },
-                      webhook: { type: 'object', properties: { url: { type: 'string' }, secret: { type: 'string' } } }
-                    },
-                    required: ['prompt', 'source', 'model']
-                  }
+        case 'tools/list':
+          result = {
+            tools: [
+              {
+                name: 'createAgent',
+                description: 'Create a new background agent to work on a repository',
+                inputSchema: {
+                  type: 'object',
+                  properties: {
+                    prompt: { type: 'object', properties: { text: { type: 'string' } }, required: ['text'] },
+                    model: { type: 'string' },
+                    source: { type: 'object', properties: { repository: { type: 'string' } }, required: ['repository'] },
+                    target: { type: 'object', properties: { autoCreatePr: { type: 'boolean' }, branchName: { type: 'string' } } },
+                    webhook: { type: 'object', properties: { url: { type: 'string' }, secret: { type: 'string' } } },
+                  },
+                  required: ['prompt', 'source', 'model'],
                 },
-                {
-                  name: 'listAgents',
-                  description: 'List all background agents for the authenticated user',
-                  inputSchema: {
-                    type: 'object',
-                    properties: {
-                      limit: { type: 'number' },
-                      cursor: { type: 'string' }
-                    }
-                  }
-                }
-              ]
-            };
-            break;
+              },
+              {
+                name: 'listAgents',
+                description: 'List all background agents for the authenticated user',
+                inputSchema: {
+                  type: 'object',
+                  properties: {
+                    limit: { type: 'number' },
+                    cursor: { type: 'string' },
+                  },
+                },
+              },
+            ],
+          };
+          break;
 
-          case 'tools/call':
-            result = {
-              content: [
-                {
-                  type: 'text',
-                  text: `Mock response for tool: ${params.name}`
-                }
-              ]
-            };
-            break;
+        case 'tools/call':
+          result = {
+            content: [
+              {
+                type: 'text',
+                text: `Mock response for tool: ${params.name}`,
+              },
+            ],
+          };
+          break;
 
-          default:
-            throw new Error(`Unknown method: ${method}`);
+        default:
+          throw new Error(`Unknown method: ${method}`);
         }
 
         const response = {
@@ -210,7 +210,7 @@ describe('MCP Protocol Integration Tests - Basic HTTP Endpoints', () => {
 
         expect(response.body).toMatchObject({
           status: 'ok',
-          version: '1.0.0'
+          version: '1.0.0',
         });
         expect(response.body).toHaveProperty('timestamp');
         expect(response.body).toHaveProperty('uptime');
@@ -236,7 +236,7 @@ describe('MCP Protocol Integration Tests - Basic HTTP Endpoints', () => {
           oauth: {
             authorization_endpoint: '/oauth/authorize',
             token_endpoint: '/oauth/token',
-          }
+          },
         });
       });
     });
@@ -309,13 +309,13 @@ describe('MCP Protocol Integration Tests - Basic HTTP Endpoints', () => {
           .post('/mcp')
           .send({
             method: 'tools/list',
-            id: 'test-123'
+            id: 'test-123',
           })
           .expect(200);
 
         expect(response.body).toMatchObject({
           jsonrpc: '2.0',
-          id: 'test-123'
+          id: 'test-123',
         });
 
         expect(response.body.result).toHaveProperty('tools');
@@ -342,16 +342,16 @@ describe('MCP Protocol Integration Tests - Basic HTTP Endpoints', () => {
               arguments: {
                 prompt: { text: 'Test prompt' },
                 model: 'gpt-4',
-                source: { repository: 'https://github.com/test/repo' }
-              }
+                source: { repository: 'https://github.com/test/repo' },
+              },
             },
-            id: 'test-456'
+            id: 'test-456',
           })
           .expect(200);
 
         expect(response.body).toMatchObject({
           jsonrpc: '2.0',
-          id: 'test-456'
+          id: 'test-456',
         });
 
         expect(response.body.result).toHaveProperty('content');
@@ -367,15 +367,15 @@ describe('MCP Protocol Integration Tests - Basic HTTP Endpoints', () => {
             method: 'tools/call',
             params: {
               name: 'nonExistentTool',
-              arguments: {}
+              arguments: {},
             },
-            id: 'test-789'
+            id: 'test-789',
           })
           .expect(200);
 
         expect(response.body).toMatchObject({
           jsonrpc: '2.0',
-          id: 'test-789'
+          id: 'test-789',
         });
 
         expect(response.body.result).toHaveProperty('content');
@@ -389,13 +389,13 @@ describe('MCP Protocol Integration Tests - Basic HTTP Endpoints', () => {
           .post('/mcp')
           .send({
             method: 'unknown/method',
-            id: 'test-101'
+            id: 'test-101',
           })
           .expect(500);
 
         expect(response.body).toMatchObject({
           jsonrpc: '2.0',
-          id: 'test-101'
+          id: 'test-101',
         });
 
         expect(response.body).toHaveProperty('error');
@@ -429,7 +429,7 @@ describe('MCP Protocol Integration Tests - Basic HTTP Endpoints', () => {
       const response = await request(app)
         .post('/mcp')
         .send({
-          id: 'test-202'
+          id: 'test-202',
           // Missing method
         })
         .expect(500);
@@ -446,10 +446,10 @@ describe('MCP Protocol Integration Tests - Basic HTTP Endpoints', () => {
           arguments: {
             prompt: { text: 'A'.repeat(10000) }, // Very large prompt
             model: 'gpt-4',
-            source: { repository: 'https://github.com/test/repo' }
-          }
+            source: { repository: 'https://github.com/test/repo' },
+          },
         },
-        id: 'test-303'
+        id: 'test-303',
       };
 
       const response = await request(app)
@@ -460,7 +460,7 @@ describe('MCP Protocol Integration Tests - Basic HTTP Endpoints', () => {
       // Should handle gracefully
       expect(response.body).toMatchObject({
         jsonrpc: '2.0',
-        id: 'test-303'
+        id: 'test-303',
       });
     });
   });
@@ -471,7 +471,7 @@ describe('MCP Protocol Integration Tests - Basic HTTP Endpoints', () => {
         .post('/mcp')
         .send({
           method: 'tools/list',
-          id: 'format-test-123'
+          id: 'format-test-123',
         })
         .expect(200);
 
@@ -490,7 +490,7 @@ describe('MCP Protocol Integration Tests - Basic HTTP Endpoints', () => {
         .post('/mcp')
         .send({
           method: 'unknown/method',
-          id: 'error-format-test-456'
+          id: 'error-format-test-456',
         })
         .expect(500);
 

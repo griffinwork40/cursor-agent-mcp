@@ -10,6 +10,8 @@ import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprot
 import { createCursorApiClient } from '../utils/cursorClient.js';
 import { createTools } from '../tools/index.js';
 
+/* global setTimeout, clearTimeout */
+
 const DEFAULT_EVENT_TIMEOUT_MS = 2000;
 
 const parseSseEvent = (rawEvent) => {
@@ -144,11 +146,11 @@ const createTestAppWithSSE = () => {
   };
 
   // Lazily create tools per request using provided API key
-  const getToolsForRequest = (req) => {
-    const apiKey = extractApiKey(req);
-    const client = createCursorApiClient(apiKey);
-    return createTools(client);
-  };
+  // const getToolsForRequest = (req) => {
+  //   const apiKey = extractApiKey(req);
+  //   const client = createCursorApiClient(apiKey);
+  //   return createTools(client);
+  // };
 
   // Create MCP Server for SSE
   const mcpServer = new Server(
@@ -233,13 +235,13 @@ const mockAgents = [
     createdAt: '2024-01-01T00:00:00Z',
     source: { repository: 'https://github.com/test/repo1' },
     target: { url: 'https://github.com/test/repo1/pull/1', branchName: 'feature/test' },
-    summary: 'Completed successfully'
-  }
+    summary: 'Completed successfully',
+  },
 ];
 
 const mockModels = ['gpt-4', 'gpt-3.5-turbo', 'claude-3-opus'];
 const mockRepositories = [
-  { name: 'repo1', owner: 'test', repository: 'https://github.com/test/repo1' }
+  { name: 'repo1', owner: 'test', repository: 'https://github.com/test/repo1' },
 ];
 
 describe('MCP SSE Integration Tests', () => {
