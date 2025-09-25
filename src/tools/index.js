@@ -6,7 +6,8 @@ import {
   schemas, 
 } from '../utils/errorHandler.js';
 
-export const createTools = (client = defaultCursorClient) => [
+export const createTools = (client = defaultCursorClient) => {
+  const tools = [
   {
     name: 'createAgent',
     description: 'Create a new background agent to work on a repository',
@@ -359,3 +360,96 @@ export const createTools = (client = defaultCursorClient) => [
     },
   },
 ];
+
+  // Add a self-documentation tool to help LLMs understand how to use this MCP server
+  tools.push({
+    name: 'documentation',
+    description: 'Return MCP usage docs, endpoints, auth, and tool schemas for this server',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        format: {
+          type: 'string',
+          description: "Response format: 'markdown' or 'json'",
+          enum: ['markdown', 'json'],
+          default: 'markdown',
+        },
+      },
+    },
+    handler: async (input = {}) => {
+      try {
+        const format = (input && input.format) || 'markdown';
+        const listedTools = tools
+          .filter(t => t.name !== 'documentation')
+          .map(t => ({ name: t.name, description: t.description, inputSchema: t.inputSchema }));
+
+        const doc = {
+          name: 'cursor-background-agents',
+          version: '1.0.0',
+          protocolVersion: '2025-03-26',
+          description: 'MCP server for Cursor Background Agents API',
+          endpoints: {
+            http: '/mcp',
+            sse: '/sse',
+            health: '/health',
+            discovery: '/',
+          },
+          authentication: {
+            type: 'api_key',
+            env: 'CURSOR_API_KEY',
+            headers: ['Authorization: Bearer key_…', 'x-cursor-api-key', 'x-api-key', 'x-mcp-token'],
+            tokenizedUrl: 'GET /connect to mint ?token=… for /sse or /mcp',
+          },
+          tools: listedTools,
+          examples: {
+            mcpList: { jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} },
+            mcpCall: { jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'listAgents', arguments: { limit: 5 } } },
+            sse: 'Use GET /sse for MCP over SSE',
+          },
+          notes: [
+            'Prefer providing the Cursor API key via environment when possible.',
+            'When calling createAgent or addFollowup, prompt.text is required.',
+          ],
+        };
+
+        if (format === 'json') {
+          return {
+            content: [{ type: 'text', text: JSON.stringify(doc, null, 2) }],
+          };
+        }
+
+        const toolLines = listedTools.map(t => `• ${t.name} — ${t.description}`).join('\n');
+        const markdown = [
+          '📘 Cursor MCP Documentation',
+          '',
+          'Name: cursor-background-agents',
+          'Version: 1.0.0',
+          'Protocol: 2025-03-26',
+          '',
+          'Endpoints:',
+          '- POST /mcp (JSON-RPC: tools/list, tools/call)',
+          '- GET  /sse  (MCP over SSE)',
+          '- GET  /health',
+          '',
+          'Authentication:',
+          '- Env: CURSOR_API_KEY',
+          "- Header: Authorization: Bearer key_… or x-cursor-api-key / x-api-key",
+          '- Token URL: use /connect to mint token, then append ?token=… to /mcp or /sse',
+          '',
+          'Available Tools:',
+          toolLines,
+          '',
+          'Examples:',
+          "- tools/list → {\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{}}",
+          "- tools/call → {\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"listAgents\",\"arguments\":{\"limit\":5}}}",
+        ].join('\n');
+
+        return createSuccessResponse(markdown, doc);
+      } catch (error) {
+        return handleMCPError(error, 'documentation');
+      }
+    },
+  });
+
+  return tools;
+};

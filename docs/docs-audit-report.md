@@ -28,7 +28,7 @@ The `cursor-agent-mcp` repository contains comprehensive documentation but suffe
 ### Total Documentation Coverage
 
 - **5 main markdown files**: 1,478 lines total
-- **Comprehensive feature coverage**: All 9 MCP tools documented
+- **Comprehensive feature coverage**: All 10 MCP tools documented
 - **Multiple integration guides**: Claude Desktop, ChatGPT, OpenAI Platform
 - **Testing documentation**: Manual and automated testing procedures
 
@@ -48,7 +48,7 @@ The `cursor-agent-mcp` repository contains comprehensive documentation but suffe
 - **Configuration examples**: Some inconsistencies in server names
 
 ### Completeness ✅ Good
-- **Feature coverage**: All 9 MCP tools fully documented
+- **Feature coverage**: All 10 MCP tools fully documented
 - **Setup instructions**: Multiple installation methods covered
 - **Usage examples**: Extensive code examples provided
 - **Testing procedures**: Comprehensive testing documentation
@@ -229,7 +229,7 @@ The `cursor-agent-mcp` repository contains comprehensive documentation but suffe
 - Standardize configuration examples
 
 #### 1.2 Create API Reference Documentation
-- Document all 9 MCP tools with parameters and examples
+- Document all 10 MCP tools with parameters and examples
 - Add error code reference table
 - Include response format specifications
 
