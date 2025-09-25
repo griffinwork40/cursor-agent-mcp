@@ -85,11 +85,11 @@ jest.unstable_mockModule('../utils/tokenUtils.js', () => ({
   decodeTokenToApiKey: mockDecodeTokenToApiKey,
 }));
 
-const { createTools } = await import('../tools/index.js');
-const { createCursorApiClient, cursorApiClient } = await import('../utils/cursorClient.js');
-const { handleMCPError } = await import('../utils/errorHandler.js');
-const { mintTokenFromApiKey, decodeTokenToApiKey } = await import('../utils/tokenUtils.js');
-const { config } = await import('../config/index.js');
+import { createTools } from '../tools/index.js';
+import { createCursorApiClient, cursorApiClient } from '../utils/cursorClient.js';
+import { handleMCPError } from '../utils/errorHandler.js';
+import { mintTokenFromApiKey, decodeTokenToApiKey } from '../utils/tokenUtils.js';
+import { config } from '../config/index.js';
 
 describe('MCP Core Protocol Functions', () => {
   beforeEach(() => {
