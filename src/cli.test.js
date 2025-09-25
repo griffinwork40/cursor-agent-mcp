@@ -118,6 +118,12 @@ describe('CLI Module', () => {
     originalConsoleError = console.error;
     originalConsoleWarn = console.warn;
 
+    // Clear CURSOR environment variables to prevent test interference
+    delete process.env.CURSOR_API_KEY;
+    delete process.env.CURSOR_API_URL;
+    delete process.env.MCP_SERVER_TOKEN;
+    delete process.env.PORT;
+
     // Mock process methods
     mockExit = jest.fn();
     mockConsoleLog = jest.fn();

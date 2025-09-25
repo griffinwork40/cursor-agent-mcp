@@ -6,7 +6,7 @@ export default {
   transform: {},
   testMatch: [
     '**/__tests__/**/*.[jt]s?(x)',
-    '**/*.(test|spec).[jt]s?(x)'
+    '**/*.{test,spec}.[jt]s?(x)'
   ],
   collectCoverageFrom: [
     'src/**/*.{js,ts}',
