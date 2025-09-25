@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: 🚀 Main CI Pipeline
 
 on:
   push:
@@ -7,8 +7,9 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  test:
-    name: Test Suite
+  # Code Quality & Testing
+  unit-tests:
+    name: 🧪 Unit Tests
     runs-on: ubuntu-latest
     
     strategy:
@@ -16,24 +17,24 @@ jobs:
         node-version: [18.x, 20.x]
     
     steps:
-    - name: Checkout code
+    - name: 📥 Checkout code
       uses: actions/checkout@v4
     
-    - name: Setup Node.js ${{ matrix.node-version }}
+    - name: 🔧 Setup Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     
-    - name: Install dependencies
+    - name: 📦 Install dependencies
       run: npm ci
     
-    - name: Run tests
+    - name: 🧪 Run unit tests
       run: npm test
       env:
         NODE_ENV: test
     
-    - name: Upload test results
+    - name: 📊 Upload test results
       uses: actions/upload-artifact@v4
       if: failure()
       with:
@@ -42,52 +43,52 @@ jobs:
           coverage/
           test-results/
 
-  lint:
-    name: Linting
+  code-quality:
+    name: 🔍 Code Quality
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
+    - name: 📥 Checkout code
       uses: actions/checkout@v4
     
-    - name: Setup Node.js
+    - name: 🔧 Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20.x'
         cache: 'npm'
     
-    - name: Install dependencies
+    - name: 📦 Install dependencies
       run: npm ci
     
-    - name: Run ESLint
+    - name: 🔍 Run ESLint
       run: npm run lint:check
     
-    - name: Check code formatting
+    - name: ✨ Check code formatting
       run: |
         npm run lint:check
         echo "✅ Code formatting check passed"
 
-  security:
-    name: Security Audit
+  security-audit:
+    name: 🛡️ Security Audit
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
+    - name: 📥 Checkout code
       uses: actions/checkout@v4
     
-    - name: Setup Node.js
+    - name: 🔧 Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20.x'
         cache: 'npm'
     
-    - name: Install dependencies
+    - name: 📦 Install dependencies
       run: npm ci
     
-    - name: Run security audit
+    - name: 🔒 Run security audit
       run: npm audit --audit-level=moderate
     
-    - name: Check for vulnerabilities
+    - name: ⚠️ Check for high-severity vulnerabilities
       run: |
         if npm audit --audit-level=high --json | jq -e '.vulnerabilities | length > 0' > /dev/null; then
           echo "❌ High severity vulnerabilities found"
@@ -97,37 +98,37 @@ jobs:
           echo "✅ No high severity vulnerabilities found"
         fi
 
-  integration-test:
-    name: Integration Tests
+  integration-tests:
+    name: 🔗 Integration Tests
     runs-on: ubuntu-latest
-    needs: [test, lint]
+    needs: [unit-tests, code-quality]
     
     steps:
-    - name: Checkout code
+    - name: 📥 Checkout code
       uses: actions/checkout@v4
     
-    - name: Setup Node.js
+    - name: 🔧 Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20.x'
         cache: 'npm'
     
-    - name: Install dependencies
+    - name: 📦 Install dependencies
       run: npm ci
     
-    - name: Test MCP client integration
+    - name: 🔌 Test MCP client integration
       run: |
         echo "Testing MCP client integration..."
         # Note: This would require CURSOR_API_KEY for full testing
         # For now, we'll just verify the client can start
         timeout 10s node test-mcp-client.js || echo "MCP client test completed"
     
-    - name: Test error handling
+    - name: 🚨 Test error handling
       run: |
         echo "Testing error handling..."
         node test-error-handling.js
     
-    - name: Test curl examples
+    - name: 🌐 Test curl examples
       run: |
         echo "Testing curl examples..."
         # Make scripts executable
@@ -135,60 +136,60 @@ jobs:
         # Run a subset of tests that don't require API key
         bash -c 'timeout 30s bash test-curl-examples.sh || echo "Curl tests completed"'
 
-  build:
-    name: Build Verification
+  build-verification:
+    name: 🏗️ Build Verification
     runs-on: ubuntu-latest
-    needs: [test, lint, security]
+    needs: [unit-tests, code-quality, security-audit]
     
     steps:
-    - name: Checkout code
+    - name: 📥 Checkout code
       uses: actions/checkout@v4
     
-    - name: Setup Node.js
+    - name: 🔧 Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20.x'
         cache: 'npm'
     
-    - name: Install dependencies
+    - name: 📦 Install dependencies
       run: npm ci
     
-    - name: Verify build
+    - name: 🔨 Verify build
       run: |
         echo "Verifying package build..."
         npm run prepublishOnly || echo "Pre-publish checks completed"
     
-    - name: Test CLI
+    - name: 💻 Test CLI
       run: |
         echo "Testing CLI interface..."
         timeout 5s npm run cli || echo "CLI test completed"
     
-    - name: Test MCP server
+    - name: 🖥️ Test MCP server
       run: |
         echo "Testing MCP server startup..."
         timeout 5s npm run mcp || echo "MCP server test completed"
 
-  status-check:
-    name: Status Check Summary
+  pipeline-summary:
+    name: 📋 Pipeline Summary
     runs-on: ubuntu-latest
-    needs: [test, lint, security, integration-test, build]
+    needs: [unit-tests, code-quality, security-audit, integration-tests, build-verification]
     if: always()
     
     steps:
-    - name: Check all jobs status
+    - name: 📊 Generate pipeline summary
       run: |
-        echo "## CI/CD Pipeline Status" >> $GITHUB_STEP_SUMMARY
+        echo "## 🚀 CI Pipeline Status" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
-        echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
-        echo "| Test Suite | ${{ needs.test.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| Linting | ${{ needs.lint.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| Security Audit | ${{ needs.security.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| Integration Tests | ${{ needs.integration-test.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| Build Verification | ${{ needs.build.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| 🧪 Unit Tests | ${{ needs.unit-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🔍 Code Quality | ${{ needs.code-quality.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🛡️ Security Audit | ${{ needs.security-audit.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🔗 Integration Tests | ${{ needs.integration-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🏗️ Build Verification | ${{ needs.build-verification.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         
-        if [[ "${{ needs.test.result }}" == "success" && "${{ needs.lint.result }}" == "success" && "${{ needs.security.result }}" == "success" && "${{ needs.integration-test.result }}" == "success" && "${{ needs.build.result }}" == "success" ]]; then
+        if [[ "${{ needs.unit-tests.result }}" == "success" && "${{ needs.code-quality.result }}" == "success" && "${{ needs.security-audit.result }}" == "success" && "${{ needs.integration-tests.result }}" == "success" && "${{ needs.build-verification.result }}" == "success" ]]; then
           echo "🎉 All checks passed! Ready for merge." >> $GITHUB_STEP_SUMMARY
         else
           echo "⚠️ Some checks failed. Please review and fix before merging." >> $GITHUB_STEP_SUMMARY
