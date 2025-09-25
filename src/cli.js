@@ -13,8 +13,6 @@ import fs from 'fs';
 import readline from 'readline';
 import crypto from 'crypto';
 
-// Note: __filename removed as it's not used in this file
-
 function getConfigDir() {
   const platform = process.platform;
   if (platform === 'win32') {
@@ -60,8 +58,8 @@ function generateMCPToken() {
 async function saveConfig({ apiKey, apiUrl, mcpToken }) {
   await ensureConfigDir();
   const existing = await loadConfigFromFile();
-  const data = { 
-    CURSOR_API_KEY: apiKey, 
+  const data = {
+    CURSOR_API_KEY: apiKey,
     CURSOR_API_URL: apiUrl || 'https://api.cursor.com',
     MCP_SERVER_TOKEN: mcpToken || existing?.MCP_SERVER_TOKEN || generateMCPToken(),
   };
