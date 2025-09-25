@@ -18,7 +18,7 @@
     "lint": "eslint src/ --fix",
     "lint:check": "eslint src/",
     "prepublishOnly": "npm test && npm run lint:check",
-    "postinstall": "echo '\n🚀 Cursor MCP Server installed successfully!\n\nNext steps:\n1. Get your Cursor API key from Settings → Features → Background Agents\n2. Add to your MCP client config:\n\n{\n  \"mcpServers\": {\n    \"cursor-agents\": {\n      \"command\": \"npx\",\n      \"args\": [\"cursor-agent-mcp@latest\"],\n      \"env\": {\n        \"CURSOR_API_KEY\": \"your_api_key_here\"\n      }\n    }\n  }\n}\n\n📚 Full documentation: https://github.com/griffinwork40/cursor-mcp#readme\n'"
+    "postinstall": "echo '\n🚀 Cursor MCP Server installed successfully!\n\nNext steps:\n1. Get your Cursor API key from Settings → Features → Background Agents\n2. Add to your MCP client config:\n\n{\n  \"mcpServers\": {\n    \"cursor-agents\": {\n      \"command\": \"npx\",\n      \"args\": [\"cursor-agent-mcp@latest\"],\n      \"env\": {\n        \"CURSOR_API_KEY\": \"your_api_key_here\"\n      }\n    }\n  }\n}\n\n📚 Full documentation: https://github.com/griffinwork40/cursor-agent-mcp#readme\n'"
   },
   "keywords": [
     "mcp",
@@ -43,12 +43,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/griffinwork40/cursor-mcp.git"
+    "url": "git+https://github.com/griffinwork40/cursor-agent-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/griffinwork40/cursor-mcp/issues"
+    "url": "https://github.com/griffinwork40/cursor-agent-mcp/issues"
   },
-  "homepage": "https://github.com/griffinwork40/cursor-mcp#readme",
+  "homepage": "https://github.com/griffinwork40/cursor-agent-mcp#readme",
   "engines": {
     "node": ">=18.0.0"
   },
