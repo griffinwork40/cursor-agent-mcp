@@ -7,8 +7,8 @@ Thank you for your interest in contributing to the Cursor MCP Server! This docum
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/cursor-mcp.git
-   cd cursor-mcp
+  git clone https://github.com/YOUR_USERNAME/cursor-agent-mcp.git
+  cd cursor-agent-mcp
    ```
 3. **Install dependencies**:
    ```bash
@@ -326,8 +326,8 @@ Closes #123
 ## 📞 Contact
 
 - **Maintainer**: Griffin Long (@griffinwork40)
-- **Repository**: https://github.com/griffinwork40/cursor-mcp
-- **Issues**: https://github.com/griffinwork40/cursor-mcp/issues
+- **Repository**: https://github.com/griffinwork40/cursor-agent-mcp
+- **Issues**: https://github.com/griffinwork40/cursor-agent-mcp/issues
 
 ## 🙏 Recognition
 

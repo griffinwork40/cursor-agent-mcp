@@ -14,7 +14,7 @@ class CursorApiClient {
   constructor(apiKey) {
     const headers = {
       'Content-Type': 'application/json',
-      'User-Agent': 'cursor-mcp/1.0.0',
+      'User-Agent': 'cursor-agent-mcp/1.0.0',
     };
     if (apiKey) {
       headers['Authorization'] = `Bearer ${apiKey}`;
