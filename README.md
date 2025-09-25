@@ -175,8 +175,8 @@ For **OpenAI Platform** and **ChatGPT** integration, you can self-host this MCP 
 
 1. **Clone and setup**:
    ```bash
-   git clone https://github.com/griffinwork40/cursor-mcp.git
-   cd cursor-mcp
+   git clone https://github.com/griffinwork40/cursor-agent-mcp.git
+   cd cursor-agent-mcp
    npm install
    ```
 
@@ -271,7 +271,7 @@ railway deploy
 **Heroku**:
 ```bash
 # Deploy to Heroku  
-heroku create your-cursor-mcp
+heroku create your-cursor-agent-mcp
 heroku config:set CURSOR_API_KEY=your_key_here
 git push heroku main
 ```
@@ -326,7 +326,7 @@ If you're running from source code, use this configuration instead:
   "mcpServers": {
     "cursor-agents": {
       "command": "node",
-      "args": ["/path/to/cursor-mcp/src/index.js"],
+      "args": ["/path/to/cursor-agent-mcp/src/index.js"],
       "env": {
         "CURSOR_API_KEY": "your_cursor_api_key_here",
         "CURSOR_API_URL": "https://api.cursor.com"
@@ -347,10 +347,10 @@ If you're running from source code, use this configuration instead:
 
 ```bash
 # Install globally
-npm install -g cursor-mcp-server
+npm install -g cursor-agent-mcp
 
 # Or use npx (no installation required)
-npx cursor-mcp-server
+npx cursor-agent-mcp
 ```
 
 ### 📝 MCP Client Configuration
@@ -376,8 +376,8 @@ Add this to your MCP client configuration (e.g., Claude Desktop's `claude_deskto
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/griffinwork40/cursor-mcp.git
-cd cursor-mcp
+git clone https://github.com/griffinwork40/cursor-agent-mcp.git
+cd cursor-agent-mcp
 
 # 2. Install dependencies
 npm install
