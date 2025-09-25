@@ -18,6 +18,8 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
+const isCiMode = process.env.CI === 'true' || process.argv.includes('--ci') || process.env.MCP_TEST_MODE === 'ci';
+
 // Helper function to make MCP requests
 async function makeMCPRequest(method, params = {}) {
   try {
@@ -155,7 +157,7 @@ function showMenu() {
 // Run all tests
 async function runAllTests() {
   console.log('🚀 Running All MCP Tests...\n');
-  
+
   await tests.listTools();
   await tests.getMe();
   await tests.listModels();
@@ -181,6 +183,32 @@ async function main() {
   } catch (error) {
     console.log('❌ Server is not running! Please start it with: npm start');
     process.exit(1);
+  }
+
+  if (isCiMode) {
+    const failures = [];
+
+    const runCiTest = async (name, fn, expectError = false) => {
+      const response = await fn();
+      const hasError = !response || response.error || response.result?.isError;
+
+      if ((expectError && !hasError) || (!expectError && hasError)) {
+        failures.push(name);
+      }
+    };
+
+    await runCiTest('listTools', tests.listTools);
+    await runCiTest('testValidation', tests.testValidation, true);
+
+    if (failures.length > 0) {
+      console.error(`❌ CI MCP tests failed: ${failures.join(', ')}`);
+      rl.close();
+      process.exit(1);
+    }
+
+    console.log('✅ CI MCP smoke tests passed!');
+    rl.close();
+    process.exit(0);
   }
 
   // Interactive mode
