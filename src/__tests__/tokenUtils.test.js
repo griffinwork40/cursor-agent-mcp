@@ -142,8 +142,11 @@ describe('Token Utilities', () => {
 
     test('should handle token tampering attempts', () => {
       const originalToken = mintTokenFromApiKey(TEST_API_KEY);
+      const tokenBuffer = Buffer.from(originalToken, 'base64url');
 
-      const tamperedToken = `${originalToken.substring(0, 10)}X${originalToken.substring(11)}`;
+      // Flip a bit to guarantee tampering without depending on specific characters
+      tokenBuffer[0] = tokenBuffer[0] ^ 0x01;
+      const tamperedToken = Buffer.from(tokenBuffer).toString('base64url');
 
       const result = decodeTokenToApiKey(tamperedToken);
       expect(result).toBeNull();
