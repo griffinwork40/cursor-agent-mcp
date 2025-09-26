@@ -230,7 +230,7 @@ For **OpenAI Platform** and **ChatGPT** integration, you can self-host this MCP 
 
 1. **Server URL**: `https://your-ngrok-url.ngrok-free.app`
 2. **Authentication**: None (server uses global API key)
-3. **Available Tools**: 9 Cursor agent management tools
+3. **Available Tools**: 10 Cursor agent management tools
 
 **API Endpoints Available:**
 - `POST /` - Main MCP protocol endpoint
@@ -310,7 +310,7 @@ curl -X POST https://your-server.com/ \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
 
-# Should return 9 Cursor agent tools
+# Should return 10 Cursor agent tools
 ```
 
 **Verify in ChatGPT**:
@@ -415,9 +415,9 @@ npm test
 - **`/mcp`** - MCP protocol endpoint for LLM interaction
 - **`/health`** - Health check endpoint with uptime info
 
-## 🛠️ Available MCP Tools (9 Tools)
+## 🛠️ Available MCP Tools (10 Tools)
 
-This server provides **9 powerful tools** that enable LLMs to fully manage Cursor's Background Agents:
+This server provides **10 powerful tools** that enable LLMs to fully manage Cursor's Background Agents:
 
 ### 🤖 Agent Management Tools
 
@@ -436,7 +436,7 @@ This server provides **9 powerful tools** that enable LLMs to fully manage Curso
   "prompt": {
     "text": "Fix all TypeScript errors in the project and add proper type definitions"
   },
-  "model": "auto",
+  "model": "default",
   "source": {
     "repository": "https://github.com/user/repo",
     "ref": "main"
@@ -512,6 +512,22 @@ This server provides **9 powerful tools** that enable LLMs to fully manage Curso
 - 📊 Access permissions
 - 🌐 Direct GitHub links
 
+#### 10. `documentation` - Self-Documenting Usage Helper
+**Purpose**: Provide structured usage information for LLMs and clients
+**Features**:
+- 📘 Returns endpoints, auth methods, and protocol version
+- 🧰 Lists all available tools with input schemas
+- 🧾 Example `tools/list` and `tools/call` payloads
+- 🧩 Supports `format` argument: `markdown` (default) or `json`
+
+**Example Input**:
+```json
+{ "format": "json" }
+```
+
+**Example Output**:
+Human-readable markdown plus a second content item containing structured data.
+
 ## 🚀 Example Usage - Background Agents API
 
 Here are practical examples of how to use the Background Agents API through this MCP server:
@@ -536,7 +552,7 @@ const newAgent = await mcp.call('createAgent', {
     3. Update documentation for new features
     4. Optimize performance bottlenecks`
   },
-  model: 'auto',
+  model: 'default',
   source: {
     repository: 'https://github.com/myuser/my-project',
     ref: 'main'
@@ -580,7 +596,7 @@ console.log('Messages:', conversation.messages.length);
   "prompt": {
     "text": "There's a critical bug in the user authentication flow. Please investigate and fix the login issues reported in GitHub issues #123 and #124."
   },
-  "model": "auto",
+  "model": "default",
   "source": {
     "repository": "https://github.com/company/webapp",
     "ref": "main"
@@ -598,7 +614,7 @@ console.log('Messages:', conversation.messages.length);
   "prompt": {
     "text": "Implement a new dark mode toggle feature with the following requirements:\n- System preference detection\n- Persistent user choice\n- Smooth transitions\n- Accessibility compliance"
   },
-  "model": "auto",
+  "model": "default",
   "source": {
     "repository": "https://github.com/company/frontend",
     "ref": "develop"
@@ -616,7 +632,7 @@ console.log('Messages:', conversation.messages.length);
   "prompt": {
     "text": "Update all documentation files:\n- Add comprehensive API documentation\n- Create setup guides for new developers\n- Add code examples for all public methods\n- Update README with latest features"
   },
-  "model": "auto",
+  "model": "default",
   "source": {
     "repository": "https://github.com/company/api-server"
   },
@@ -633,7 +649,7 @@ console.log('Messages:', conversation.messages.length);
   "prompt": {
     "text": "Improve test coverage by:\n- Adding unit tests for untested components\n- Creating integration tests for API endpoints\n- Adding E2E tests for critical user flows\n- Setting up test data factories"
   },
-  "model": "auto",
+  "model": "default",
   "source": {
     "repository": "https://github.com/company/app"
   },
@@ -803,7 +819,7 @@ npm start
 ### 🔗 API Reference
 Complete API documentation for all MCP tools, including request/response schemas, error codes, and examples:
 - **📖 [API Reference](./docs/api-reference.md)** - Comprehensive tool documentation
-- **🔧 All 9 MCP Tools** - Detailed parameter specifications
+- **🔧 All 10 MCP Tools** - Detailed parameter specifications
 - **🚨 Error Handling** - Complete error code reference
 - **💡 Usage Examples** - Practical implementation examples
 

@@ -21,7 +21,7 @@ The Cursor MCP Server is a production-ready Model Context Protocol (MCP) server 
 
 ## Key Features
 
-### 9 MCP Tools Available
+### 10 MCP Tools Available
 1. **createAgent**: Create background agents for repository work
 2. **listAgents**: List all background agents for authenticated user
 3. **getAgent**: Retrieve detailed status and results of specific agent
@@ -133,7 +133,7 @@ src/
 ├── index.js              # Express server implementation
 ├── mcp-server.js         # MCP protocol server implementation
 ├── tools/
-│   └── index.js          # All 9 MCP tools implementation
+│   └── index.js          # All MCP tools implementation (including documentation)
 ├── utils/
 │   ├── cursorClient.js   # Cursor API client wrapper
 │   └── errorHandler.js   # Error handling and validation
