@@ -11,11 +11,7 @@ let cachedCreateAndWaitModule;
 async function loadCreateAndWaitModule() {
   if (cachedCreateAndWaitModule) return cachedCreateAndWaitModule;
 
-  try {
-    cachedCreateAndWaitModule = await import('./createAndWait.ts');
-  } catch (_tsError) {
-    cachedCreateAndWaitModule = await import('./createAndWait.js');
-  }
+  cachedCreateAndWaitModule = await import('./createAndWait.js');
 
   return cachedCreateAndWaitModule;
 }
