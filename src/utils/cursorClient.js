@@ -26,39 +26,73 @@ class CursorApiClient {
       timeout: 30000, // 30 second timeout
     });
 
-    // Add request interceptor for logging
-    const redact = (obj) => {
+    const shouldDebug = Boolean(config.logging?.cursorClientDebug);
+
+    const sensitiveKey = (key) => {
+      const lower = key.toLowerCase();
+      return (
+        lower.includes('secret') ||
+        lower.includes('token') ||
+        lower.includes('key') ||
+        lower.includes('authorization') ||
+        lower.includes('password') ||
+        lower.includes('prompt')
+      );
+    };
+
+    const sanitize = (value, depth = 0) => {
+      if (value === null || value === undefined) return value;
+      if (typeof value === 'bigint') return value.toString();
+      if (typeof value !== 'object') return value;
+      if (depth >= 4) return '[Truncated]';
+      if (Array.isArray(value)) {
+        return value.map(item => sanitize(item, depth + 1));
+      }
+      return Object.entries(value).reduce((acc, [key, val]) => {
+        acc[key] = sensitiveKey(key) ? '***REDACTED***' : sanitize(val, depth + 1);
+        return acc;
+      }, {});
+    };
+
+    const safeStringify = (value) => {
       try {
-        const json = JSON.stringify(obj, (key, value) => (key === 'secret' ? '***REDACTED***' : value));
-        return JSON.parse(json);
+        return JSON.stringify(value);
       } catch {
-        return obj;
+        return null;
+      }
+    };
+
+    const logPayload = (label, payload) => {
+      if (!shouldDebug || payload === undefined) return;
+      const sanitized = sanitize(payload);
+      const serialized = safeStringify(sanitized);
+      if (serialized) {
+        console.error(label, serialized.slice(0, 4000));
       }
     };
 
     this.client.interceptors.request.use(
-      (config) => {
-        const safeData = redact(config.data);
-        console.error(`Making API request: ${config.method?.toUpperCase()} ${config.url}`);
-        if (safeData) {
-          console.error('Request payload:', JSON.stringify(safeData).slice(0, 4000));
+      (requestConfig) => {
+        if (shouldDebug) {
+          console.error(`Making API request: ${requestConfig.method?.toUpperCase()} ${requestConfig.url}`);
         }
-        return config;
+        logPayload('Request payload:', requestConfig.data);
+        return requestConfig;
       },
       (error) => {
-        console.error('Request interceptor error:', error);
+        if (shouldDebug) {
+          console.error('Request interceptor error:', error);
+        }
         return Promise.reject(error);
       },
     );
 
-    // Add response interceptor for error handling
     this.client.interceptors.response.use(
       (response) => {
-        console.error(`API response: ${response.status} ${response.config.url}`);
-        const safeData = redact(response.data);
-        if (safeData) {
-          console.error('Response payload:', JSON.stringify(safeData).slice(0, 4000));
+        if (shouldDebug) {
+          console.error(`API response: ${response.status} ${response.config.url}`);
         }
+        logPayload('Response payload:', response.data);
         return response;
       },
       (error) => {
@@ -66,11 +100,8 @@ class CursorApiClient {
         const statusText = error.response?.statusText;
         const url = error.config?.url;
         const message = error.message;
-        const safeData = redact(error.response?.data);
         console.error('API response error:', { status, statusText, url, message });
-        if (safeData) {
-          console.error('Error payload:', JSON.stringify(safeData).slice(0, 4000));
-        }
+        logPayload('Error payload:', error.response?.data);
         return Promise.reject(error);
       },
     );

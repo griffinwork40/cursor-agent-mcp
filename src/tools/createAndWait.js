@@ -28,7 +28,6 @@ export async function createAndWait(input, client) {
     const agentId = created.id;
 
     let lastSnapshot = created;
-    let finalResponse = null;
 
     if (created?.status && TERMINAL_STATUSES.has(created.status)) {
       const elapsedMs = Date.now() - start;
@@ -38,27 +37,22 @@ export async function createAndWait(input, client) {
       );
     }
 
-    let doneFlag = false;
-    while (!doneFlag) {
+    while (true) {
       if (cancelToken && inMemoryCancellation.has(cancelToken)) {
         inMemoryCancellation.delete(cancelToken);
         const elapsedMs = Date.now() - start;
-        finalResponse = createSuccessResponse(
+        return createSuccessResponse(
           '🛑 createAndWait cancelled',
           { finalStatus: 'CANCELLED', agentId, elapsedMs, agent: lastSnapshot || null },
         );
-        doneFlag = true;
-        break;
       }
 
       const elapsed = Date.now() - start;
       if (elapsed > timeoutMs) {
-        finalResponse = createSuccessResponse(
+        return createSuccessResponse(
           '⏰ createAndWait timed out',
           { finalStatus: 'TIMEOUT', agentId, elapsedMs: elapsed, agent: lastSnapshot || null },
         );
-        doneFlag = true;
-        break;
       }
 
       try {
@@ -66,12 +60,10 @@ export async function createAndWait(input, client) {
         lastSnapshot = current;
         if (current?.status && TERMINAL_STATUSES.has(current.status)) {
           const elapsedMs = Date.now() - start;
-          finalResponse = createSuccessResponse(
+          return createSuccessResponse(
             `✅ createAndWait completed with status: ${current.status}`,
             { finalStatus: current.status, agentId, elapsedMs, agent: current },
           );
-          doneFlag = true;
-          break;
         }
       } catch (_pollErr) {
         // Swallow transient poll errors and continue until timeout
@@ -80,7 +72,6 @@ export async function createAndWait(input, client) {
       const delay = computeDelay(pollIntervalMs, jitterRatio);
       await sleep(delay);
     }
-    return finalResponse;
   } catch (error) {
     return handleMCPError(error, 'createAndWait');
   }

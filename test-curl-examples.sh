@@ -159,7 +159,7 @@ make_mcp_request "tools/call" '{
     }
 }' "CreateAndWait Hardened"
 
-# Test 8: Test invalid tool name
+# Test 10: Test invalid tool name
 make_mcp_request "tools/call" '{
     "name": "invalidTool",
     "arguments": {}
