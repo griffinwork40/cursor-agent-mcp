@@ -1,4 +1,7 @@
 import { exec } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { promisify } from 'util';
 
 const execAsync = promisify(exec);
@@ -8,6 +11,36 @@ const execAsync = promisify(exec);
  * @param {string} repository - The repository URL or path
  * @returns {Promise<boolean>} - True if there are code changes, false otherwise
  */
+function resolveLocalRepositoryPath(repository) {
+  if (!repository) {
+    return null;
+  }
+
+  if (repository.startsWith('file://')) {
+    try {
+      return fileURLToPath(repository);
+    } catch (error) {
+      console.warn('Invalid file URL for repository:', error.message);
+      return null;
+    }
+  }
+
+  try {
+    // If this doesn't throw, it's a URL that isn't a local path
+    // eslint-disable-next-line no-new
+    new URL(repository);
+    return null;
+  } catch (error) {
+    // Not a URL, treat as a path candidate
+  }
+
+  const candidatePath = path.isAbsolute(repository)
+    ? repository
+    : path.resolve(process.cwd(), repository);
+
+  return fs.existsSync(candidatePath) ? candidatePath : null;
+}
+
 export async function hasCodeChanges(repository) {
   try {
     // Extract repository path from URL if it's a GitHub URL
@@ -19,9 +52,10 @@ export async function hasCodeChanges(repository) {
     }
 
     // For local repositories, check git status
-    if (repository.startsWith('/') || repository.startsWith('./') || repository.startsWith('../')) {
+    const localPath = resolveLocalRepositoryPath(repository);
+    if (localPath) {
       try {
-        const { stdout } = await execAsync('git status --porcelain', { cwd: repository });
+        const { stdout } = await execAsync('git status --porcelain', { cwd: localPath });
         return stdout.trim().length > 0;
       } catch (error) {
         console.warn('Could not check git status:', error.message);
@@ -48,7 +82,12 @@ export async function getCurrentBranch(repository) {
       return null; // Can't determine branch for remote URLs
     }
 
-    const { stdout } = await execAsync('git branch --show-current', { cwd: repository });
+    const localPath = resolveLocalRepositoryPath(repository);
+    if (!localPath) {
+      return null;
+    }
+
+    const { stdout } = await execAsync('git branch --show-current', { cwd: localPath });
     return stdout.trim() || null;
   } catch (error) {
     console.warn('Could not get current branch:', error.message);
@@ -67,7 +106,12 @@ export async function hasUncommittedChanges(repository) {
       return false; // Can't check remote repositories
     }
 
-    const { stdout } = await execAsync('git diff --name-only', { cwd: repository });
+    const localPath = resolveLocalRepositoryPath(repository);
+    if (!localPath) {
+      return false;
+    }
+
+    const { stdout } = await execAsync('git status --porcelain', { cwd: localPath });
     return stdout.trim().length > 0;
   } catch (error) {
     console.warn('Could not check for uncommitted changes:', error.message);
