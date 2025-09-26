@@ -492,7 +492,7 @@ Signals cancellation for a previously issued `createAndWait` call by marking its
 ```json
 {
   "content": [
-    { "type": "text", "text": "🛑 createAndWait cancellation scheduled" },
+    { "type": "text", "text": "🛑 Cancellation requested for createAndWait invocation" },
     { "type": "text", "text": "\\nData: {\\n  \\\"cancelToken\\\": \\\"build-123\\\"\\n}" }
   ]
 }
