@@ -9,7 +9,10 @@
  */
 function renderDocAudit(params) {
   const { docPaths, guidelines } = params;
-  const paths = Array.isArray(docPaths) ? docPaths.join(', ') : String(docPaths);
+  if (!Array.isArray(docPaths)) {
+    throw new TypeError('docPaths must be an array of strings');
+  }
+  const paths = docPaths.join(', ');
   const extra = guidelines ? `\n\nGuidelines to follow:\n${guidelines}` : '';
   return [
     'Documentation Audit Task',
