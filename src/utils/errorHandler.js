@@ -1,3 +1,4 @@
+// Error handling utilities and validation schemas for MCP tool execution.
 import { z } from 'zod';
 
 // Custom error classes
@@ -182,6 +183,8 @@ const webhook = z.object({
   secret: z.string().min(32, 'Webhook secret must be at least 32 characters').max(256, 'Webhook secret too long').optional(),
 });
 
+const agentStatus = z.enum(['CREATING', 'RUNNING', 'FINISHED', 'ERROR', 'EXPIRED']);
+
 export const schemas = {
   imageDimension,
   image,
@@ -192,7 +195,7 @@ export const schemas = {
 
   createAgentRequest: z.object({
     prompt: prompt,
-    model: z.string().min(1, 'Model cannot be empty').default('auto'),
+    model: z.string().min(1, 'Model cannot be empty').default('default'),
     source: source,
     target: target.optional(),
     webhook: webhook.optional(),
@@ -203,6 +206,13 @@ export const schemas = {
   }),
 
   listAgentsParams: z.object({
+    limit: z.number().int().min(1).max(100).optional(),
+    cursor: z.string().min(1).optional(),
+  }),
+
+  summarizeAgentsParams: z.object({
+    status: agentStatus.optional(),
+    repository: z.string().min(1, 'Repository filter cannot be empty').optional(),
     limit: z.number().int().min(1).max(100).optional(),
     cursor: z.string().min(1).optional(),
   }),
