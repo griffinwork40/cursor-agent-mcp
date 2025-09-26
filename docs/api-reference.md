@@ -249,7 +249,119 @@ Retrieves all background agents for the authenticated user.
 
 ---
 
-### 3. `getAgent`
+### 3. `summarizeAgents`
+
+Produces an aggregated dashboard of recent agents with optional filters. Filters are applied before computing totals to ensure counts and recent activity align with the requested subset.
+
+#### Request Schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string",
+      "description": "Optional status filter (CREATING, RUNNING, FINISHED, ERROR, EXPIRED)"
+    },
+    "repository": {
+      "type": "string",
+      "description": "Optional repository filter matched against the agent source"
+    },
+    "limit": {
+      "type": "number",
+      "description": "Maximum number of agents to inspect (1-100)"
+    },
+    "cursor": {
+      "type": "string",
+      "description": "Pagination cursor for fetching the next page"
+    }
+  }
+}
+```
+
+#### Example Request
+
+```json
+{
+  "status": "RUNNING",
+  "repository": "company/app"
+}
+```
+
+#### Example Response
+
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "📊 Agent Summary Dashboard\nFilters: status=RUNNING, repository~company/app\nTotal agents: 2\nStatus mix: 🔄 CREATING: 0 | ⚡ RUNNING: 2 | ✅ FINISHED: 0 | ❌ ERROR: 0 | ⏰ EXPIRED: 0\n\n🆕 Recent activity:\n• Hotfix Runner — ⚡ RUNNING (1/15/2024, 10:32:00 AM)\n• Docs Update — ⚡ RUNNING (1/15/2024, 9:58:00 AM)\n\n⏱️ In progress:\n• Hotfix Runner — 34m elapsed\n• Docs Update — 2h 5m elapsed"
+    },
+    {
+      "type": "json",
+      "json": {
+        "filters": {
+          "status": "RUNNING",
+          "repository": "company/app",
+          "limit": null,
+          "cursor": null
+        },
+        "totals": {
+          "totalAgents": 2
+        },
+        "statusCounts": {
+          "CREATING": 0,
+          "RUNNING": 2,
+          "FINISHED": 0,
+          "ERROR": 0,
+          "EXPIRED": 0
+        },
+        "recentAgents": [
+          {
+            "id": "bc_hotfix",
+            "name": "Hotfix Runner",
+            "status": "RUNNING",
+            "repository": "github.com/company/app",
+            "timestamp": 1705314720000
+          },
+          {
+            "id": "bc_docs",
+            "name": "Docs Update",
+            "status": "RUNNING",
+            "repository": "github.com/company/app",
+            "timestamp": 1705311480000
+          }
+        ],
+        "inProgressAgents": [
+          {
+            "id": "bc_hotfix",
+            "name": "Hotfix Runner",
+            "status": "RUNNING",
+            "repository": "github.com/company/app",
+            "startedAt": "2024-01-15T09:58:00.000Z",
+            "ageSeconds": 2040
+          },
+          {
+            "id": "bc_docs",
+            "name": "Docs Update",
+            "status": "RUNNING",
+            "repository": "github.com/company/app",
+            "startedAt": "2024-01-15T08:27:00.000Z",
+            "ageSeconds": 7440
+          }
+        ],
+        "pagination": {
+          "nextCursor": null
+        }
+      }
+    }
+  ]
+}
+```
+
+---
+
+### 4. `getAgent`
 
 Retrieves detailed status and results of a specific background agent.
 
@@ -291,7 +403,7 @@ Retrieves detailed status and results of a specific background agent.
 
 ---
 
-### 4. `deleteAgent`
+### 5. `deleteAgent`
 
 Permanently deletes a background agent.
 
@@ -333,7 +445,7 @@ Permanently deletes a background agent.
 
 ---
 
-### 5. `addFollowup`
+### 6. `addFollowup`
 
 Adds followup instructions to a running background agent.
 

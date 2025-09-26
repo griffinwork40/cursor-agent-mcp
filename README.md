@@ -456,7 +456,30 @@ This server provides **11 powerful tools** that enable LLMs to fully manage Curs
 - 📅 Creation date sorting
 - 🔍 Cursor-based navigation
 
-#### 3. `getAgent` - Get Agent Details
+#### 3. `summarizeAgents` - Aggregated Agent Dashboard
+**Purpose**: Produce a quick dashboard with totals, recent activity, and in-progress timers
+**Highlights**:
+- 📈 Counts agents per status after applying filters
+- 🧭 Lists the five most recent matching agents
+- ⏱️ Shows elapsed time for creating or running agents when available
+- 🧩 Returns structured JSON in the response for downstream automation
+
+Filters are applied before aggregation—use `status` or `repository` (substring match) to focus on specific pipelines without skewing totals.
+
+**Example Call**:
+```javascript
+const summary = await mcp.call('summarizeAgents', {
+  status: 'RUNNING',
+  repository: 'example/repo',
+  limit: 75,
+});
+
+console.log(summary.content[0].text);
+// Access machine-readable aggregates
+const dashboard = summary.content[1].json;
+```
+
+#### 4. `getAgent` - Get Agent Details
 **Purpose**: Retrieve detailed status and results of a specific agent
 **Returns**:
 - 📊 Current status with emoji indicators
@@ -465,14 +488,14 @@ This server provides **11 powerful tools** that enable LLMs to fully manage Curs
 - 🌿 Branch and repository information
 - 📅 Creation and update timestamps
 
-#### 4. `deleteAgent` - Remove Agent
+#### 5. `deleteAgent` - Remove Agent
 **Purpose**: Permanently delete a background agent
 **Features**:
 - ⚠️ Permanent deletion (cannot be undone)
 - 🛡️ Confirmation response
 - 🗑️ Cleanup of associated resources
 
-#### 5. `addFollowup` - Add Instructions
+#### 6. `addFollowup` - Add Instructions
 **Purpose**: Send additional instructions to a running agent
 **Capabilities**:
 - 💬 Text instructions
@@ -710,6 +733,21 @@ for (const agent of allAgents.agents) {
     console.log(`  Messages: ${conversation.messageCount}`);
   }
 }
+```
+
+#### Generate a Dashboard Summary
+```javascript
+const { content } = await mcp.call('summarizeAgents', {
+  repository: 'company/app',
+  status: 'RUNNING',
+});
+
+// Human-readable overview in the first block
+console.log(content[0].text);
+
+// Structured aggregates for automation in the second block
+const dashboard = content[1].json;
+console.log(dashboard.statusCounts.RUNNING, 'agents in progress');
 ```
 
 #### Cleanup Finished Agents
