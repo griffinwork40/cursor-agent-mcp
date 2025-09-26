@@ -32,16 +32,33 @@ const paramsByTemplate = {
   bugHunt: bugHuntParams,
 };
 
-// Build request schema using existing base schemas for source/target/webhook
-const createAgentFromTemplateRequest = z.object({
-  template: TemplateName,
-  // accept any object; specific validation happens after reading template
-  params: z.record(z.any()),
-  model: z.string().min(1).default('auto'),
-  source: baseSchemas.source,
-  target: baseSchemas.target.optional(),
-  webhook: baseSchemas.webhook.optional(),
-});
+// Build request schema using a discriminated union for template/params
+const createAgentFromTemplateRequest = z.discriminatedUnion('template', [
+  z.object({
+    template: z.literal('docAudit'),
+    params: docAuditParams,
+    model: z.string().min(1).default('auto'),
+    source: baseSchemas.source,
+    target: baseSchemas.target.optional(),
+    webhook: baseSchemas.webhook.optional(),
+  }),
+  z.object({
+    template: z.literal('typeCleanup'),
+    params: typeCleanupParams,
+    model: z.string().min(1).default('auto'),
+    source: baseSchemas.source,
+    target: baseSchemas.target.optional(),
+    webhook: baseSchemas.webhook.optional(),
+  }),
+  z.object({
+    template: z.literal('bugHunt'),
+    params: bugHuntParams,
+    model: z.string().min(1).default('auto'),
+    source: baseSchemas.source,
+    target: baseSchemas.target.optional(),
+    webhook: baseSchemas.webhook.optional(),
+  }),
+]);
 
 /**
  * Factory to create the tool definition bound to a specific Cursor API client instance.
