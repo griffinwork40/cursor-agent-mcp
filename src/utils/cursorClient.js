@@ -27,9 +27,22 @@ class CursorApiClient {
     });
 
     // Add request interceptor for logging
+    const redact = (obj) => {
+      try {
+        const json = JSON.stringify(obj, (key, value) => (key === 'secret' ? '***REDACTED***' : value));
+        return JSON.parse(json);
+      } catch {
+        return obj;
+      }
+    };
+
     this.client.interceptors.request.use(
       (config) => {
+        const safeData = redact(config.data);
         console.error(`Making API request: ${config.method?.toUpperCase()} ${config.url}`);
+        if (safeData) {
+          console.error('Request payload:', JSON.stringify(safeData).slice(0, 4000));
+        }
         return config;
       },
       (error) => {
@@ -42,15 +55,22 @@ class CursorApiClient {
     this.client.interceptors.response.use(
       (response) => {
         console.error(`API response: ${response.status} ${response.config.url}`);
+        const safeData = redact(response.data);
+        if (safeData) {
+          console.error('Response payload:', JSON.stringify(safeData).slice(0, 4000));
+        }
         return response;
       },
       (error) => {
-        console.error('API response error:', {
-          status: error.response?.status,
-          statusText: error.response?.statusText,
-          url: error.config?.url,
-          message: error.message,
-        });
+        const status = error.response?.status;
+        const statusText = error.response?.statusText;
+        const url = error.config?.url;
+        const message = error.message;
+        const safeData = redact(error.response?.data);
+        console.error('API response error:', { status, statusText, url, message });
+        if (safeData) {
+          console.error('Error payload:', JSON.stringify(safeData).slice(0, 4000));
+        }
         return Promise.reject(error);
       },
     );
