@@ -91,8 +91,8 @@ Creates a new background agent to work on a repository.
     },
     "model": {
       "type": "string",
-      "description": "The LLM to use (defaults to 'auto' if not specified)",
-      "default": "auto"
+      "description": "The LLM to use (defaults to 'default' if not specified)",
+      "default": "default"
     },
     "source": {
       "type": "object",
@@ -147,7 +147,7 @@ Creates a new background agent to work on a repository.
   "prompt": {
     "text": "Fix all TypeScript errors in the project and add proper type definitions"
   },
-  "model": "auto",
+  "model": "default",
   "source": {
     "repository": "https://github.com/user/repo",
     "ref": "main"
