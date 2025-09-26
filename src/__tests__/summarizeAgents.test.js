@@ -114,7 +114,7 @@ describe('summarizeAgents tool', () => {
     const response = await summarizeTool.handler({ 
       status: 'FINISHED', 
       repository: 'repo-two',
-      limit: 1 
+      limit: 1, 
     });
 
     expect(mockClient.listAgents).toHaveBeenCalledWith({ limit: 1 });
