@@ -93,6 +93,79 @@ export const createTools = (client = defaultCursorClient) => {
       },
     },
     {
+      name: 'createAndWait',
+      description: 'Create an agent and wait until it reaches a terminal status (FINISHED/ERROR/EXPIRED)',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          prompt: {
+            type: 'object',
+            properties: {
+              text: { type: 'string', description: 'The task or instructions for the agent to execute' },
+              images: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    data: { type: 'string', description: 'Base64 encoded image data' },
+                    dimension: {
+                      type: 'object',
+                      properties: {
+                        width: { type: 'number' },
+                        height: { type: 'number' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            required: ['text'],
+          },
+          model: { type: 'string', description: 'The LLM to use', default: 'auto' },
+          source: {
+            type: 'object',
+            properties: {
+              repository: { type: 'string', description: 'The GitHub repository URL' },
+              ref: { type: 'string', description: 'Git ref (branch/tag) to use as the base branch' },
+            },
+            required: ['repository'],
+          },
+          target: {
+            type: 'object',
+            properties: {
+              autoCreatePr: { type: 'boolean', description: 'Automatically create a pull request when complete' },
+              branchName: { type: 'string', description: 'Custom branch name for the agent to create' },
+            },
+          },
+          webhook: {
+            type: 'object',
+            properties: {
+              url: { type: 'string', description: 'Webhook URL for status changes' },
+              secret: { type: 'string', description: 'Secret key for webhook payload verification' },
+            },
+          },
+          pollIntervalMs: { type: 'number', description: 'Polling interval in milliseconds', default: 2000 },
+          timeoutMs: { type: 'number', description: 'Maximum time to wait in milliseconds', default: 600000 },
+          jitterRatio: { type: 'number', description: 'Jitter ratio (0–0.5)', default: 0.1 },
+          cancelToken: { type: 'string', description: 'Optional cancellation token' },
+        },
+        required: ['prompt', 'source', 'model'],
+      },
+      handler: async (input) => {
+        try {
+          let mod;
+          try {
+            mod = await import('./createAndWait.ts');
+          } catch (_e) {
+            mod = await import('./createAndWait.js');
+          }
+          return await mod.createAndWait(input, client);
+        } catch (error) {
+          return handleMCPError(error, 'createAndWait');
+        }
+      },
+    },
+    {
       name: 'listAgents',
       description: 'List all background agents for the authenticated user',
       inputSchema: {
