@@ -109,6 +109,8 @@ export function createAgentFromTemplateTool(client) {
         // Validate params against the selected template schema explicitly
         const templ = validated.template;
         const paramsSchema = paramsByTemplate[templ];
+        // This check should be unreachable since `templ` is validated against the `TemplateName` enum.
+        // Retained for runtime safety in case of future changes or unexpected input.
         if (!paramsSchema) {
           throw new Error(`Template "${templ}" is not supported. Supported: docAudit, typeCleanup, bugHunt.`);
         }
