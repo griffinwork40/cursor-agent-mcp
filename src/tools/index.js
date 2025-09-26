@@ -166,6 +166,38 @@ export const createTools = (client = defaultCursorClient) => {
       },
     },
     {
+      name: 'cancelCreateAndWait',
+      description: 'Signal cancellation for an in-flight createAndWait call using its cancelToken',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          cancelToken: {
+            type: 'string',
+            description: 'The cancelToken originally provided to createAndWait',
+          },
+        },
+        required: ['cancelToken'],
+      },
+      handler: async (input) => {
+        try {
+          const validatedInput = validateInput(schemas.cancelCreateAndWaitRequest, input, 'cancelCreateAndWait');
+          let mod;
+          try {
+            mod = await import('./createAndWait.ts');
+          } catch (_e) {
+            mod = await import('./createAndWait.js');
+          }
+          mod.cancelWaitToken(validatedInput.cancelToken);
+          return createSuccessResponse(
+            '🛑 createAndWait cancellation scheduled',
+            { cancelToken: validatedInput.cancelToken },
+          );
+        } catch (error) {
+          return handleMCPError(error, 'cancelCreateAndWait');
+        }
+      },
+    },
+    {
       name: 'listAgents',
       description: 'List all background agents for the authenticated user',
       inputSchema: {

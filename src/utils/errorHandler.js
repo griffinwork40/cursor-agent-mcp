@@ -221,6 +221,10 @@ export const schemas = {
     jitterRatio: z.number().min(0).max(0.5).default(0.1),
     cancelToken: z.string().min(1).optional(),
   }),
+
+  cancelCreateAndWaitRequest: z.object({
+    cancelToken: z.string().min(1, 'Cancel token cannot be empty'),
+  }),
 };
 
 // Validation helper

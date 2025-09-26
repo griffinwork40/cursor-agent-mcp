@@ -76,11 +76,11 @@ Example:
 - Use uniform jitter in [−jitterRatio, +jitterRatio]. Bound interval to [250ms, 60s].
 
 ### Cancellation
-- Accept optional `cancelToken` string. For this iteration, cancellation is cooperative:
-  - A simple in-memory map holds cancelled tokens during the server process lifetime.
-  - Expose a minimal helper to mark a token as cancelled (internal API for now).
-  - If token is marked cancelled during polling, return `{ finalStatus: 'CANCELLED' }` with latest known agent snapshot.
-- Future: consider explicit `cancelWait` tool if external cancellation is required.
+- Accept optional `cancelToken` string. Cancellation is cooperative:
+  - A simple in-memory set holds cancelled tokens during the server process lifetime.
+  - Expose a dedicated `cancelCreateAndWait` tool to allow clients to request cancellation via MCP.
+  - If token is marked cancelled during polling, return `{ finalStatus: 'CANCELLED' }` with latest known agent snapshot and clear the token so it can be reused.
+- Future: consider persistence or distributed cancellation if multiple instances are introduced.
 
 ### Error Handling, Timeouts, Partial Results
 - If `createAgent` fails: return standard MCP error via `handleMCPError`.

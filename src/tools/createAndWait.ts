@@ -42,6 +42,7 @@ export async function createAndWait(input: any, client: CursorClient) {
 
     while (true) {
       if (cancelToken && inMemoryCancellation.has(cancelToken)) {
+        inMemoryCancellation.delete(cancelToken);
         const elapsedMs = Date.now() - start;
         return createSuccessResponse(
           '🛑 createAndWait cancelled',

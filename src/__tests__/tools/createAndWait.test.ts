@@ -160,5 +160,59 @@ describe('createAndWait', () => {
     const res: any = await promise;
     expect(res.content[1].text).toContain('"finalStatus": "CANCELLED"');
   });
+
+  it('clears cancel token after consumption so it can be reused later', async () => {
+    const cancelToken = 'reusable-token';
+
+    const firstClient = makeClient([
+      { id: 'a6', status: 'CREATING' },
+      { id: 'a6', status: 'RUNNING' },
+      { id: 'a6', status: 'RUNNING' },
+    ]);
+
+    const firstPromise = mod.createAndWait(
+      {
+        prompt: { text: 'x' },
+        source: { repository: 'r' },
+        model: 'auto',
+        pollIntervalMs: 1000,
+        timeoutMs: 10_000,
+        jitterRatio: 0,
+        cancelToken,
+      },
+      firstClient as any,
+    );
+
+    await flushAllTimers(0);
+    mod.cancelWaitToken(cancelToken);
+    await flushAllTimers(1000);
+    const firstResult: any = await firstPromise;
+    expect(firstResult.content[1].text).toContain('"finalStatus": "CANCELLED"');
+
+    const secondClient = makeClient([
+      { id: 'a7', status: 'CREATING' },
+      { id: 'a7', status: 'RUNNING' },
+      { id: 'a7', status: 'FINISHED' },
+    ]);
+
+    const secondPromise = mod.createAndWait(
+      {
+        prompt: { text: 'y' },
+        source: { repository: 'r' },
+        model: 'auto',
+        pollIntervalMs: 500,
+        timeoutMs: 10_000,
+        jitterRatio: 0,
+        cancelToken,
+      },
+      secondClient as any,
+    );
+
+    await flushAllTimers(0);
+    await flushAllTimers(500);
+    await flushAllTimers(500);
+    const secondResult: any = await secondPromise;
+    expect(secondResult.content[1].text).toContain('"finalStatus": "FINISHED"');
+  });
 });
 
