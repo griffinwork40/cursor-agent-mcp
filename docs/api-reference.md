@@ -91,8 +91,8 @@ Creates a new background agent to work on a repository.
     },
     "model": {
       "type": "string",
-      "description": "The LLM to use (defaults to 'auto' if not specified)",
-      "default": "auto"
+      "description": "The LLM to use (defaults to 'default' if not specified)",
+      "default": "default"
     },
     "source": {
       "type": "object",
