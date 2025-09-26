@@ -1,9 +1,9 @@
 import { cursorApiClient as defaultCursorClient } from '../utils/cursorClient.js';
-import { 
-  handleMCPError, 
-  validateInput, 
+import {
+  handleMCPError,
+  validateInput,
   createSuccessResponse,
-  schemas, 
+  schemas,
 } from '../utils/errorHandler.js';
 
 export const createTools = (client = defaultCursorClient) => {
@@ -66,138 +66,25 @@ export const createTools = (client = defaultCursorClient) => {
       },
       handler: async (input) => {
         try {
-        // Validate input
           const validatedInput = validateInput(schemas.createAgentRequest, input, 'createAgent');
           const inputWithDefaults = {
             ...validatedInput,
             model: validatedInput.model || 'auto',
           };
           const result = await client.createAgent(inputWithDefaults);
-        
+
           return createSuccessResponse(
             '✅ Successfully created agent!\n' +
-          `📋 ID: ${result.id}\n` +
-          `📊 Status: ${result.status}\n` +
-          `🌐 View: ${result.target.url}\n` +
-          `📅 Created: ${new Date(result.createdAt).toLocaleString()}`,
+            `📋 ID: ${result.id}\n` +
+            `📊 Status: ${result.status}\n` +
+            `🌐 View: ${result.target.url}\n` +
+            `📅 Created: ${new Date(result.createdAt).toLocaleString()}`,
             {
               agentId: result.id,
               status: result.status,
               url: result.target.url,
               createdAt: result.createdAt,
             },
-    {
-      name: 'createAndWait',
-      description: 'Create a new background agent and wait until it finishes or errors',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          prompt: {
-            type: 'object',
-            properties: {
-              text: { type: 'string', description: 'The task or instructions for the agent to execute' },
-              images: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    data: { type: 'string', description: 'Base64 encoded image data' },
-                    dimension: {
-                      type: 'object',
-                      properties: {
-                        width: { type: 'number' },
-                        height: { type: 'number' },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-            required: ['text'],
-          },
-          model: { type: 'string', description: 'The LLM to use (defaults to auto if not specified)', default: 'auto' },
-          source: {
-            type: 'object',
-            properties: {
-              repository: { type: 'string', description: 'The GitHub repository URL' },
-              ref: { type: 'string', description: 'Git ref (branch/tag) to use as the base branch' },
-            },
-            required: ['repository'],
-          },
-          target: {
-            type: 'object',
-            properties: {
-              autoCreatePr: { type: 'boolean', description: 'Whether to automatically create a pull request when the agent completes' },
-              branchName: { type: 'string', description: 'Custom branch name for the agent to create' },
-            },
-          },
-          webhook: {
-            type: 'object',
-            properties: {
-              url: { type: 'string', description: 'URL to receive webhook notifications about agent status changes' },
-              secret: { type: 'string', description: 'Secret key for webhook payload verification' },
-            },
-            required: ['url'],
-          },
-        },
-        required: ['prompt', 'source', 'model'],
-      },
-      handler: async (input) => {
-        try {
-          const validatedInput = validateInput(schemas.createAgentRequest, input, 'createAndWait');
-          const inputWithDefaults = {
-            ...validatedInput,
-            model: validatedInput.model || 'auto',
-          };
-
-          const created = await client.createAgent(inputWithDefaults);
-
-          const agentId = created.id;
-          const startTime = Date.now();
-          const maxWaitMs = 10 * 60 * 1000; // 10 minutes
-          const pollIntervalMs = 2000; // 2 seconds
-
-          const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-          let lastStatus = created.status;
-          let finalState = created;
-
-          while (Date.now() - startTime < maxWaitMs) {
-            const current = await client.getAgent(agentId);
-            finalState = current;
-            lastStatus = current.status;
-
-            if (lastStatus === 'FINISHED' || lastStatus === 'ERROR' || lastStatus === 'EXPIRED') {
-              break;
-            }
-
-            await sleep(pollIntervalMs);
-          }
-
-          const statusEmoji = {
-            'CREATING': '🔄',
-            'RUNNING': '⚡',
-            'FINISHED': '✅',
-            'ERROR': '❌',
-            'EXPIRED': '⏰',
-          }[lastStatus] || '❓';
-
-          return createSuccessResponse(
-            '✅ Agent createAndWait completed\n' +
-            `🆔 ID: ${agentId}\n` +
-            `📊 Final Status: ${statusEmoji} ${lastStatus}\n` +
-            `🌐 View: ${finalState.target?.url}\n` +
-            `📅 Created: ${new Date(finalState.createdAt).toLocaleString()}`,
-            {
-              agentId,
-              status: lastStatus,
-              result: finalState,
-            },
-          );
-        } catch (error) {
-          return handleMCPError(error, 'createAndWait');
-        }
-      },
-    },
           );
         } catch (error) {
           return handleMCPError(error, 'createAgent');
@@ -274,38 +161,6 @@ export const createTools = (client = defaultCursorClient) => {
           return await mod.createAndWait(input, client);
         } catch (error) {
           return handleMCPError(error, 'createAndWait');
-        }
-      },
-    },
-    {
-      name: 'cancelCreateAndWait',
-      description: 'Signal cancellation for an in-flight createAndWait call using its cancelToken',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          cancelToken: {
-            type: 'string',
-            description: 'The cancelToken originally provided to createAndWait',
-          },
-        },
-        required: ['cancelToken'],
-      },
-      handler: async (input) => {
-        try {
-          const validatedInput = validateInput(schemas.cancelCreateAndWaitRequest, input, 'cancelCreateAndWait');
-          let mod;
-          try {
-            mod = await import('./createAndWait.ts');
-          } catch (_e) {
-            mod = await import('./createAndWait.js');
-          }
-          mod.cancelWaitToken(validatedInput.cancelToken);
-          return createSuccessResponse(
-            '🛑 createAndWait cancellation scheduled',
-            { cancelToken: validatedInput.cancelToken },
-          );
-        } catch (error) {
-          return handleMCPError(error, 'cancelCreateAndWait');
         }
       },
     },
