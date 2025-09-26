@@ -1,4 +1,5 @@
 import { createSuccessResponse, handleMCPError, schemas, validateInput } from '../utils/errorHandler.js';
+import { setTimeout as sleep } from 'node:timers/promises';
 
 /** @typedef {{ createAgent: (data: any) => Promise<any>, getAgent: (id: string) => Promise<any> }} CursorClient */
 
@@ -27,6 +28,7 @@ export async function createAndWait(input, client) {
     const agentId = created.id;
 
     let lastSnapshot = created;
+    let finalResponse = null;
 
     if (created?.status && TERMINAL_STATUSES.has(created.status)) {
       const elapsedMs = Date.now() - start;
@@ -36,21 +38,26 @@ export async function createAndWait(input, client) {
       );
     }
 
-    while (true) {
+    let doneFlag = false;
+    while (!doneFlag) {
       if (cancelToken && inMemoryCancellation.has(cancelToken)) {
         const elapsedMs = Date.now() - start;
-        return createSuccessResponse(
+        finalResponse = createSuccessResponse(
           '🛑 createAndWait cancelled',
           { finalStatus: 'CANCELLED', agentId, elapsedMs, agent: lastSnapshot || null },
         );
+        doneFlag = true;
+        break;
       }
 
       const elapsed = Date.now() - start;
       if (elapsed > timeoutMs) {
-        return createSuccessResponse(
+        finalResponse = createSuccessResponse(
           '⏰ createAndWait timed out',
           { finalStatus: 'TIMEOUT', agentId, elapsedMs: elapsed, agent: lastSnapshot || null },
         );
+        doneFlag = true;
+        break;
       }
 
       try {
@@ -58,18 +65,21 @@ export async function createAndWait(input, client) {
         lastSnapshot = current;
         if (current?.status && TERMINAL_STATUSES.has(current.status)) {
           const elapsedMs = Date.now() - start;
-          return createSuccessResponse(
+          finalResponse = createSuccessResponse(
             `✅ createAndWait completed with status: ${current.status}`,
             { finalStatus: current.status, agentId, elapsedMs, agent: current },
           );
+          doneFlag = true;
+          break;
         }
       } catch (_pollErr) {
         // Swallow transient poll errors and continue until timeout
       }
 
       const delay = computeDelay(pollIntervalMs, jitterRatio);
-      await new Promise(res => setTimeout(res, delay));
+      await sleep(delay);
     }
+    return finalResponse;
   } catch (error) {
     return handleMCPError(error, 'createAndWait');
   }
