@@ -77,4 +77,85 @@ describe('summarizeAgents tool', () => {
     expect(response.content[0].text).toContain('Validation Error');
     expect(mockClient.listAgents).not.toHaveBeenCalledWith(expect.anything());
   });
+
+  it('handles repository filtering correctly', async () => {
+    const response = await summarizeTool.handler({ repository: 'repo-one' });
+
+    expect(mockClient.listAgents).toHaveBeenCalledWith({});
+    expect(response.content[0].text).toContain('Agent Summary Dashboard');
+    expect(response.content[0].text).toContain('repository~repo-one');
+
+    const { json } = response.content[1];
+    expect(json.filters.repository).toBe('repo-one');
+    expect(json.recentAgents).toHaveLength(2); // Only agents from repo-one
+  });
+
+  it('handles limit filtering correctly', async () => {
+    const response = await summarizeTool.handler({ limit: 2 });
+
+    expect(mockClient.listAgents).toHaveBeenCalledWith({ limit: 2 });
+    expect(response.content[0].text).toContain('Agent Summary Dashboard');
+
+    const { json } = response.content[1];
+    expect(json.filters.limit).toBe(2);
+  });
+
+  it('handles cursor pagination correctly', async () => {
+    const response = await summarizeTool.handler({ cursor: 'test-cursor' });
+
+    expect(mockClient.listAgents).toHaveBeenCalledWith({ cursor: 'test-cursor' });
+    expect(response.content[0].text).toContain('Agent Summary Dashboard');
+
+    const { json } = response.content[1];
+    expect(json.filters.cursor).toBe('test-cursor');
+  });
+
+  it('handles combined filters correctly', async () => {
+    const response = await summarizeTool.handler({ 
+      status: 'FINISHED', 
+      repository: 'repo-two',
+      limit: 1 
+    });
+
+    expect(mockClient.listAgents).toHaveBeenCalledWith({ limit: 1 });
+    expect(response.content[0].text).toContain('status=FINISHED');
+    expect(response.content[0].text).toContain('repository~repo-two');
+
+    const { json } = response.content[1];
+    expect(json.filters.status).toBe('FINISHED');
+    expect(json.filters.repository).toBe('repo-two');
+    expect(json.filters.limit).toBe(1);
+  });
+
+  it('handles empty agent list gracefully', async () => {
+    const emptyMockClient = buildMockClient([], null);
+    const emptySummarizeTool = createTools(emptyMockClient).find(tool => tool.name === 'summarizeAgents');
+    
+    const response = await emptySummarizeTool.handler({});
+
+    expect(emptyMockClient.listAgents).toHaveBeenCalledWith({});
+    expect(response.content[0].text).toContain('Total agents: 0');
+    expect(response.content[0].text).toContain('Recent activity: none for the selected filters');
+
+    const { json } = response.content[1];
+    expect(json.totals.totalAgents).toBe(0);
+    expect(json.recentAgents).toHaveLength(0);
+    expect(json.inProgressAgents).toHaveLength(0);
+  });
+
+  it('validates limit bounds correctly', async () => {
+    const response = await summarizeTool.handler({ limit: 0 });
+
+    expect(response.isError).toBe(true);
+    expect(response.content[0].text).toContain('Validation Error');
+    expect(mockClient.listAgents).not.toHaveBeenCalledWith(expect.anything());
+  });
+
+  it('validates empty repository filter correctly', async () => {
+    const response = await summarizeTool.handler({ repository: '' });
+
+    expect(response.isError).toBe(true);
+    expect(response.content[0].text).toContain('Validation Error');
+    expect(mockClient.listAgents).not.toHaveBeenCalledWith(expect.anything());
+  });
 });
