@@ -405,11 +405,31 @@ app.get('/connect', (req, res) => {
   res.end(`<!doctype html>
 <html><head><meta charset="utf-8"><title>Connect Cursor MCP</title></head>
 <body>
-  <h1>Connect your Cursor API key</h1>
+  <h1>🔗 Connect your Cursor API key</h1>
+  <p>Generate secure URLs for ChatGPT MCP integration with your Cursor account.</p>
+  
+  <h2>How to get your Cursor API key:</h2>
+  <ol>
+    <li>Open Cursor IDE</li>
+    <li>Go to <strong>Settings</strong> → <strong>Features</strong> → <strong>Background Agents</strong></li>
+    <li>Copy your API key (it starts with "key_")</li>
+    <li>Paste it in the form below</li>
+  </ol>
+  
   <form method="POST" action="/connect">
-    <label>Cursor API Key <input name="apiKey" type="password" required></label>
+    <label>Cursor API Key <input name="apiKey" type="password" required placeholder="key_..."></label>
     <button type="submit">Generate URL</button>
   </form>
+  
+  <h2>What happens next?</h2>
+  <ul>
+    <li>Your API key will be encrypted into a secure token</li>
+    <li>You'll get two URLs: one for SSE and one for MCP</li>
+    <li>Share either URL with ChatGPT MCP to connect</li>
+    <li>Token expires in ${config.token.ttlDays} day(s)</li>
+  </ul>
+  
+  <p><small>🔒 Your API key is never stored - it's only used to generate the token</small></p>
 </body></html>`);
 });
 
@@ -418,9 +438,79 @@ app.use('/connect', express.urlencoded({ extended: false }));
 app.post('/connect', (req, res) => {
   try {
     const apiKey = (req.body?.apiKey || '').trim();
+    
+    // Enhanced error handling for missing API key
     if (!apiKey) {
-      return res.status(400).send('Missing API key');
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.status(400).end(`<!doctype html>
+<html><head><meta charset="utf-8"><title>Error - Missing API Key</title></head>
+<body>
+  <h1>❌ API Key Required</h1>
+  <p><strong>Error:</strong> No API key provided</p>
+  <p>Please enter your Cursor API key to continue.</p>
+  <h2>How to get your Cursor API key:</h2>
+  <ol>
+    <li>Open Cursor IDE</li>
+    <li>Go to <strong>Settings</strong> → <strong>Features</strong> → <strong>Background Agents</strong></li>
+    <li>Copy your API key (it starts with "key_")</li>
+    <li>Paste it in the form below</li>
+  </ol>
+  <form method="POST" action="/connect">
+    <label>Cursor API Key <input name="apiKey" type="password" required placeholder="key_..."></label>
+    <button type="submit">Generate URL</button>
+  </form>
+  <p><a href="/connect">← Back to connect page</a></p>
+</body></html>`);
     }
+
+    // Validate API key format
+    if (!apiKey.startsWith('key_')) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.status(400).end(`<!doctype html>
+<html><head><meta charset="utf-8"><title>Error - Invalid API Key Format</title></head>
+<body>
+  <h1>❌ Invalid API Key Format</h1>
+  <p><strong>Error:</strong> API key must start with "key_"</p>
+  <p>Your API key should look like: <code>key_abc123...</code></p>
+  <h2>How to get your Cursor API key:</h2>
+  <ol>
+    <li>Open Cursor IDE</li>
+    <li>Go to <strong>Settings</strong> → <strong>Features</strong> → <strong>Background Agents</strong></li>
+    <li>Copy your API key (it starts with "key_")</li>
+    <li>Paste it in the form below</li>
+  </ol>
+  <form method="POST" action="/connect">
+    <label>Cursor API Key <input name="apiKey" type="password" required placeholder="key_..."></label>
+    <button type="submit">Generate URL</button>
+  </form>
+  <p><a href="/connect">← Back to connect page</a></p>
+</body></html>`);
+    }
+
+    // Validate API key length (basic check)
+    if (apiKey.length < 10) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.status(400).end(`<!doctype html>
+<html><head><meta charset="utf-8"><title>Error - API Key Too Short</title></head>
+<body>
+  <h1>❌ API Key Too Short</h1>
+  <p><strong>Error:</strong> API key appears to be too short</p>
+  <p>Please make sure you copied the complete API key from Cursor.</p>
+  <h2>How to get your Cursor API key:</h2>
+  <ol>
+    <li>Open Cursor IDE</li>
+    <li>Go to <strong>Settings</strong> → <strong>Features</strong> → <strong>Background Agents</strong></li>
+    <li>Copy your API key (it starts with "key_")</li>
+    <li>Paste it in the form below</li>
+  </ol>
+  <form method="POST" action="/connect">
+    <label>Cursor API Key <input name="apiKey" type="password" required placeholder="key_..."></label>
+    <button type="submit">Generate URL</button>
+  </form>
+  <p><a href="/connect">← Back to connect page</a></p>
+</body></html>`);
+    }
+
     const token = mintTokenFromApiKey(apiKey);
     const host = req.get('host');
     const isHttps = req.protocol === 'https' || host.includes(':') === false; // best-effort
@@ -431,15 +521,34 @@ app.post('/connect', (req, res) => {
     res.end(`<!doctype html>
 <html><head><meta charset="utf-8"><title>Your MCP URLs</title></head>
 <body>
-  <h1>Connection ready</h1>
+  <h1>✅ Connection ready</h1>
   <p>Share one of these URLs with ChatGPT MCP:</p>
   <p><strong>SSE URL:</strong> <code>${sseUrl}</code></p>
   <p><strong>MCP URL:</strong> <code>${mcpUrl}</code></p>
   <p>Token expires in ${config.token.ttlDays} day(s). You can regenerate anytime.</p>
+  <p><a href="/connect">← Generate new token</a></p>
 </body></html>`);
   } catch (e) {
     console.error('Error generating token:', e);
-    res.status(500).send('Internal error generating token');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.status(500).end(`<!doctype html>
+<html><head><meta charset="utf-8"><title>Error - Token Generation Failed</title></head>
+<body>
+  <h1>❌ Token Generation Failed</h1>
+  <p><strong>Error:</strong> Internal error generating token</p>
+  <p>Please try again or check your API key.</p>
+  <h2>Common issues:</h2>
+  <ul>
+    <li>Make sure your API key is valid and starts with "key_"</li>
+    <li>Check that you copied the complete API key</li>
+    <li>Verify your API key is active in Cursor settings</li>
+  </ul>
+  <form method="POST" action="/connect">
+    <label>Cursor API Key <input name="apiKey" type="password" required placeholder="key_..."></label>
+    <button type="submit">Try Again</button>
+  </form>
+  <p><a href="/connect">← Back to connect page</a></p>
+</body></html>`);
   }
 });
 
