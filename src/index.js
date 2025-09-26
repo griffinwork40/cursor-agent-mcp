@@ -439,7 +439,7 @@ app.post('/connect', (req, res) => {
   try {
     const apiKey = (req.body?.apiKey || '').trim();
     
-    // Enhanced error handling for missing API key
+    // Enhanced error handling for a missing API key.
     if (!apiKey) {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       return res.status(400).end(`<!doctype html>
