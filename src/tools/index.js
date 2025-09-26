@@ -1,4 +1,5 @@
 import { cursorApiClient as defaultCursorClient } from '../utils/cursorClient.js';
+import { createAgentFromTemplateTool } from './createAgentFromTemplate.js';
 import { 
   handleMCPError, 
   validateInput, 
@@ -360,6 +361,9 @@ export const createTools = (client = defaultCursorClient) => {
       },
     },
   ];
+
+  // Register high-level templated agent creation tool
+  tools.push(createAgentFromTemplateTool(client));
 
   // Add a self-documentation tool to help LLMs understand how to use this MCP server
   tools.push({

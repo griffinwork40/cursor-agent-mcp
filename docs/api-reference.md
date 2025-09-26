@@ -51,6 +51,64 @@ CURSOR_API_KEY="your_cursor_api_key_here"
 ## MCP Tools Reference
 
 ### 1. `createAgent`
+### 1a. `createAgentFromTemplate`
+
+Creates a new background agent using a curated template and parameters. Internally validates input and calls `createAgent`.
+
+#### Request Schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "template": { "type": "string", "enum": ["docAudit", "typeCleanup", "bugHunt"] },
+    "params": { "type": "object" },
+    "model": { "type": "string", "default": "auto" },
+    "source": {
+      "type": "object",
+      "properties": {
+        "repository": { "type": "string" },
+        "ref": { "type": "string" }
+      },
+      "required": ["repository"]
+    },
+    "target": {
+      "type": "object",
+      "properties": {
+        "autoCreatePr": { "type": "boolean" },
+        "branchName": { "type": "string" }
+      }
+    },
+    "webhook": {
+      "type": "object",
+      "properties": {
+        "url": { "type": "string" },
+        "secret": { "type": "string" }
+      },
+      "required": ["url"]
+    }
+  },
+  "required": ["template", "params", "source"]
+}
+```
+
+#### Output
+
+```json
+{
+  "agentId": "string",
+  "status": "string",
+  "url": "string",
+  "createdAt": "string",
+  "template": "string"
+}
+```
+
+#### Templates
+- docAudit: `{ docPaths: string[]; guidelines?: string }`
+- typeCleanup: `{ strictMode?: boolean; includeDirs?: string[] }`
+- bugHunt: `{ area: string; flaky?: boolean }`
+
 
 Creates a new background agent to work on a repository.
 

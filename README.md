@@ -415,13 +415,30 @@ npm test
 - **`/mcp`** - MCP protocol endpoint for LLM interaction
 - **`/health`** - Health check endpoint with uptime info
 
-## 🛠️ Available MCP Tools (10 Tools)
+## 🛠️ Available MCP Tools (11 Tools)
 
-This server provides **10 powerful tools** that enable LLMs to fully manage Cursor's Background Agents:
+This server provides **11 powerful tools** that enable LLMs to fully manage Cursor's Background Agents:
 
 ### 🤖 Agent Management Tools
 
 #### 1. `createAgent` - Create Background Agent
+#### 1a. `createAgentFromTemplate` - Create Agent from Template
+**Purpose**: High-level helper to create an agent using curated templates.
+**Templates**: `docAudit`, `typeCleanup`, `bugHunt`
+
+**Example Input**:
+```json
+{
+  "template": "docAudit",
+  "params": { "docPaths": ["docs/**/*.md"], "guidelines": "Be concise." },
+  "model": "auto",
+  "source": { "repository": "https://github.com/user/repo", "ref": "main" },
+  "target": { "autoCreatePr": true, "branchName": "audit-docs" }
+}
+```
+
+**Behavior**: Validates inputs and composes `createAgent` with a rendered prompt.
+
 **Purpose**: Create a new background agent to work on a repository
 **Key Features**:
 - 📝 Support for text and image prompts
