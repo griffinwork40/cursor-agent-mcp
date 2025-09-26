@@ -6,6 +6,20 @@ import {
   schemas,
 } from '../utils/errorHandler.js';
 
+let cachedCreateAndWaitModule;
+
+async function loadCreateAndWaitModule() {
+  if (cachedCreateAndWaitModule) return cachedCreateAndWaitModule;
+
+  try {
+    cachedCreateAndWaitModule = await import('./createAndWait.ts');
+  } catch (_tsError) {
+    cachedCreateAndWaitModule = await import('./createAndWait.js');
+  }
+
+  return cachedCreateAndWaitModule;
+}
+
 export const createTools = (client = defaultCursorClient) => {
   const tools = [
     {
@@ -120,7 +134,7 @@ export const createTools = (client = defaultCursorClient) => {
             },
             required: ['text'],
           },
-          model: { type: 'string', description: 'The LLM to use', default: 'auto' },
+          model: { type: 'string', description: 'The LLM to use (defaults to auto if not specified)', default: 'auto' },
           source: {
             type: 'object',
             properties: {
@@ -132,16 +146,17 @@ export const createTools = (client = defaultCursorClient) => {
           target: {
             type: 'object',
             properties: {
-              autoCreatePr: { type: 'boolean', description: 'Automatically create a pull request when complete' },
+              autoCreatePr: { type: 'boolean', description: 'Whether to automatically create a pull request when the agent completes' },
               branchName: { type: 'string', description: 'Custom branch name for the agent to create' },
             },
           },
           webhook: {
             type: 'object',
             properties: {
-              url: { type: 'string', description: 'Webhook URL for status changes' },
+              url: { type: 'string', description: 'URL to receive webhook notifications about agent status changes' },
               secret: { type: 'string', description: 'Secret key for webhook payload verification' },
             },
+            required: ['url'],
           },
           pollIntervalMs: { type: 'number', description: 'Polling interval in milliseconds', default: 2000 },
           timeoutMs: { type: 'number', description: 'Maximum time to wait in milliseconds', default: 600000 },
@@ -152,15 +167,37 @@ export const createTools = (client = defaultCursorClient) => {
       },
       handler: async (input) => {
         try {
-          let mod;
-          try {
-            mod = await import('./createAndWait.ts');
-          } catch (_e) {
-            mod = await import('./createAndWait.js');
-          }
+          const mod = await loadCreateAndWaitModule();
           return await mod.createAndWait(input, client);
         } catch (error) {
           return handleMCPError(error, 'createAndWait');
+        }
+      },
+    },
+    {
+      name: 'cancelCreateAndWait',
+      description: 'Request cancellation for a pending createAndWait call identified by a cancelToken',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          cancelToken: {
+            type: 'string',
+            description: 'Cancellation token previously supplied to createAndWait',
+          },
+        },
+        required: ['cancelToken'],
+      },
+      handler: async (input) => {
+        try {
+          const validated = validateInput(schemas.cancelCreateAndWaitRequest, input, 'cancelCreateAndWait');
+          const mod = await loadCreateAndWaitModule();
+          mod.cancelWaitToken(validated.cancelToken);
+          return createSuccessResponse(
+            '🛑 Cancellation requested for createAndWait invocation',
+            { cancelToken: validated.cancelToken },
+          );
+        } catch (error) {
+          return handleMCPError(error, 'cancelCreateAndWait');
         }
       },
     },
