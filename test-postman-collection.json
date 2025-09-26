@@ -146,7 +146,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 6,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"createAgent\",\n    \"arguments\": {\n      \"prompt\": {\n        \"text\": \"Add a README.md file with installation instructions\"\n      },\n      \"source\": {\n        \"repository\": \"https://github.com/test/repo\"\n      },\n      \"model\": \"auto\"\n    }\n  }\n}"
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 6,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"createAgent\",\n    \"arguments\": {\n      \"prompt\": {\n        \"text\": \"Add a README.md file with installation instructions\"\n      },\n      \"source\": {\n        \"repository\": \"https://github.com/test/repo\"\n      },\n      \"model\": \"default\"\n    }\n  }\n}"
         },
         "url": {
           "raw": "http://localhost:3000/mcp",
