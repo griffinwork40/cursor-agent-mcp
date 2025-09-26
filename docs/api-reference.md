@@ -413,6 +413,8 @@ Creates a new background agent and waits until it reaches a terminal status.
 
 Terminal statuses: `FINISHED`, `ERROR`, `EXPIRED`.
 
+Provide an optional `cancelToken` to pair the request with the `cancelCreateAndWait` tool for cooperative cancellation.
+
 #### Request Schema
 
 ```json
@@ -458,7 +460,47 @@ Terminal statuses: `FINISHED`, `ERROR`, `EXPIRED`.
 
 ---
 
-### 7. `getAgentConversation`
+### 7. `cancelCreateAndWait`
+
+Signals cancellation for a previously issued `createAndWait` call by marking its `cancelToken`.
+
+#### Request Schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "cancelToken": {
+      "type": "string",
+      "description": "The cancelToken originally provided to createAndWait"
+    }
+  },
+  "required": ["cancelToken"]
+}
+```
+
+#### Example Request
+
+```json
+{
+  "cancelToken": "build-123"
+}
+```
+
+#### Example Response
+
+```json
+{
+  "content": [
+    { "type": "text", "text": "🛑 createAndWait cancellation scheduled" },
+    { "type": "text", "text": "\\nData: {\\n  \\\"cancelToken\\\": \\\"build-123\\\"\\n}" }
+  ]
+}
+```
+
+---
+
+### 8. `getAgentConversation`
 
 Retrieves the conversation history of a background agent.
 
@@ -500,7 +542,7 @@ Retrieves the conversation history of a background agent.
 
 ---
 
-### 8. `getMe`
+### 9. `getMe`
 
 Retrieves information about the API key being used for authentication.
 
