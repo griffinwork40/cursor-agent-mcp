@@ -109,7 +109,7 @@ make_mcp_request "tools/call" '{
         "source": {
             "repository": "https://github.com/test/repo"
         },
-        "model": "auto"
+        "model": "default"
     }
 }' "Create Test Agent"
 

@@ -110,7 +110,7 @@ const tests = {
         source: {
           repository: 'https://github.com/test/repo'
         },
-        model: 'auto'
+        model: 'default'
       }
     });
     if (result) {

@@ -436,7 +436,7 @@ This server provides **11 powerful tools** that enable LLMs to fully manage Curs
   "prompt": {
     "text": "Fix all TypeScript errors in the project and add proper type definitions"
   },
-  "model": "auto",
+  "model": "default",
   "source": {
     "repository": "https://github.com/user/repo",
     "ref": "main"
@@ -582,7 +582,7 @@ const newAgent = await mcp.call('createAgent', {
     3. Update documentation for new features
     4. Optimize performance bottlenecks`
   },
-  model: 'auto',
+  model: 'default',
   source: {
     repository: 'https://github.com/myuser/my-project',
     ref: 'main'
@@ -626,7 +626,7 @@ console.log('Messages:', conversation.messages.length);
   "prompt": {
     "text": "There's a critical bug in the user authentication flow. Please investigate and fix the login issues reported in GitHub issues #123 and #124."
   },
-  "model": "auto",
+  "model": "default",
   "source": {
     "repository": "https://github.com/company/webapp",
     "ref": "main"
@@ -644,7 +644,7 @@ console.log('Messages:', conversation.messages.length);
   "prompt": {
     "text": "Implement a new dark mode toggle feature with the following requirements:\n- System preference detection\n- Persistent user choice\n- Smooth transitions\n- Accessibility compliance"
   },
-  "model": "auto",
+  "model": "default",
   "source": {
     "repository": "https://github.com/company/frontend",
     "ref": "develop"
@@ -662,7 +662,7 @@ console.log('Messages:', conversation.messages.length);
   "prompt": {
     "text": "Update all documentation files:\n- Add comprehensive API documentation\n- Create setup guides for new developers\n- Add code examples for all public methods\n- Update README with latest features"
   },
-  "model": "auto",
+  "model": "default",
   "source": {
     "repository": "https://github.com/company/api-server"
   },
@@ -679,7 +679,7 @@ console.log('Messages:', conversation.messages.length);
   "prompt": {
     "text": "Improve test coverage by:\n- Adding unit tests for untested components\n- Creating integration tests for API endpoints\n- Adding E2E tests for critical user flows\n- Setting up test data factories"
   },
-  "model": "auto",
+  "model": "default",
   "source": {
     "repository": "https://github.com/company/app"
   },
