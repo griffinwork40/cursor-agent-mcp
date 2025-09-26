@@ -34,7 +34,7 @@ A **MCP (Model Context Protocol) server** that seamlessly integrates with **Curs
 npm install -g cursor-agent-mcp
 
 # Or use npx (no installation required)
-npx cursor-agent-mcp
+npx cursor-agent-mcp@latest
 ```
 
 ### MCP Client Configuration
@@ -350,7 +350,7 @@ If you're running from source code, use this configuration instead:
 npm install -g cursor-agent-mcp
 
 # Or use npx (no installation required)
-npx cursor-agent-mcp
+npx cursor-agent-mcp@latest
 ```
 
 ### 📝 MCP Client Configuration

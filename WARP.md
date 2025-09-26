@@ -14,13 +14,6 @@ What you’ll use most
   - npm run dev
 - Start MCP server over stdio (for local MCP runners)
   - npm run mcp
-- CLI entry (bin)
-  - npx cursor-agent-mcp help
-  - npx cursor-agent-mcp init
-  - npx cursor-agent-mcp http --port 3000
-  - npx cursor-agent-mcp stdio
-  - npx cursor-agent-mcp whoami
-  - npx cursor-agent-mcp config
 - Lint
   - npm run lint:check   # check only
   - npm run lint         # fix where possible
@@ -57,10 +50,6 @@ High-level architecture
     - At request time, constructs tools wired to a Cursor API client carrying that key
   - src/mcp-server.js (stdio MCP server)
     - Pure MCP over stdio for local runners; shares tool set and error handling
-  - src/cli.js (bin: cursor-agent-mcp)
-    - init: securely saves CURSOR_API_KEY in user config dir
-    - http|stdio: launches HTTP or stdio servers using saved/env config
-    - whoami|config: quick diagnostics
 
 - Tools layer (MCP tools)
   - src/tools/index.js
@@ -112,10 +101,6 @@ Common workflows
   - export CURSOR_API_KEY=key_...
   - npm start
   - curl http://localhost:3000/health
-- Drive via CLI
-  - npx cursor-agent-mcp init
-  - npx cursor-agent-mcp http --port 3000
-  - npx cursor-agent-mcp stdio
 - Use per-request API keys (HTTP mode)
   - curl -X POST http://localhost:3000/mcp \
     -H "Content-Type: application/json" \

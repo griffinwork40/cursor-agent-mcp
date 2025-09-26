@@ -1,12 +1,11 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-The production entrypoint is `src/index.js`, which wires the MCP transport, Express server, and token utilities. CLI usage is routed through `src/cli.js`, while `src/mcp-server.js` exposes the server as a standalone MPC process. Configuration defaults live in `src/config/index.js`; shared helpers (Cursor client, error handling, token minting) are under `src/utils/`. Tool definitions are grouped in `src/tools/index.js`. Manual assets such as `mcp-images/generation_history.json` are persisted in `mcp-images/` and treated as runtime artifacts. Test harnesses and examples (`test-mcp-client.js`, `test-curl-examples.sh`, `test-postman-collection.json`) sit at the repo root for quick access during development.
+The production entrypoint is `src/index.js`, which wires the MCP transport, Express server, and token utilities. `src/mcp-server.js` exposes the server as a standalone MPC process. Configuration defaults live in `src/config/index.js`; shared helpers (Cursor client, error handling, token minting) are under `src/utils/`. Tool definitions are grouped in `src/tools/index.js`. Manual assets such as `mcp-images/generation_history.json` are persisted in `mcp-images/` and treated as runtime artifacts. Test harnesses and examples (`test-mcp-client.js`, `test-curl-examples.sh`, `test-postman-collection.json`) sit at the repo root for quick access during development.
 
 ## Build, Test, and Development Commands
 - `npm start` — Run the HTTP + MCP server on the configured port (defaults to 3000).
 - `npm run mcp` — Launch only the MCP server process for embedding in external clients.
-- `npm run cli` — Invoke the command-line interface wrapper.
 - `npm run dev` — Start the server with `nodemon` for live reload during local iteration.
 - `npm test` — Execute the Jest suite (`--passWithNoTests` is enabled, so add tests to enforce coverage).
 

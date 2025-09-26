@@ -4,13 +4,9 @@
   "description": "Production-ready MCP server for Cursor Background Agents API - enables LLMs to create, manage, and interact with Cursor's autonomous coding agents",
   "main": "src/mcp-server.js",
   "type": "module",
-  "bin": {
-    "cursor-agent-mcp": "src/cli.js"
-  },
   "scripts": {
     "start": "node src/index.js",
     "mcp": "node src/mcp-server.js",
-    "cli": "node src/cli.js",
     "dev": "nodemon src/index.js",
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --passWithNoTests",
     "lint": "eslint src/ --fix",

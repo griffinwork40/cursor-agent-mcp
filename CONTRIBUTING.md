@@ -43,7 +43,6 @@ Thank you for your interest in contributing to the Cursor MCP Server! This docum
 npm run dev           # Start with auto-reload
 npm start            # Start production server
 npm run mcp          # Start MCP server only
-npm run cli          # Run CLI interface
 
 # Testing & Quality
 npm test             # Run test suite
