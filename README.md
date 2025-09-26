@@ -466,7 +466,30 @@ This ensures pull requests are automatically created when agents complete their 
 - 📅 Creation date sorting
 - 🔍 Cursor-based navigation
 
-#### 3. `getAgent` - Get Agent Details
+#### 3. `summarizeAgents` - Aggregated Agent Dashboard
+**Purpose**: Produce a quick dashboard with totals, recent activity, and in-progress timers
+**Highlights**:
+- 📈 Counts agents per status after applying filters
+- 🧭 Lists the five most recent matching agents
+- ⏱️ Shows elapsed time for creating or running agents when available
+- 🧩 Returns structured JSON in the response for downstream automation
+
+Filters are applied before aggregation—use `status` or `repository` (substring match) to focus on specific pipelines without skewing totals.
+
+**Example Call**:
+```javascript
+const summary = await mcp.call('summarizeAgents', {
+  status: 'RUNNING',
+  repository: 'example/repo',
+  limit: 75,
+});
+
+console.log(summary.content[0].text);
+// Access machine-readable aggregates
+const dashboard = summary.content[1].json;
+```
+
+#### 4. `getAgent` - Get Agent Details
 **Purpose**: Retrieve detailed status and results of a specific agent
 **Returns**:
 - 📊 Current status with emoji indicators
@@ -475,14 +498,14 @@ This ensures pull requests are automatically created when agents complete their 
 - 🌿 Branch and repository information
 - 📅 Creation and update timestamps
 
-#### 4. `deleteAgent` - Remove Agent
+#### 5. `deleteAgent` - Remove Agent
 **Purpose**: Permanently delete a background agent
 **Features**:
 - ⚠️ Permanent deletion (cannot be undone)
 - 🛡️ Confirmation response
 - 🗑️ Cleanup of associated resources
 
-#### 5. `addFollowup` - Add Instructions
+#### 6. `addFollowup` - Add Instructions
 **Purpose**: Send additional instructions to a running agent
 **Capabilities**:
 - 💬 Text instructions
@@ -492,7 +515,7 @@ This ensures pull requests are automatically created when agents complete their 
 
 ### 📊 Information & Discovery Tools
 
-#### 6. `getAgentConversation` - View Chat History
+#### 7. `getAgentConversation` - View Chat History
 **Purpose**: Access the complete conversation history of an agent
 **Features**:
 - 💬 Full message history
@@ -500,21 +523,21 @@ This ensures pull requests are automatically created when agents complete their 
 - 📊 Message count statistics
 - 🔍 Recent message preview
 
-#### 7. `getMe` - API Key Info
+#### 8. `getMe` - API Key Info
 **Purpose**: Retrieve information about the current API key
 **Returns**:
 - 🔑 API key name and creation date
 - 👤 Associated user email
 - 📊 Account status information
 
-#### 8. `listModels` - Available AI Models
+#### 9. `listModels` - Available AI Models
 **Purpose**: Get list of recommended models for background agents
 **Features**:
 - 🤖 All supported AI models
 - 📋 Model recommendations
 - 🎯 Optimized for different tasks
 
-#### 9. `listRepositories` - Accessible Repos
+#### 10. `listRepositories` - Accessible Repos
 **Purpose**: List GitHub repositories accessible to the user
 **Returns**:
 - 📁 Repository names and owners
@@ -522,7 +545,7 @@ This ensures pull requests are automatically created when agents complete their 
 - 📊 Access permissions
 - 🌐 Direct GitHub links
 
-#### 10. `documentation` - Self-Documenting Usage Helper
+#### 11. `documentation` - Self-Documenting Usage Helper
 **Purpose**: Provide structured usage information for LLMs and clients
 **Features**:
 - 📘 Returns endpoints, auth methods, and protocol version
@@ -690,6 +713,21 @@ for (const agent of allAgents.agents) {
     console.log(`  Messages: ${conversation.messageCount}`);
   }
 }
+```
+
+#### Generate a Dashboard Summary
+```javascript
+const { content } = await mcp.call('summarizeAgents', {
+  repository: 'company/app',
+  status: 'RUNNING',
+});
+
+// Human-readable overview in the first block
+console.log(content[0].text);
+
+// Structured aggregates for automation in the second block
+const dashboard = content[1].json;
+console.log(dashboard.statusCounts.RUNNING, 'agents in progress');
 ```
 
 #### Cleanup Finished Agents
