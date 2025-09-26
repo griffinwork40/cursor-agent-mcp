@@ -415,9 +415,9 @@ npm test
 - **`/mcp`** - MCP protocol endpoint for LLM interaction
 - **`/health`** - Health check endpoint with uptime info
 
-## 🛠️ Available MCP Tools (10 Tools)
+## 🛠️ Available MCP Tools (11 Tools)
 
-This server provides **10 powerful tools** that enable LLMs to fully manage Cursor's Background Agents:
+This server provides **11 powerful tools** that enable LLMs to fully manage Cursor's Background Agents:
 
 ### 🤖 Agent Management Tools
 
@@ -480,9 +480,39 @@ This server provides **10 powerful tools** that enable LLMs to fully manage Curs
 - 🔄 Real-time agent updates
 - 📝 Conversation threading
 
+#### 6. `createAndWait` - Create Agent and Wait for Completion
+**Purpose**: Create an agent and internally poll until it reaches a terminal status.
+**Returns**: `{ finalStatus, agentId, elapsedMs, agent }`
+
+**Configurable Options**:
+- `pollIntervalMs` (default 2000)
+- `timeoutMs` (default 600000)
+- `jitterRatio` (default 0.1)
+
+**Example Input**:
+```json
+{
+  "prompt": { "text": "Refactor utils for readability and add tests" },
+  "source": { "repository": "https://github.com/user/repo", "ref": "main" },
+  "model": "auto",
+  "pollIntervalMs": 1500,
+  "timeoutMs": 900000
+}
+```
+
+**Example Output**:
+```json
+{
+  "finalStatus": "FINISHED",
+  "agentId": "bc_abc123",
+  "elapsedMs": 84217,
+  "agent": { "id": "bc_abc123", "status": "FINISHED" }
+}
+```
+
 ### 📊 Information & Discovery Tools
 
-#### 6. `getAgentConversation` - View Chat History
+#### 7. `getAgentConversation` - View Chat History
 **Purpose**: Access the complete conversation history of an agent
 **Features**:
 - 💬 Full message history
@@ -490,21 +520,21 @@ This server provides **10 powerful tools** that enable LLMs to fully manage Curs
 - 📊 Message count statistics
 - 🔍 Recent message preview
 
-#### 7. `getMe` - API Key Info
+#### 8. `getMe` - API Key Info
 **Purpose**: Retrieve information about the current API key
 **Returns**:
 - 🔑 API key name and creation date
 - 👤 Associated user email
 - 📊 Account status information
 
-#### 8. `listModels` - Available AI Models
+#### 9. `listModels` - Available AI Models
 **Purpose**: Get list of recommended models for background agents
 **Features**:
 - 🤖 All supported AI models
 - 📋 Model recommendations
 - 🎯 Optimized for different tasks
 
-#### 9. `listRepositories` - Accessible Repos
+#### 10. `listRepositories` - Accessible Repos
 **Purpose**: List GitHub repositories accessible to the user
 **Returns**:
 - 📁 Repository names and owners
@@ -512,7 +542,7 @@ This server provides **10 powerful tools** that enable LLMs to fully manage Curs
 - 📊 Access permissions
 - 🌐 Direct GitHub links
 
-#### 10. `documentation` - Self-Documenting Usage Helper
+#### 11. `documentation` - Self-Documenting Usage Helper
 **Purpose**: Provide structured usage information for LLMs and clients
 **Features**:
 - 📘 Returns endpoints, auth methods, and protocol version
