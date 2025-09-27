@@ -324,7 +324,7 @@ If you're running from source code, use this configuration instead:
 ```json
 {
   "mcpServers": {
-    "cursor-agents": {
+    "cursor-background-agents": {
       "command": "node",
       "args": ["/path/to/cursor-agent-mcp/src/index.js"],
       "env": {
@@ -415,9 +415,9 @@ npm test
 - **`/mcp`** - MCP protocol endpoint for LLM interaction
 - **`/health`** - Health check endpoint with uptime info
 
-## 🛠️ Available MCP Tools (11 Tools)
+## 🛠️ Available MCP Tools (12 Tools)
 
-This server provides **11 powerful tools** that enable LLMs to fully manage Cursor's Background Agents:
+This server provides **12 powerful tools** that enable LLMs to fully manage Cursor's Background Agents:
 
 ### 🤖 Agent Management Tools
 
@@ -520,7 +520,7 @@ const dashboard = summary.content[1].json;
 - 🔄 Real-time agent updates
 - 📝 Conversation threading
 
-#### 6. `createAndWait` - Create Agent and Wait for Completion
+#### 7. `createAndWait` - Create Agent and Wait for Completion
 **Purpose**: Create an agent and internally poll until it reaches a terminal status.
 **Returns**: `{ finalStatus, agentId, elapsedMs, agent }`
 
@@ -552,7 +552,7 @@ const dashboard = summary.content[1].json;
 
 ### 📊 Information & Discovery Tools
 
-#### 7. `getAgentConversation` - View Chat History
+#### 8. `getAgentConversation` - View Chat History
 **Purpose**: Access the complete conversation history of an agent
 **Features**:
 - 💬 Full message history
@@ -560,21 +560,21 @@ const dashboard = summary.content[1].json;
 - 📊 Message count statistics
 - 🔍 Recent message preview
 
-#### 8. `getMe` - API Key Info
+#### 9. `getMe` - API Key Info
 **Purpose**: Retrieve information about the current API key
 **Returns**:
 - 🔑 API key name and creation date
 - 👤 Associated user email
 - 📊 Account status information
 
-#### 9. `listModels` - Available AI Models
+#### 10. `listModels` - Available AI Models
 **Purpose**: Get list of recommended models for background agents
 **Features**:
 - 🤖 All supported AI models
 - 📋 Model recommendations
 - 🎯 Optimized for different tasks
 
-#### 10. `listRepositories` - Accessible Repos
+#### 11. `listRepositories` - Accessible Repos
 **Purpose**: List GitHub repositories accessible to the user
 **Returns**:
 - 📁 Repository names and owners
@@ -582,7 +582,7 @@ const dashboard = summary.content[1].json;
 - 📊 Access permissions
 - 🌐 Direct GitHub links
 
-#### 11. `documentation` - Self-Documenting Usage Helper
+#### 12. `documentation` - Self-Documenting Usage Helper
 **Purpose**: Provide structured usage information for LLMs and clients
 **Features**:
 - 📘 Returns endpoints, auth methods, and protocol version
@@ -904,9 +904,10 @@ npm start
 ### 🔗 API Reference
 Complete API documentation for all MCP tools, including request/response schemas, error codes, and examples:
 - **📖 [API Reference](./docs/api-reference.md)** - Comprehensive tool documentation
-- **🔧 All 10 MCP Tools** - Detailed parameter specifications
+- **🔧 All 12 MCP Tools** - Detailed parameter specifications
 - **🚨 Error Handling** - Complete error code reference
 - **💡 Usage Examples** - Practical implementation examples
+- **📋 [Changelog](./CHANGELOG.md)** - Version history and release notes
 
 ### 🔒 Security
 Security best practices and configuration guidance:
@@ -917,10 +918,71 @@ Security best practices and configuration guidance:
 
 ---
 
+## 🚨 Troubleshooting
+
+### Common Issues
+
+#### "I don't see any special abilities in Claude"
+- Make sure you **restarted Claude Desktop** completely
+- Check that your **API key is correct** (no extra spaces or characters)
+- Verify you have a **Cursor subscription** (free accounts won't work)
+
+#### "Claude says it can't access Cursor"
+- Double-check your **API key** is valid
+- Make sure you **saved the config file** properly
+- Try **restarting Claude Desktop** again
+
+#### "The config file won't save"
+- Make sure the file is named **exactly** `claude_desktop_config.json`
+- Check you have **permission** to save files in that folder
+- Try using a different text editor
+
+#### "I get an error about npx or node"
+- This usually means the system is downloading the required files
+- **Wait a few minutes** and try again
+- Make sure you have an **internet connection**
+
+#### "Validation Error" messages
+- Check that your input data matches the required schema
+- Ensure all required fields are provided
+- Verify your API key has the necessary permissions
+
+#### "API Error (401): Invalid or missing API key"
+- Verify your `CURSOR_API_KEY` is set correctly in your environment
+- Check that the API key starts with `key_`
+- Ensure the API key hasn't expired
+
+### Getting Help
+
+- **GitHub Issues**: [Report bugs or request features](https://github.com/griffinwork40/cursor-agent-mcp/issues)
+- **Documentation**: Check the [API Reference](./docs/api-reference.md) for detailed tool documentation
+- **Testing**: Use the [testing guide](./TESTING.md) to verify your setup
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md) for details on:
+
+- **Development Setup** - How to get started with local development
+- **Code Standards** - Coding style and conventions
+- **Testing Guidelines** - How to write and run tests
+- **Pull Request Process** - How to submit changes
+- **Issue Reporting** - How to report bugs and request features
+
+### Quick Start for Contributors
+
+1. **Fork the repository** on GitHub
+2. **Clone your fork** locally
+3. **Install dependencies**: `npm install`
+4. **Create a feature branch**: `git checkout -b feature/your-feature-name`
+5. **Make your changes** and test them
+6. **Submit a pull request**
+
+For detailed information, see the [Contributing Guide](./CONTRIBUTING.md).
+
 ## 🎉 Why Choose This MCP Server?
 
 ✅ **Production Ready** - Comprehensive error handling and validation  
-✅ **Full Feature Coverage** - All 9 Cursor Background Agent API endpoints  
+✅ **Full Feature Coverage** - All 12 Cursor Background Agent API endpoints  
 ✅ **Developer Friendly** - Extensive documentation and examples  
 ✅ **Type Safe** - Zod schema validation for all inputs  
 ✅ **Observable** - Detailed logging and monitoring  
