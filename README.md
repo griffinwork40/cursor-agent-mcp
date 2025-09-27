@@ -908,7 +908,7 @@ A: This depends on your Cursor subscription tier. Check your account limits in t
 A: Yes, use the `deleteAgent` tool to stop and remove a running agent.
 
 ### Q: Is my API key secure?
-A: Yes, the server only stores your API key in memory and never logs it. Use environment variables for security.
+A: The server never logs your API key, but the bundled CLI persists it to `~/.config/cursor-agent-mcp/config.json` by default so it can reuse the credential. Use environment variables if you prefer not to write the key to disk and make sure the config file is stored on a trusted machine with appropriate filesystem permissions.
 
 ---
 
