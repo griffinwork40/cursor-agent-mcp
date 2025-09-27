@@ -37,7 +37,7 @@ export async function createAndWait(input, client) {
       );
     }
 
-    while (true) {
+    for (;;) {
       if (cancelToken && inMemoryCancellation.has(cancelToken)) {
         inMemoryCancellation.delete(cancelToken);
         const elapsedMs = Date.now() - start;
