@@ -26,31 +26,83 @@ class CursorApiClient {
       timeout: 30000, // 30 second timeout
     });
 
-    // Add request interceptor for logging
+    const shouldDebug = Boolean(config.logging?.cursorClientDebug);
+
+    const sensitiveKey = (key) => {
+      const sensitiveFields = [
+        'secret',
+        'token',
+        'apiKey',
+        'authorization',
+        'password',
+        'prompt',
+      ];
+      const lower = key.toLowerCase();
+      return sensitiveFields.some(field => lower === field.toLowerCase());
+    };
+
+    const sanitize = (value, depth = 0) => {
+      if (value === null || value === undefined) return value;
+      if (typeof value === 'bigint') return value.toString();
+      if (typeof value !== 'object') return value;
+      if (depth >= 4) return '[Truncated]';
+      if (Array.isArray(value)) {
+        return value.map(item => sanitize(item, depth + 1));
+      }
+      return Object.entries(value).reduce((acc, [key, val]) => {
+        acc[key] = sensitiveKey(key) ? '***REDACTED***' : sanitize(val, depth + 1);
+        return acc;
+      }, {});
+    };
+
+    const safeStringify = (value) => {
+      try {
+        return JSON.stringify(value);
+      } catch {
+        return null;
+      }
+    };
+
+    const logPayload = (label, payload) => {
+      if (!shouldDebug || payload === undefined) return;
+      const sanitized = sanitize(payload);
+      const serialized = safeStringify(sanitized);
+      if (serialized) {
+        console.error(label, serialized.slice(0, 4000));
+      }
+    };
+
     this.client.interceptors.request.use(
-      (config) => {
-        console.error(`Making API request: ${config.method?.toUpperCase()} ${config.url}`);
-        return config;
+      (requestConfig) => {
+        if (shouldDebug) {
+          console.error(`Making API request: ${requestConfig.method?.toUpperCase()} ${requestConfig.url}`);
+        }
+        logPayload('Request payload:', requestConfig.data);
+        return requestConfig;
       },
       (error) => {
-        console.error('Request interceptor error:', error);
+        if (shouldDebug) {
+          console.error('Request interceptor error:', error);
+        }
         return Promise.reject(error);
       },
     );
 
-    // Add response interceptor for error handling
     this.client.interceptors.response.use(
       (response) => {
-        console.error(`API response: ${response.status} ${response.config.url}`);
+        if (shouldDebug) {
+          console.error(`API response: ${response.status} ${response.config.url}`);
+        }
+        logPayload('Response payload:', response.data);
         return response;
       },
       (error) => {
-        console.error('API response error:', {
-          status: error.response?.status,
-          statusText: error.response?.statusText,
-          url: error.config?.url,
-          message: error.message,
-        });
+        const status = error.response?.status;
+        const statusText = error.response?.statusText;
+        const url = error.config?.url;
+        const message = error.message;
+        console.error('API response error:', { status, statusText, url, message });
+        logPayload('Error payload:', error.response?.data);
         return Promise.reject(error);
       },
     );

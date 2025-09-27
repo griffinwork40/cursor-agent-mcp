@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Cursor Agent MCP Server provides a Model Context Protocol interface to interact with Cursor's Background Agents API. This server exposes 10 MCP tools that enable LLMs to programmatically create, manage, and monitor background agents for autonomous code development.
+The Cursor Agent MCP Server provides a Model Context Protocol interface to interact with Cursor's Background Agents API. This server exposes 12 MCP tools that enable LLMs to programmatically create, manage, and monitor background agents for autonomous code development.
 
 ### Base Information
 
@@ -577,7 +577,100 @@ Adds followup instructions to a running background agent.
 
 ---
 
-### 7. `getAgentConversation`
+### 6. `createAndWait`
+
+Creates a new background agent and waits until it reaches a terminal status.
+
+Terminal statuses: `FINISHED`, `ERROR`, `EXPIRED`.
+
+Provide an optional `cancelToken` to pair the request with the `cancelCreateAndWait` tool for cooperative cancellation.
+
+#### Request Schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "prompt": { "type": "object", "properties": { "text": { "type": "string" } }, "required": ["text"] },
+    "model": { "type": "string", "default": "auto" },
+    "source": { "type": "object", "properties": { "repository": { "type": "string" }, "ref": { "type": "string" } }, "required": ["repository"] },
+    "target": { "type": "object" },
+    "webhook": { "type": "object" },
+    "pollIntervalMs": { "type": "number", "default": 2000 },
+    "timeoutMs": { "type": "number", "default": 600000 },
+    "jitterRatio": { "type": "number", "default": 0.1 },
+    "cancelToken": { "type": "string" }
+  },
+  "required": ["prompt", "source", "model"]
+}
+```
+
+#### Example Request
+
+```json
+{
+  "prompt": { "text": "Refactor utils for readability and add tests" },
+  "source": { "repository": "https://github.com/org/repo", "ref": "main" },
+  "model": "auto",
+  "pollIntervalMs": 1500,
+  "timeoutMs": 900000
+}
+```
+
+#### Example Response
+
+```json
+{
+  "content": [
+    { "type": "text", "text": "✅ createAndWait completed with status: FINISHED" },
+    { "type": "text", "text": "{\n  \"finalStatus\": \"FINISHED\",\n  \"agentId\": \"bc_abc123\",\n  \"elapsedMs\": 84217,\n  \"agent\": { \"id\": \"bc_abc123\", \"status\": \"FINISHED\" }\n}" }
+  ]
+}
+```
+
+---
+
+### 7. `cancelCreateAndWait`
+
+Signals cancellation for a previously issued `createAndWait` call by marking its `cancelToken`.
+
+#### Request Schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "cancelToken": {
+      "type": "string",
+      "description": "The cancelToken originally provided to createAndWait"
+    }
+  },
+  "required": ["cancelToken"]
+}
+```
+
+#### Example Request
+
+```json
+{
+  "cancelToken": "build-123"
+}
+```
+
+#### Example Response
+
+```json
+{
+  "content": [
+    { "type": "text", "text": "🛑 Cancellation requested for createAndWait invocation" },
+    { "type": "text", "text": "\\nData: {\\n  \\\"cancelToken\\\": \\\"build-123\\\"\\n}" }
+  ]
+}
+```
+
+---
+
+### 8. `getAgentConversation`
 
 Retrieves the conversation history of a background agent.
 
@@ -619,7 +712,7 @@ Retrieves the conversation history of a background agent.
 
 ---
 
-### 8. `getMe`
+### 9. `getMe`
 
 Retrieves information about the API key being used for authentication.
 
@@ -653,7 +746,7 @@ Retrieves information about the API key being used for authentication.
 
 ---
 
-### 9. `listModels`
+### 10. `listModels`
 
 Retrieves a list of recommended models for background agents.
 
@@ -687,7 +780,7 @@ Retrieves a list of recommended models for background agents.
 
 ---
 
-### 10. `listRepositories`
+### 11. `listRepositories`
 
 Retrieves a list of GitHub repositories accessible to the authenticated user.
 
@@ -721,7 +814,7 @@ Retrieves a list of GitHub repositories accessible to the authenticated user.
 
 ---
 
-### 11. `documentation`
+### 12. `documentation`
 
 Returns self-describing documentation for this MCP server, including endpoints, authentication, protocol, tool list, and example payloads.
 

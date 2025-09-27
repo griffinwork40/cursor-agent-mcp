@@ -10,6 +10,9 @@ export const config = {
     apiKey: process.env.CURSOR_API_KEY,
     apiUrl: process.env.CURSOR_API_URL || 'https://api.cursor.com',
   },
+  logging: {
+    cursorClientDebug: process.env.CURSOR_CLIENT_DEBUG === 'true',
+  },
   token: {
     secret: process.env.TOKEN_SECRET,
     ttlDays: Number(process.env.TOKEN_TTL_DAYS || 30),

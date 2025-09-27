@@ -520,6 +520,36 @@ const dashboard = summary.content[1].json;
 - 🔄 Real-time agent updates
 - 📝 Conversation threading
 
+#### 6. `createAndWait` - Create Agent and Wait for Completion
+**Purpose**: Create an agent and internally poll until it reaches a terminal status.
+**Returns**: `{ finalStatus, agentId, elapsedMs, agent }`
+
+**Configurable Options**:
+- `pollIntervalMs` (default 2000)
+- `timeoutMs` (default 600000)
+- `jitterRatio` (default 0.1)
+
+**Example Input**:
+```json
+{
+  "prompt": { "text": "Refactor utils for readability and add tests" },
+  "source": { "repository": "https://github.com/user/repo", "ref": "main" },
+  "model": "auto",
+  "pollIntervalMs": 1500,
+  "timeoutMs": 900000
+}
+```
+
+**Example Output**:
+```json
+{
+  "finalStatus": "FINISHED",
+  "agentId": "bc_abc123",
+  "elapsedMs": 84217,
+  "agent": { "id": "bc_abc123", "status": "FINISHED" }
+}
+```
+
 ### 📊 Information & Discovery Tools
 
 #### 7. `getAgentConversation` - View Chat History
