@@ -18,10 +18,12 @@ function computeDelay(baseMs, jitterRatio) {
 }
 
 export async function createAndWait(input, client) {
+  let cleanupToken = input?.cancelToken;
   try {
     const validated = validateInput(schemas.createAndWaitRequest, input, 'createAndWait');
 
     const { pollIntervalMs, timeoutMs, jitterRatio, cancelToken, ...createPayload } = validated;
+    cleanupToken = cancelToken;
 
     const start = Date.now();
     const created = await client.createAgent(createPayload);
@@ -77,7 +79,7 @@ export async function createAndWait(input, client) {
             _pollErr.code === 'EAI_AGAIN' ||
             _pollErr.code === 'ENOTFOUND' ||
             (_pollErr.name && _pollErr.name.includes('Timeout')) ||
-            (_pollErr.message && /timeout|temporar(il)?y|network/i.test(_pollErr.message))
+            (_pollErr.message && /timeout|temporar(?:y|ily)|network/i.test(_pollErr.message))
           ));
 
         if (!transient) {
@@ -92,6 +94,8 @@ export async function createAndWait(input, client) {
     }
   } catch (error) {
     return handleMCPError(error, 'createAndWait');
+  } finally {
+    if (cleanupToken) inMemoryCancellation.delete(cleanupToken);
   }
 }
 
