@@ -66,7 +66,25 @@ export async function createAndWait(input, client) {
           );
         }
       } catch (_pollErr) {
-        // Swallow transient poll errors and continue until timeout
+        // Log poll errors and distinguish transient from permanent errors
+        console.warn(`[createAndWait] Poll error for agentId=${agentId}:`, _pollErr);
+
+        // Heuristic: treat network errors and timeouts as transient, others as permanent
+        const transient =
+          (_pollErr && (
+            _pollErr.code === 'ECONNRESET' ||
+            _pollErr.code === 'ETIMEDOUT' ||
+            _pollErr.code === 'EAI_AGAIN' ||
+            _pollErr.code === 'ENOTFOUND' ||
+            (_pollErr.name && _pollErr.name.includes('Timeout')) ||
+            (_pollErr.message && /timeout|temporar(il)?y|network/i.test(_pollErr.message))
+          ));
+
+        if (!transient) {
+          // Permanent error: abort and return error response
+          return handleMCPError(_pollErr, 'createAndWait.poll');
+        }
+        // Transient error: continue loop after delay
       }
 
       const delay = computeDelay(pollIntervalMs, jitterRatio);
