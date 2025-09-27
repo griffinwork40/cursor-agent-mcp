@@ -415,9 +415,9 @@ npm test
 - **`/mcp`** - MCP protocol endpoint for LLM interaction
 - **`/health`** - Health check endpoint with uptime info
 
-## 🛠️ Available MCP Tools (10 Tools)
+## 🛠️ Available MCP Tools (11 Tools)
 
-This server provides **10 powerful tools** that enable LLMs to fully manage Cursor's Background Agents:
+This server provides **11 powerful tools** that enable LLMs to fully manage Cursor's Background Agents:
 
 ### 🤖 Agent Management Tools
 
@@ -502,6 +502,36 @@ const dashboard = summary.content[1].json;
 - 🖼️ Image attachments
 - 🔄 Real-time agent updates
 - 📝 Conversation threading
+
+#### 6. `createAndWait` - Create Agent and Wait for Completion
+**Purpose**: Create an agent and internally poll until it reaches a terminal status.
+**Returns**: `{ finalStatus, agentId, elapsedMs, agent }`
+
+**Configurable Options**:
+- `pollIntervalMs` (default 2000)
+- `timeoutMs` (default 600000)
+- `jitterRatio` (default 0.1)
+
+**Example Input**:
+```json
+{
+  "prompt": { "text": "Refactor utils for readability and add tests" },
+  "source": { "repository": "https://github.com/user/repo", "ref": "main" },
+  "model": "auto",
+  "pollIntervalMs": 1500,
+  "timeoutMs": 900000
+}
+```
+
+**Example Output**:
+```json
+{
+  "finalStatus": "FINISHED",
+  "agentId": "bc_abc123",
+  "elapsedMs": 84217,
+  "agent": { "id": "bc_abc123", "status": "FINISHED" }
+}
+```
 
 ### 📊 Information & Discovery Tools
 
