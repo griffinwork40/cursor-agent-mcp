@@ -33,8 +33,8 @@ CURSOR_API_KEY="your_cursor_api_key_here"
 {
   "mcpServers": {
     "cursor-agent-mcp": {
-      "command": "npx",
-      "args": ["cursor-agent-mcp@latest"],
+      "command": "node",
+      "args": ["./node_modules/cursor-agent-mcp/src/index.js"],
       "env": {
         "CURSOR_API_KEY": "your_cursor_api_key_here"
       }

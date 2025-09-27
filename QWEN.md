@@ -48,11 +48,12 @@ The Cursor MCP Server is a production-ready Model Context Protocol (MCP) server 
 
 ### Installation
 ```bash
-# Install globally (recommended)
-npm install -g cursor-agent-mcp
+# Run without installing (installs to a temp directory each run)
+npx --yes --package cursor-agent-mcp node ./node_modules/cursor-agent-mcp/src/index.js
 
-# Or use npx without installation
-npx cursor-agent-mcp
+# Or add it to your project and launch it locally
+npm install cursor-agent-mcp
+node ./node_modules/cursor-agent-mcp/src/index.js
 ```
 
 ### Development Setup
@@ -149,8 +150,8 @@ Add to `claude_desktop_config.json`:
 {
   "mcpServers": {
     "cursor-background-agents": {
-      "command": "npx",
-      "args": ["cursor-agent-mcp@latest"],
+      "command": "node",
+      "args": ["./node_modules/cursor-agent-mcp/src/index.js"],
       "env": {
         "CURSOR_API_KEY": "your_cursor_api_key_here",
         "CURSOR_API_URL": "https://api.cursor.com"

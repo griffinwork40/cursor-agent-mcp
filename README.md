@@ -30,11 +30,12 @@ A **MCP (Model Context Protocol) server** that seamlessly integrates with **Curs
 ### Quick Install via npm
 
 ```bash
-# Install globally
-npm install -g cursor-agent-mcp
+# Run without installing (installs to a temp directory each run)
+npx --yes --package cursor-agent-mcp node ./node_modules/cursor-agent-mcp/src/index.js
 
-# Or use npx (no installation required)
-npx cursor-agent-mcp@latest
+# Or add it to your project and start it locally
+npm install cursor-agent-mcp
+node ./node_modules/cursor-agent-mcp/src/index.js
 ```
 
 ### MCP Client Configuration
@@ -45,8 +46,8 @@ Add this to your MCP client configuration (e.g., Claude Desktop's `claude_deskto
 {
   "mcpServers": {
     "cursor-background-agents": {
-      "command": "npx",
-      "args": ["cursor-agent-mcp@latest"],
+      "command": "node",
+      "args": ["./node_modules/cursor-agent-mcp/src/index.js"],
       "env": {
         "CURSOR_API_KEY": "your_cursor_api_key_here",
         "CURSOR_API_URL": "https://api.cursor.com"
@@ -118,8 +119,8 @@ Add this server to your MCP client configuration:
 {
   "mcpServers": {
     "cursor-background-agents": {
-      "command": "npx",
-      "args": ["cursor-agent-mcp@latest"],
+      "command": "node",
+      "args": ["./node_modules/cursor-agent-mcp/src/index.js"],
       "env": {
         "CURSOR_API_KEY": "your_cursor_api_key_here",
         "CURSOR_API_URL": "https://api.cursor.com"
@@ -136,8 +137,8 @@ For Claude Desktop, add to your `claude_desktop_config.json`:
 {
   "mcpServers": {
     "cursor-background-agents": {
-      "command": "npx",
-      "args": ["cursor-agent-mcp@latest"],
+      "command": "node",
+      "args": ["./node_modules/cursor-agent-mcp/src/index.js"],
       "env": {
         "CURSOR_API_KEY": "your_cursor_api_key_here",
         "CURSOR_API_URL": "https://api.cursor.com"
@@ -153,8 +154,8 @@ For Codex CLI, add to your `~/.codex/config.toml`:
 ```toml
 # IMPORTANT: the top-level key is `mcp_servers` rather than `mcpServers`.
 [mcp_servers.cursor-background-agents]
-command = "npx"
-args = ["cursor-agent-mcp@latest"]
+command = "node"
+args = ["./node_modules/cursor-agent-mcp/src/index.js"]
 env = { "CURSOR_API_KEY" = "your_cursor_api_key_here", "CURSOR_API_URL" = "https://api.cursor.com" }
 ```
 
@@ -346,11 +347,12 @@ If you're running from source code, use this configuration instead:
 ### 🚀 Quick Install via npm (Recommended)
 
 ```bash
-# Install globally
-npm install -g cursor-agent-mcp
+# Run without installing (installs to a temp directory each run)
+npx --yes --package cursor-agent-mcp node ./node_modules/cursor-agent-mcp/src/index.js
 
-# Or use npx (no installation required)
-npx cursor-agent-mcp@latest
+# Or install locally and start it from your project
+npm install cursor-agent-mcp
+node ./node_modules/cursor-agent-mcp/src/index.js
 ```
 
 ### 📝 MCP Client Configuration
@@ -361,8 +363,8 @@ Add this to your MCP client configuration (e.g., Claude Desktop's `claude_deskto
 {
   "mcpServers": {
     "cursor-background-agents": {
-      "command": "npx",
-      "args": ["cursor-agent-mcp@latest"],
+      "command": "node",
+      "args": ["./node_modules/cursor-agent-mcp/src/index.js"],
       "env": {
         "CURSOR_API_KEY": "your_cursor_api_key_here",
         "CURSOR_API_URL": "https://api.cursor.com"

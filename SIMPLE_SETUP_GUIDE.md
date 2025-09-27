@@ -49,8 +49,8 @@ This guide will help you connect Claude Desktop to Cursor's AI agents so Claude 
 {
   "mcpServers": {
     "cursor-background-agents": {
-      "command": "npx",
-      "args": ["cursor-agent-mcp@latest"],
+      "command": "node",
+      "args": ["./node_modules/cursor-agent-mcp/src/index.js"],
       "env": {
         "CURSOR_API_KEY": "PASTE_YOUR_API_KEY_HERE",
         "CURSOR_API_URL": "https://api.cursor.com"
