@@ -50,7 +50,6 @@ describe('Authentication Race Conditions and Timing Issues', () => {
       const { decodeTokenToApiKey } = await import('../utils/tokenUtils.js');
       
       // Simulate token that expires during processing
-      const now = Date.now();
       const expiringToken = 'expiring-token';
       
       mockDecodeTokenToApiKey
@@ -243,7 +242,7 @@ describe('Authentication Race Conditions and Timing Issues', () => {
 
       // Simulate concurrent error handling
       const results = await Promise.all(
-        errors.map(error => Promise.resolve(handleMCPError(error, 'test')))
+        errors.map(error => Promise.resolve(handleMCPError(error, 'test'))),
       );
 
       expect(results).toHaveLength(4);
@@ -259,12 +258,12 @@ describe('Authentication Race Conditions and Timing Issues', () => {
       const { config } = await import('../config/index.js');
       
       // Simulate configuration access during concurrent operations
-      const configAccess = Array.from({ length: 10 }, () => 
+      const configAccess = Array.from({ length: 10 }, () =>
         Promise.resolve({
           tokenSecret: config.token.secret,
           apiKey: config.cursor.apiKey,
           ttlDays: config.token.ttlDays,
-        })
+        }),
       );
 
       const results = await Promise.all(configAccess);
@@ -320,12 +319,12 @@ describe('Authentication Race Conditions and Timing Issues', () => {
       mockDecodeTokenToApiKey.mockReturnValue(apiKey);
       
       // Simulate rapid token minting and decoding
-      const operations = Array.from({ length: 100 }, () => 
+      const operations = Array.from({ length: 100 }, () =>
         Promise.resolve().then(() => {
           const token = mintTokenFromApiKey(apiKey);
           const decoded = decodeTokenToApiKey(token);
           return { token, decoded };
-        })
+        }),
       );
 
       const results = await Promise.all(operations);

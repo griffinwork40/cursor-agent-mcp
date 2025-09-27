@@ -201,7 +201,7 @@ describe('Authentication Fixes', () => {
     it('should throw AuthenticationError when no valid API key is found', async () => {
       const { AuthenticationError } = await import('../utils/errorHandler.js');
       
-      const getToolsForRequest = (req) => {
+      const getToolsForRequest = (_req) => {
         const apiKey = null; // Simulate no API key found
         if (!apiKey) {
           throw new AuthenticationError('No valid API key found in request');
@@ -218,7 +218,9 @@ describe('Authentication Fixes', () => {
       mockCreateCursorApiClient.mockReturnValue(mockClient);
       mockCreateTools.mockReturnValue([]);
 
-      const getToolsForRequest = (req) => {
+      const { AuthenticationError } = await import('../utils/errorHandler.js');
+
+      const getToolsForRequest = (_req) => {
         const apiKey = 'key_valid_api_key_12345';
         if (!apiKey) {
           throw new AuthenticationError('No valid API key found in request');
