@@ -43,7 +43,7 @@ describe('createAndWait', () => {
       {
         prompt: { text: 'x' },
         source: { repository: 'r' },
-        model: 'auto',
+        model: 'default',
         pollIntervalMs: 500,
         timeoutMs: 10_000,
         jitterRatio: 0,
@@ -68,7 +68,7 @@ describe('createAndWait', () => {
       {
         prompt: { text: 'x' },
         source: { repository: 'r' },
-        model: 'auto',
+        model: 'default',
         pollIntervalMs: 400,
         timeoutMs: 10_000,
         jitterRatio: 0,
@@ -93,7 +93,7 @@ describe('createAndWait', () => {
       {
         prompt: { text: 'x' },
         source: { repository: 'r' },
-        model: 'auto',
+        model: 'default',
         pollIntervalMs: 300,
         timeoutMs: 10_000,
         jitterRatio: 0,
@@ -119,7 +119,7 @@ describe('createAndWait', () => {
       {
         prompt: { text: 'x' },
         source: { repository: 'r' },
-        model: 'auto',
+        model: 'default',
         pollIntervalMs: 1000,
         timeoutMs: 6000,
         jitterRatio: 0,
@@ -145,7 +145,7 @@ describe('createAndWait', () => {
       {
         prompt: { text: 'x' },
         source: { repository: 'r' },
-        model: 'auto',
+        model: 'default',
         pollIntervalMs: 1000,
         timeoutMs: 10_000,
         jitterRatio: 0,
@@ -174,7 +174,7 @@ describe('createAndWait', () => {
       {
         prompt: { text: 'x' },
         source: { repository: 'r' },
-        model: 'auto',
+        model: 'default',
         pollIntervalMs: 1000,
         timeoutMs: 10_000,
         jitterRatio: 0,
@@ -199,7 +199,7 @@ describe('createAndWait', () => {
       {
         prompt: { text: 'y' },
         source: { repository: 'r' },
-        model: 'auto',
+        model: 'default',
         pollIntervalMs: 500,
         timeoutMs: 10_000,
         jitterRatio: 0,
