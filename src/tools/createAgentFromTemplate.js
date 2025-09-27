@@ -34,7 +34,7 @@ const createAgentFromTemplateRequest = z.discriminatedUnion('template', [
   z.object({
     template: z.literal('docAudit'),
     params: docAuditParams,
-    model: z.string().min(1).default('auto'),
+    model: z.string().min(1).default('default'),
     source: baseSchemas.source,
     target: baseSchemas.target.optional(),
     webhook: baseSchemas.webhook.optional(),
@@ -42,7 +42,7 @@ const createAgentFromTemplateRequest = z.discriminatedUnion('template', [
   z.object({
     template: z.literal('typeCleanup'),
     params: typeCleanupParams,
-    model: z.string().min(1).default('auto'),
+    model: z.string().min(1).default('default'),
     source: baseSchemas.source,
     target: baseSchemas.target.optional(),
     webhook: baseSchemas.webhook.optional(),
@@ -50,7 +50,7 @@ const createAgentFromTemplateRequest = z.discriminatedUnion('template', [
   z.object({
     template: z.literal('bugHunt'),
     params: bugHuntParams,
-    model: z.string().min(1).default('auto'),
+    model: z.string().min(1).default('default'),
     source: baseSchemas.source,
     target: baseSchemas.target.optional(),
     webhook: baseSchemas.webhook.optional(),
@@ -70,7 +70,7 @@ export function createAgentFromTemplateTool(client) {
       properties: {
         template: { type: 'string', enum: ['docAudit', 'typeCleanup', 'bugHunt'] },
         params: { type: 'object', description: 'Template-specific parameters' },
-        model: { type: 'string', description: 'The LLM to use (defaults to auto)', default: 'auto' },
+        model: { type: 'string', description: 'The LLM to use (defaults to default)', default: 'default' },
         source: {
           type: 'object',
           properties: {
@@ -123,7 +123,7 @@ export function createAgentFromTemplateTool(client) {
         // Compose createAgent payload, reusing existing schema types
         const payload = {
           prompt: { text: promptText },
-          model: validated.model || 'auto',
+          model: validated.model || 'default',
           source: validated.source,
           target: validated.target,
           webhook: validated.webhook,

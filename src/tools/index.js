@@ -76,7 +76,7 @@ export const createTools = (client = defaultCursorClient) => {
             },
             required: ['text'],
           },
-          model: { type: 'string', description: 'The LLM to use (defaults to auto if not specified)', default: 'auto' },
+          model: { type: 'string', description: 'The LLM to use (defaults to default if not specified)', default: 'default' },
           source: {
             type: 'object',
             properties: {
@@ -108,7 +108,7 @@ export const createTools = (client = defaultCursorClient) => {
           const validatedInput = validateInput(schemas.createAgentRequest, input, 'createAgent');
           const inputWithDefaults = {
             ...validatedInput,
-            model: validatedInput.model || 'auto',
+            model: validatedInput.model || 'default',
           };
           const result = await client.createAgent(inputWithDefaults);
 
@@ -159,7 +159,7 @@ export const createTools = (client = defaultCursorClient) => {
             },
             required: ['text'],
           },
-          model: { type: 'string', description: 'The LLM to use (defaults to auto if not specified)', default: 'auto' },
+          model: { type: 'string', description: 'The LLM to use (defaults to default if not specified)', default: 'default' },
           source: {
             type: 'object',
             properties: {

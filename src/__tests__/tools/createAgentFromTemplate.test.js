@@ -29,7 +29,7 @@ describe('createAgentFromTemplate tool', () => {
     const args = {
       template: 'docAudit',
       params: { docPaths: ['docs/**/*.md'], guidelines: 'Be concise.' },
-      model: 'auto',
+      model: 'default',
       source: { repository: 'https://github.com/org/repo', ref: 'main' },
       target: { autoCreatePr: true, branchName: 'audit-docs' },
     };
@@ -65,7 +65,7 @@ describe('createAgentFromTemplate tool', () => {
     await tool.handler(args);
     const payload = mockClient.createAgent.mock.calls[0][0];
     expect(payload.prompt.text).toMatch(/Bug Hunt Task/);
-    expect(payload.model).toBe('auto');
+    expect(payload.model).toBe('default');
   });
 
   it('errors on unknown template', async () => {
