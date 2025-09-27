@@ -1,11 +1,39 @@
+// Tool factory aggregating Cursor MCP agent operations for the server runtime.
 import { cursorApiClient as defaultCursorClient } from '../utils/cursorClient.js';
 import { createAgentFromTemplateTool } from './createAgentFromTemplate.js';
-import { 
-  handleMCPError, 
-  validateInput, 
-  createSuccessResponse,
-  schemas, 
-} from '../utils/errorHandler.js';
+import { handleMCPError, validateInput, createSuccessResponse, schemas } from '../utils/errorHandler.js';
+
+const statusEmojis = {
+  CREATING: '🔄',
+  RUNNING: '⚡',
+  FINISHED: '✅',
+  ERROR: '❌',
+  EXPIRED: '⏰',
+};
+
+const statusOrder = ['CREATING', 'RUNNING', 'FINISHED', 'ERROR', 'EXPIRED'];
+
+const formatDuration = milliseconds => {
+  const clamped = Math.max(0, milliseconds);
+  const totalMinutes = Math.floor(clamped / 60000);
+  if (totalMinutes <= 0) {
+    return '<1m';
+  }
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours === 0) {
+    return `${minutes}m`;
+  }
+  if (minutes === 0) {
+    return `${hours}h`;
+  }
+  return `${hours}h ${minutes}m`;
+};
+
+const getAgentTimestamp = agent => {
+  const timestamp = agent?.updatedAt || agent?.completedAt || agent?.createdAt;
+  return timestamp ? new Date(timestamp).getTime() : 0;
+};
 
 export const createTools = (client = defaultCursorClient) => {
   const tools = [
@@ -125,6 +153,184 @@ export const createTools = (client = defaultCursorClient) => {
           );
         } catch (error) {
           return handleMCPError(error, 'listAgents');
+        }
+      },
+    },
+    {
+      name: 'summarizeAgents',
+      description: 'Generate an aggregate dashboard for recent background agents',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          status: {
+            type: 'string',
+            description: 'Optional status filter (CREATING, RUNNING, FINISHED, ERROR, EXPIRED)',
+          },
+          repository: {
+            type: 'string',
+            description: 'Optional repository filter (full name or URL substring match)',
+          },
+          limit: {
+            type: 'number',
+            description: 'Maximum number of agents to inspect (1-100)',
+          },
+          cursor: {
+            type: 'string',
+            description: 'Pagination cursor for retrieving the next page of agents',
+          },
+        },
+      },
+      handler: async (input = {}) => {
+        try {
+          const validatedInput = validateInput(
+            schemas.summarizeAgentsParams,
+            input || {},
+            'summarizeAgents',
+          );
+
+          const { status, repository, limit, cursor } = validatedInput;
+          const listParams = {};
+          if (limit) {
+            listParams.limit = limit;
+          }
+          if (cursor) {
+            listParams.cursor = cursor;
+          }
+
+          const result = await client.listAgents(listParams);
+          const agents = Array.isArray(result?.agents) ? result.agents : [];
+          const repositoryNeedle = repository ? repository.toLowerCase() : null;
+
+          const filteredAgents = agents.filter(agent => {
+            if (status && agent.status !== status) {
+              return false;
+            }
+            if (repositoryNeedle) {
+              const sourceRepository = (agent?.source?.repository || '').toLowerCase();
+              if (!sourceRepository.includes(repositoryNeedle)) {
+                return false;
+              }
+            }
+            return true;
+          });
+
+          const statusCounts = statusOrder.reduce((acc, currentStatus) => {
+            acc[currentStatus] = 0;
+            return acc;
+          }, {});
+
+          filteredAgents.forEach(agent => {
+            if (typeof statusCounts[agent.status] === 'number') {
+              statusCounts[agent.status] += 1;
+            } else {
+              statusCounts[agent.status] = 1;
+            }
+          });
+
+          const now = Date.now();
+          const recentAgents = filteredAgents
+            .slice()
+            .sort((a, b) => getAgentTimestamp(b) - getAgentTimestamp(a))
+            .slice(0, 5);
+
+          const inProgressAgents = filteredAgents
+            .filter(agent => ['CREATING', 'RUNNING'].includes(agent.status))
+            .map(agent => {
+              const startedTimestamp = agent?.startedAt || agent?.updatedAt || agent?.createdAt;
+              const startedAt = startedTimestamp ? new Date(startedTimestamp).toISOString() : null;
+              const ageMs = startedTimestamp ? now - new Date(startedTimestamp).getTime() : 0;
+              return {
+                id: agent.id,
+                name: agent.name,
+                status: agent.status,
+                repository: agent?.source?.repository || null,
+                startedAt,
+                ageSeconds: Math.max(0, Math.round(ageMs / 1000)),
+              };
+            });
+
+          const totalAgents = filteredAgents.length;
+          const statusSummary = statusOrder
+            .map(orderStatus => `${statusEmojis[orderStatus]} ${orderStatus}: ${statusCounts[orderStatus]}`)
+            .join(' | ');
+
+          const filterSummary = [
+            status ? `status=${status}` : null,
+            repository ? `repository~${repository}` : null,
+          ].filter(Boolean).join(', ');
+
+          const lines = [
+            '📊 Agent Summary Dashboard',
+            filterSummary ? `Filters: ${filterSummary}` : 'Filters: none',
+            `Total agents: ${totalAgents}`,
+          ];
+
+          lines.push(statusSummary ? `Status mix: ${statusSummary}` : 'Status mix: n/a');
+
+          if (recentAgents.length) {
+            lines.push('', '🆕 Recent activity:');
+            recentAgents.forEach(agent => {
+              const timestamp = getAgentTimestamp(agent);
+              const formattedDate = timestamp ? new Date(timestamp).toLocaleString() : 'n/a';
+              lines.push(
+                `• ${agent.name || agent.id} — ${statusEmojis[agent.status] || ''} ${agent.status} (${formattedDate})`,
+              );
+            });
+          } else {
+            lines.push('', '🆕 Recent activity: none for the selected filters');
+          }
+
+          if (inProgressAgents.length) {
+            lines.push('', '⏱️ In progress:');
+            inProgressAgents.forEach(agent => {
+              const displayName = agent.name || agent.id;
+              const duration = formatDuration(agent.ageSeconds * 1000);
+              lines.push(`• ${displayName} — ${duration} elapsed`);
+            });
+          }
+
+          if (result?.nextCursor) {
+            lines.push('', `Next cursor: ${result.nextCursor}`);
+          }
+
+          const structuredData = {
+            filters: {
+              status: status || null,
+              repository: repository || null,
+              limit: limit || null,
+              cursor: cursor || null,
+            },
+            totals: {
+              totalAgents,
+            },
+            statusCounts,
+            recentAgents: recentAgents.map(agent => ({
+              id: agent.id,
+              name: agent.name,
+              status: agent.status,
+              repository: agent?.source?.repository || null,
+              timestamp: getAgentTimestamp(agent),
+            })),
+            inProgressAgents,
+            pagination: {
+              nextCursor: result?.nextCursor || null,
+            },
+          };
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: lines.join('\n'),
+              },
+              {
+                type: 'json',
+                json: structuredData,
+              },
+            ],
+          };
+        } catch (error) {
+          return handleMCPError(error, 'summarizeAgents');
         }
       },
     },

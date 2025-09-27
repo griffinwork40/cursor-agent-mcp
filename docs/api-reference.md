@@ -149,8 +149,8 @@ Creates a new background agent to work on a repository.
     },
     "model": {
       "type": "string",
-      "description": "The LLM to use (defaults to 'auto' if not specified)",
-      "default": "auto"
+      "description": "The LLM to use (defaults to 'default' if not specified)",
+      "default": "default"
     },
     "source": {
       "type": "object",
@@ -205,7 +205,7 @@ Creates a new background agent to work on a repository.
   "prompt": {
     "text": "Fix all TypeScript errors in the project and add proper type definitions"
   },
-  "model": "auto",
+  "model": "default",
   "source": {
     "repository": "https://github.com/user/repo",
     "ref": "main"
@@ -307,7 +307,119 @@ Retrieves all background agents for the authenticated user.
 
 ---
 
-### 3. `getAgent`
+### 3. `summarizeAgents`
+
+Produces an aggregated dashboard of recent agents with optional filters. Filters are applied before computing totals to ensure counts and recent activity align with the requested subset.
+
+#### Request Schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string",
+      "description": "Optional status filter (CREATING, RUNNING, FINISHED, ERROR, EXPIRED)"
+    },
+    "repository": {
+      "type": "string",
+      "description": "Optional repository filter matched against the agent source"
+    },
+    "limit": {
+      "type": "number",
+      "description": "Maximum number of agents to inspect (1-100)"
+    },
+    "cursor": {
+      "type": "string",
+      "description": "Pagination cursor for fetching the next page"
+    }
+  }
+}
+```
+
+#### Example Request
+
+```json
+{
+  "status": "RUNNING",
+  "repository": "company/app"
+}
+```
+
+#### Example Response
+
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "📊 Agent Summary Dashboard\nFilters: status=RUNNING, repository~company/app\nTotal agents: 2\nStatus mix: 🔄 CREATING: 0 | ⚡ RUNNING: 2 | ✅ FINISHED: 0 | ❌ ERROR: 0 | ⏰ EXPIRED: 0\n\n🆕 Recent activity:\n• Hotfix Runner — ⚡ RUNNING (1/15/2024, 10:32:00 AM)\n• Docs Update — ⚡ RUNNING (1/15/2024, 9:58:00 AM)\n\n⏱️ In progress:\n• Hotfix Runner — 34m elapsed\n• Docs Update — 2h 5m elapsed"
+    },
+    {
+      "type": "json",
+      "json": {
+        "filters": {
+          "status": "RUNNING",
+          "repository": "company/app",
+          "limit": null,
+          "cursor": null
+        },
+        "totals": {
+          "totalAgents": 2
+        },
+        "statusCounts": {
+          "CREATING": 0,
+          "RUNNING": 2,
+          "FINISHED": 0,
+          "ERROR": 0,
+          "EXPIRED": 0
+        },
+        "recentAgents": [
+          {
+            "id": "bc_hotfix",
+            "name": "Hotfix Runner",
+            "status": "RUNNING",
+            "repository": "github.com/company/app",
+            "timestamp": 1705314720000
+          },
+          {
+            "id": "bc_docs",
+            "name": "Docs Update",
+            "status": "RUNNING",
+            "repository": "github.com/company/app",
+            "timestamp": 1705311480000
+          }
+        ],
+        "inProgressAgents": [
+          {
+            "id": "bc_hotfix",
+            "name": "Hotfix Runner",
+            "status": "RUNNING",
+            "repository": "github.com/company/app",
+            "startedAt": "2024-01-15T09:58:00.000Z",
+            "ageSeconds": 2040
+          },
+          {
+            "id": "bc_docs",
+            "name": "Docs Update",
+            "status": "RUNNING",
+            "repository": "github.com/company/app",
+            "startedAt": "2024-01-15T08:27:00.000Z",
+            "ageSeconds": 7440
+          }
+        ],
+        "pagination": {
+          "nextCursor": null
+        }
+      }
+    }
+  ]
+}
+```
+
+---
+
+### 4. `getAgent`
 
 Retrieves detailed status and results of a specific background agent.
 
@@ -349,7 +461,7 @@ Retrieves detailed status and results of a specific background agent.
 
 ---
 
-### 4. `deleteAgent`
+### 5. `deleteAgent`
 
 Permanently deletes a background agent.
 
@@ -391,7 +503,7 @@ Permanently deletes a background agent.
 
 ---
 
-### 5. `addFollowup`
+### 6. `addFollowup`
 
 Adds followup instructions to a running background agent.
 
@@ -465,7 +577,7 @@ Adds followup instructions to a running background agent.
 
 ---
 
-### 6. `getAgentConversation`
+### 7. `getAgentConversation`
 
 Retrieves the conversation history of a background agent.
 
@@ -507,7 +619,7 @@ Retrieves the conversation history of a background agent.
 
 ---
 
-### 7. `getMe`
+### 8. `getMe`
 
 Retrieves information about the API key being used for authentication.
 
@@ -541,7 +653,7 @@ Retrieves information about the API key being used for authentication.
 
 ---
 
-### 8. `listModels`
+### 9. `listModels`
 
 Retrieves a list of recommended models for background agents.
 
@@ -575,7 +687,7 @@ Retrieves a list of recommended models for background agents.
 
 ---
 
-### 9. `listRepositories`
+### 10. `listRepositories`
 
 Retrieves a list of GitHub repositories accessible to the authenticated user.
 
@@ -609,7 +721,7 @@ Retrieves a list of GitHub repositories accessible to the authenticated user.
 
 ---
 
-### 10. `documentation`
+### 11. `documentation`
 
 Returns self-describing documentation for this MCP server, including endpoints, authentication, protocol, tool list, and example payloads.
 

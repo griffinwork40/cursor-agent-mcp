@@ -453,7 +453,7 @@ This server provides **11 powerful tools** that enable LLMs to fully manage Curs
   "prompt": {
     "text": "Fix all TypeScript errors in the project and add proper type definitions"
   },
-  "model": "auto",
+  "model": "default",
   "source": {
     "repository": "https://github.com/user/repo",
     "ref": "main"
@@ -473,7 +473,30 @@ This server provides **11 powerful tools** that enable LLMs to fully manage Curs
 - 📅 Creation date sorting
 - 🔍 Cursor-based navigation
 
-#### 3. `getAgent` - Get Agent Details
+#### 3. `summarizeAgents` - Aggregated Agent Dashboard
+**Purpose**: Produce a quick dashboard with totals, recent activity, and in-progress timers
+**Highlights**:
+- 📈 Counts agents per status after applying filters
+- 🧭 Lists the five most recent matching agents
+- ⏱️ Shows elapsed time for creating or running agents when available
+- 🧩 Returns structured JSON in the response for downstream automation
+
+Filters are applied before aggregation—use `status` or `repository` (substring match) to focus on specific pipelines without skewing totals.
+
+**Example Call**:
+```javascript
+const summary = await mcp.call('summarizeAgents', {
+  status: 'RUNNING',
+  repository: 'example/repo',
+  limit: 75,
+});
+
+console.log(summary.content[0].text);
+// Access machine-readable aggregates
+const dashboard = summary.content[1].json;
+```
+
+#### 4. `getAgent` - Get Agent Details
 **Purpose**: Retrieve detailed status and results of a specific agent
 **Returns**:
 - 📊 Current status with emoji indicators
@@ -482,14 +505,14 @@ This server provides **11 powerful tools** that enable LLMs to fully manage Curs
 - 🌿 Branch and repository information
 - 📅 Creation and update timestamps
 
-#### 4. `deleteAgent` - Remove Agent
+#### 5. `deleteAgent` - Remove Agent
 **Purpose**: Permanently delete a background agent
 **Features**:
 - ⚠️ Permanent deletion (cannot be undone)
 - 🛡️ Confirmation response
 - 🗑️ Cleanup of associated resources
 
-#### 5. `addFollowup` - Add Instructions
+#### 6. `addFollowup` - Add Instructions
 **Purpose**: Send additional instructions to a running agent
 **Capabilities**:
 - 💬 Text instructions
@@ -499,7 +522,7 @@ This server provides **11 powerful tools** that enable LLMs to fully manage Curs
 
 ### 📊 Information & Discovery Tools
 
-#### 6. `getAgentConversation` - View Chat History
+#### 7. `getAgentConversation` - View Chat History
 **Purpose**: Access the complete conversation history of an agent
 **Features**:
 - 💬 Full message history
@@ -507,21 +530,21 @@ This server provides **11 powerful tools** that enable LLMs to fully manage Curs
 - 📊 Message count statistics
 - 🔍 Recent message preview
 
-#### 7. `getMe` - API Key Info
+#### 8. `getMe` - API Key Info
 **Purpose**: Retrieve information about the current API key
 **Returns**:
 - 🔑 API key name and creation date
 - 👤 Associated user email
 - 📊 Account status information
 
-#### 8. `listModels` - Available AI Models
+#### 9. `listModels` - Available AI Models
 **Purpose**: Get list of recommended models for background agents
 **Features**:
 - 🤖 All supported AI models
 - 📋 Model recommendations
 - 🎯 Optimized for different tasks
 
-#### 9. `listRepositories` - Accessible Repos
+#### 10. `listRepositories` - Accessible Repos
 **Purpose**: List GitHub repositories accessible to the user
 **Returns**:
 - 📁 Repository names and owners
@@ -529,7 +552,7 @@ This server provides **11 powerful tools** that enable LLMs to fully manage Curs
 - 📊 Access permissions
 - 🌐 Direct GitHub links
 
-#### 10. `documentation` - Self-Documenting Usage Helper
+#### 11. `documentation` - Self-Documenting Usage Helper
 **Purpose**: Provide structured usage information for LLMs and clients
 **Features**:
 - 📘 Returns endpoints, auth methods, and protocol version
@@ -569,7 +592,7 @@ const newAgent = await mcp.call('createAgent', {
     3. Update documentation for new features
     4. Optimize performance bottlenecks`
   },
-  model: 'auto',
+  model: 'default',
   source: {
     repository: 'https://github.com/myuser/my-project',
     ref: 'main'
@@ -613,7 +636,7 @@ console.log('Messages:', conversation.messages.length);
   "prompt": {
     "text": "There's a critical bug in the user authentication flow. Please investigate and fix the login issues reported in GitHub issues #123 and #124."
   },
-  "model": "auto",
+  "model": "default",
   "source": {
     "repository": "https://github.com/company/webapp",
     "ref": "main"
@@ -631,7 +654,7 @@ console.log('Messages:', conversation.messages.length);
   "prompt": {
     "text": "Implement a new dark mode toggle feature with the following requirements:\n- System preference detection\n- Persistent user choice\n- Smooth transitions\n- Accessibility compliance"
   },
-  "model": "auto",
+  "model": "default",
   "source": {
     "repository": "https://github.com/company/frontend",
     "ref": "develop"
@@ -649,7 +672,7 @@ console.log('Messages:', conversation.messages.length);
   "prompt": {
     "text": "Update all documentation files:\n- Add comprehensive API documentation\n- Create setup guides for new developers\n- Add code examples for all public methods\n- Update README with latest features"
   },
-  "model": "auto",
+  "model": "default",
   "source": {
     "repository": "https://github.com/company/api-server"
   },
@@ -666,7 +689,7 @@ console.log('Messages:', conversation.messages.length);
   "prompt": {
     "text": "Improve test coverage by:\n- Adding unit tests for untested components\n- Creating integration tests for API endpoints\n- Adding E2E tests for critical user flows\n- Setting up test data factories"
   },
-  "model": "auto",
+  "model": "default",
   "source": {
     "repository": "https://github.com/company/app"
   },
@@ -697,6 +720,21 @@ for (const agent of allAgents.agents) {
     console.log(`  Messages: ${conversation.messageCount}`);
   }
 }
+```
+
+#### Generate a Dashboard Summary
+```javascript
+const { content } = await mcp.call('summarizeAgents', {
+  repository: 'company/app',
+  status: 'RUNNING',
+});
+
+// Human-readable overview in the first block
+console.log(content[0].text);
+
+// Structured aggregates for automation in the second block
+const dashboard = content[1].json;
+console.log(dashboard.statusCounts.RUNNING, 'agents in progress');
 ```
 
 #### Cleanup Finished Agents

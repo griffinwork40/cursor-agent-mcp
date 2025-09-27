@@ -3,3 +3,4 @@ node_modules/
 *.log
 .cursor/
 .coverage/
+mcp-images/
