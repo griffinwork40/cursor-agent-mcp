@@ -15,6 +15,20 @@ import { mintTokenFromApiKey, decodeTokenToApiKey } from './utils/tokenUtils.js'
 const app = express();
 const port = config.port;
 
+// Trust proxy for Railway and other cloud deployments
+// This enables proper protocol and host detection behind reverse proxies
+app.set('trust proxy', true);
+
+// Helper function for consistent base URL generation
+const getBaseUrl = (req) => {
+  const host = req.get('host');
+  const forwardedProto = req.get('x-forwarded-proto');
+  const isHttps = forwardedProto === 'https' || 
+                 req.protocol === 'https' || 
+                 (process.env.NODE_ENV === 'production' && !host.includes('localhost'));
+  return `${isHttps ? 'https' : 'http'}://${host}`;
+};
+
 app.use(express.json());
 
 // Note: requireMCPAuth middleware removed as it's not currently used
@@ -247,9 +261,9 @@ mcpServer.setRequestHandler(CallToolRequestSchema, async (request, context) => {
 // OAuth discovery endpoints for ChatGPT MCP integration
 app.get('/.well-known/oauth-authorization-server', (req, res) => {
   res.json({
-    issuer: `https://${req.get('host')}`,
-    authorization_endpoint: `https://${req.get('host')}/oauth/authorize`,
-    token_endpoint: `https://${req.get('host')}/oauth/token`,
+    issuer: `${getBaseUrl(req)}`,
+    authorization_endpoint: `${getBaseUrl(req)}/oauth/authorize`,
+    token_endpoint: `${getBaseUrl(req)}/oauth/token`,
     response_types_supported: ['code'],
     grant_types_supported: ['authorization_code'],
     code_challenge_methods_supported: ['S256'],
@@ -258,9 +272,9 @@ app.get('/.well-known/oauth-authorization-server', (req, res) => {
 
 app.get('/.well-known/openid-configuration', (req, res) => {
   res.json({
-    issuer: `https://${req.get('host')}`,
-    authorization_endpoint: `https://${req.get('host')}/oauth/authorize`,
-    token_endpoint: `https://${req.get('host')}/oauth/token`,
+    issuer: `${getBaseUrl(req)}`,
+    authorization_endpoint: `${getBaseUrl(req)}/oauth/authorize`,
+    token_endpoint: `${getBaseUrl(req)}/oauth/token`,
     response_types_supported: ['code'],
     grant_types_supported: ['authorization_code'],
     code_challenge_methods_supported: ['S256'],
@@ -269,15 +283,15 @@ app.get('/.well-known/openid-configuration', (req, res) => {
 
 app.get('/.well-known/oauth-protected-resource/sse', (req, res) => {
   res.json({
-    resource_registration_endpoint: `https://${req.get('host')}/oauth/resource`,
-    authorization_servers: [`https://${req.get('host')}`],
+    resource_registration_endpoint: `${getBaseUrl(req)}/oauth/resource`,
+    authorization_servers: [`${getBaseUrl(req)}`],
   });
 });
 
 app.get('/.well-known/oauth-protected-resource', (req, res) => {
   res.json({
-    resource_registration_endpoint: `https://${req.get('host')}/oauth/resource`,
-    authorization_servers: [`https://${req.get('host')}`],
+    resource_registration_endpoint: `${getBaseUrl(req)}/oauth/resource`,
+    authorization_servers: [`${getBaseUrl(req)}`],
   });
 });
 
@@ -303,7 +317,7 @@ app.post('/oauth/resource', (req, res) => {
   res.json({
     resource_id: 'mcp-server',
     resource_scopes: ['read', 'write'],
-    resource_uri: `https://${req.get('host')}/sse`,
+    resource_uri: `${getBaseUrl(req)}/sse`,
   });
 });
 
@@ -512,9 +526,7 @@ app.post('/connect', (req, res) => {
     }
 
     const token = mintTokenFromApiKey(apiKey);
-    const host = req.get('host');
-    const isHttps = req.protocol === 'https' || host.includes(':') === false; // best-effort
-    const base = `${isHttps ? 'https' : 'http'}://${host}`;
+    const base = getBaseUrl(req);
     const sseUrl = `${base}/sse?token=${encodeURIComponent(token)}`;
     const mcpUrl = `${base}/mcp?token=${encodeURIComponent(token)}`;
     res.setHeader('Content-Type', 'text/html; charset=utf-8');

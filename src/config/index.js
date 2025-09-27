@@ -22,4 +22,5 @@ export const config = {
 
 if (!config.token.secret) {
   console.warn('TOKEN_SECRET not set - token-based connections will be ephemeral per process and cannot be revoked across restarts.');
+  console.warn('For Railway deployment, set TOKEN_SECRET environment variable to a secure random string (32+ characters).');
 }
