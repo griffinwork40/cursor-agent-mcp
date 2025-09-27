@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { pathToFileURL } from 'url';
 import express from 'express';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
@@ -596,7 +597,10 @@ export function createApp() {
   return app;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+const isDirectExecution =
+  Boolean(process.argv[1]) && pathToFileURL(process.argv[1]).href === import.meta.url;
+
+if (isDirectExecution) {
   app.listen(port, () => {
     console.log(`🚀 Cursor MCP Server listening on port ${port}`);
     console.log(`🏥 Health check: http://localhost:${port}/health`);
