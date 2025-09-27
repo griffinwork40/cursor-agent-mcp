@@ -119,6 +119,39 @@ const tests = {
     return result;
   },
 
+  async createAndWaitMinimal() {
+    console.log('\n⏳ Testing: createAndWait (minimal payload)');
+    const result = await makeMCPRequest('tools/call', {
+      name: 'createAndWait',
+      arguments: {
+        prompt: { text: 'Touch a file hello.txt with greeting' },
+        source: { repository: 'https://github.com/test/repo' },
+        model: 'auto'
+      }
+    });
+    if (result) {
+      console.log('✅ createAndWait minimal:', result.result.content[0].text);
+    }
+    return result;
+  },
+
+  async createAndWaitHardened() {
+    console.log('\n🛡️  Testing: createAndWait (hardened payload)');
+    const result = await makeMCPRequest('tools/call', {
+      name: 'createAndWait',
+      arguments: {
+        prompt: { text: 'Create a docs/USAGE.md with instructions' },
+        source: { repository: 'https://github.com/test/repo', ref: 'main' },
+        target: { autoCreatePr: false, branchName: 'mcp/test-create-and-wait' },
+        model: 'gpt-4o'
+      }
+    });
+    if (result) {
+      console.log('✅ createAndWait hardened:', result.result.content[0].text);
+    }
+    return result;
+  },
+
   async testValidation() {
     console.log('\n🧪 Testing: Input Validation (should fail)');
     const result = await makeMCPRequest('tools/call', {
