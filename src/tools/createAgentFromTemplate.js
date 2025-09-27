@@ -7,9 +7,6 @@ import { z } from 'zod';
 import { templates } from '../templates/index.js';
 import { handleMCPError, validateInput, createSuccessResponse, schemas as baseSchemas } from '../utils/errorHandler.js';
 
-// Template name enum
-const TemplateName = z.enum(['docAudit', 'typeCleanup', 'bugHunt']);
-
 // Per-template params schemas
 const docAuditParams = z.object({
   docPaths: z.array(z.string()).nonempty('At least one doc path is required'),
@@ -109,7 +106,7 @@ export function createAgentFromTemplateTool(client) {
         // Validate params against the selected template schema explicitly
         const templ = validated.template;
         const paramsSchema = paramsByTemplate[templ];
-        // This check should be unreachable since `templ` is validated against the `TemplateName` enum.
+        // This check should be unreachable since `templ` is validated by the discriminated union.
         // Retained for runtime safety in case of future changes or unexpected input.
         if (!paramsSchema) {
           throw new Error(`Template "${templ}" is not supported. Supported: docAudit, typeCleanup, bugHunt.`);
