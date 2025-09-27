@@ -1,18 +1,33 @@
 import { describe, it, expect, beforeEach, beforeAll, afterEach, jest } from '@jest/globals';
+import type { Agent, CursorClient, MCPResponse, CreateAndWaitInput, CreateAgentRequest } from '../../types.js';
 
-let mod: any;
+let mod: {
+  createAndWait: (input: CreateAndWaitInput, client: CursorClient) => Promise<MCPResponse>;
+  cancelWaitToken: (token: string) => void;
+};
+
 beforeAll(async () => {
   mod = await import('../../tools/createAndWait.js');
 });
 
-function makeClient(sequence: any[]) {
-  const createAgent = jest.fn().mockResolvedValue(sequence[0]);
-  const getAgent = jest.fn();
+function makeClient(sequence: Agent[]): CursorClient {
+  const createAgent = jest.fn() as jest.MockedFunction<(data: CreateAgentRequest) => Promise<Agent>>;
+  const getAgent = jest.fn() as jest.MockedFunction<(id: string) => Promise<Agent>>;
+  
+  if (sequence[0]) {
+    createAgent.mockResolvedValue(sequence[0]);
+  }
   for (let i = 1; i < sequence.length; i += 1) {
-    getAgent.mockResolvedValueOnce(sequence[i]);
+    const agent = sequence[i];
+    if (agent) {
+      getAgent.mockResolvedValueOnce(agent);
+    }
   }
   // Keep returning last state if polled extra times (should not happen)
-  getAgent.mockImplementation((id: string) => Promise.resolve(sequence[sequence.length - 1]));
+  const lastAgent = sequence[sequence.length - 1];
+  if (lastAgent) {
+    getAgent.mockImplementation((_id: string) => Promise.resolve(lastAgent));
+  }
   return { createAgent, getAgent };
 }
 
@@ -48,14 +63,14 @@ describe('createAndWait', () => {
         timeoutMs: 10_000,
         jitterRatio: 0,
       },
-      client as any,
+      client,
     );
 
     await flushAllTimers(0); // after create
     await flushAllTimers(500); // poll 1
     await flushAllTimers(500); // poll 2 -> FINISHED
-    const res: any = await promise;
-    expect(res.content[1].text).toContain('"finalStatus": "FINISHED"');
+    const res: MCPResponse = await promise;
+    expect(res.content[1]?.text).toContain('"finalStatus": "FINISHED"');
   });
 
   it('returns ERROR when agent errors', async () => {
@@ -73,13 +88,13 @@ describe('createAndWait', () => {
         timeoutMs: 10_000,
         jitterRatio: 0,
       },
-      client as any,
+      client,
     );
 
     await flushAllTimers(0);
     await flushAllTimers(400);
-    const res: any = await promise;
-    expect(res.content[1].text).toContain('"finalStatus": "ERROR"');
+    const res: MCPResponse = await promise;
+    expect(res.content[1]?.text).toContain('"finalStatus": "ERROR"');
   });
 
   it('returns EXPIRED when agent expires', async () => {
@@ -98,14 +113,14 @@ describe('createAndWait', () => {
         timeoutMs: 10_000,
         jitterRatio: 0,
       },
-      client as any,
+      client,
     );
 
     await flushAllTimers(0);
     await flushAllTimers(300);
     await flushAllTimers(300);
-    const res: any = await promise;
-    expect(res.content[1].text).toContain('"finalStatus": "EXPIRED"');
+    const res: MCPResponse = await promise;
+    expect(res.content[1]?.text).toContain('"finalStatus": "EXPIRED"');
   });
 
   it('returns TIMEOUT when exceeding timeoutMs', async () => {
@@ -124,14 +139,14 @@ describe('createAndWait', () => {
         timeoutMs: 6000,
         jitterRatio: 0,
       },
-      client as any,
+      client,
     );
 
     await flushAllTimers(0);
     await flushAllTimers(1000);
     await flushAllTimers(6000); // exceed timeout
-    const res: any = await promise;
-    expect(res.content[1].text).toContain('"finalStatus": "TIMEOUT"');
+    const res: MCPResponse = await promise;
+    expect(res.content[1]?.text).toContain('"finalStatus": "TIMEOUT"');
   });
 
   it('returns CANCELLED when cancelToken is triggered', async () => {
@@ -149,16 +164,16 @@ describe('createAndWait', () => {
         pollIntervalMs: 1000,
         timeoutMs: 10_000,
         jitterRatio: 0,
-        cancelToken: 'tok'
+        cancelToken: 'tok',
       },
-      client as any,
+      client,
     );
 
     await flushAllTimers(0);
     mod.cancelWaitToken('tok');
     await flushAllTimers(1000);
-    const res: any = await promise;
-    expect(res.content[1].text).toContain('"finalStatus": "CANCELLED"');
+    const res: MCPResponse = await promise;
+    expect(res.content[1]?.text).toContain('"finalStatus": "CANCELLED"');
   });
 
   it('clears cancel token after consumption so it can be reused later', async () => {
@@ -180,14 +195,14 @@ describe('createAndWait', () => {
         jitterRatio: 0,
         cancelToken,
       },
-      firstClient as any,
+      firstClient,
     );
 
     await flushAllTimers(0);
     mod.cancelWaitToken(cancelToken);
     await flushAllTimers(1000);
-    const firstResult: any = await firstPromise;
-    expect(firstResult.content[1].text).toContain('"finalStatus": "CANCELLED"');
+    const firstResult: MCPResponse = await firstPromise;
+    expect(firstResult.content[1]?.text).toContain('"finalStatus": "CANCELLED"');
 
     const secondClient = makeClient([
       { id: 'a7', status: 'CREATING' },
@@ -205,14 +220,14 @@ describe('createAndWait', () => {
         jitterRatio: 0,
         cancelToken,
       },
-      secondClient as any,
+      secondClient,
     );
 
     await flushAllTimers(0);
     await flushAllTimers(500);
     await flushAllTimers(500);
-    const secondResult: any = await secondPromise;
-    expect(secondResult.content[1].text).toContain('"finalStatus": "FINISHED"');
+    const secondResult: MCPResponse = await secondPromise;
+    expect(secondResult.content[1]?.text).toContain('"finalStatus": "FINISHED"');
   });
 });
 
