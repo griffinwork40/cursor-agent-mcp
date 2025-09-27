@@ -169,6 +169,101 @@ const tests = {
       console.log('✅ Validation Error:', result.result.content[0].text);
     }
     return result;
+  },
+
+  async createAgentFromTemplateDocAudit() {
+    console.log('\n📚 Testing: createAgentFromTemplate (docAudit)');
+    const result = await makeMCPRequest('tools/call', {
+      name: 'createAgentFromTemplate',
+      arguments: {
+        template: 'docAudit',
+        params: {
+          docPaths: ['docs/**/*.md', 'README.md'],
+          guidelines: 'Focus on clarity and completeness'
+        },
+        source: {
+          repository: 'https://github.com/test/repo',
+          ref: 'main'
+        },
+        target: {
+          autoCreatePr: true,
+          branchName: 'audit-docs'
+        },
+        model: 'default'
+      }
+    });
+    if (result) {
+      console.log('✅ DocAudit Template:', result.result.content[0].text);
+    }
+    return result;
+  },
+
+  async createAgentFromTemplateTypeCleanup() {
+    console.log('\n🔧 Testing: createAgentFromTemplate (typeCleanup)');
+    const result = await makeMCPRequest('tools/call', {
+      name: 'createAgentFromTemplate',
+      arguments: {
+        template: 'typeCleanup',
+        params: {
+          strictMode: true,
+          includeDirs: ['src', 'lib']
+        },
+        source: {
+          repository: 'https://github.com/test/repo'
+        },
+        model: 'gpt-4o'
+      }
+    });
+    if (result) {
+      console.log('✅ TypeCleanup Template:', result.result.content[0].text);
+    }
+    return result;
+  },
+
+  async createAgentFromTemplateBugHunt() {
+    console.log('\n🐛 Testing: createAgentFromTemplate (bugHunt)');
+    const result = await makeMCPRequest('tools/call', {
+      name: 'createAgentFromTemplate',
+      arguments: {
+        template: 'bugHunt',
+        params: {
+          area: 'authentication',
+          flaky: true
+        },
+        source: {
+          repository: 'https://github.com/test/repo',
+          ref: 'develop'
+        },
+        target: {
+          autoCreatePr: false,
+          branchName: 'bug-hunt-auth'
+        }
+      }
+    });
+    if (result) {
+      console.log('✅ BugHunt Template:', result.result.content[0].text);
+    }
+    return result;
+  },
+
+  async createAgentFromTemplateValidation() {
+    console.log('\n❌ Testing: createAgentFromTemplate Validation (should fail)');
+    const result = await makeMCPRequest('tools/call', {
+      name: 'createAgentFromTemplate',
+      arguments: {
+        template: 'docAudit',
+        params: {
+          docPaths: [] // Empty array should fail validation
+        },
+        source: {
+          repository: 'https://github.com/test/repo'
+        }
+      }
+    });
+    if (result) {
+      console.log('✅ Validation Error:', result.result.content[0].text);
+    }
+    return result;
   }
 };
 
@@ -182,9 +277,13 @@ function showMenu() {
   console.log('5. List agents');
   console.log('6. Create agent (test)');
   console.log('7. Test validation (should fail)');
-  console.log('8. Run all tests');
-  console.log('9. Exit');
-  console.log('\nEnter your choice (1-9):');
+  console.log('8. createAgentFromTemplate - docAudit');
+  console.log('9. createAgentFromTemplate - typeCleanup');
+  console.log('10. createAgentFromTemplate - bugHunt');
+  console.log('11. createAgentFromTemplate validation (should fail)');
+  console.log('12. Run all tests');
+  console.log('13. Exit');
+  console.log('\nEnter your choice (1-13):');
 }
 
 // Run all tests
@@ -198,6 +297,10 @@ async function runAllTests() {
   await tests.listAgents();
   await tests.createAgent();
   await tests.testValidation();
+  await tests.createAgentFromTemplateDocAudit();
+  await tests.createAgentFromTemplateTypeCleanup();
+  await tests.createAgentFromTemplateBugHunt();
+  await tests.createAgentFromTemplateValidation();
   
   console.log('\n✅ All tests completed!');
 }
@@ -235,6 +338,7 @@ async function main() {
 
     await runCiTest('listTools', tests.listTools);
     await runCiTest('testValidation', tests.testValidation, true);
+    await runCiTest('createAgentFromTemplateValidation', tests.createAgentFromTemplateValidation, true);
 
     if (failures.length > 0) {
       console.error(`❌ CI MCP tests failed: ${failures.join(', ')}`);
@@ -281,15 +385,31 @@ async function main() {
           askQuestion();
           break;
         case '8':
-          await runAllTests();
+          await tests.createAgentFromTemplateDocAudit();
           askQuestion();
           break;
         case '9':
+          await tests.createAgentFromTemplateTypeCleanup();
+          askQuestion();
+          break;
+        case '10':
+          await tests.createAgentFromTemplateBugHunt();
+          askQuestion();
+          break;
+        case '11':
+          await tests.createAgentFromTemplateValidation();
+          askQuestion();
+          break;
+        case '12':
+          await runAllTests();
+          askQuestion();
+          break;
+        case '13':
           console.log('👋 Goodbye!');
           rl.close();
           break;
         default:
-          console.log('❌ Invalid choice. Please enter 1-9.');
+          console.log('❌ Invalid choice. Please enter 1-13.');
           askQuestion();
       }
     });

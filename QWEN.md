@@ -164,7 +164,7 @@ Add to `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "cursor-agents": {
+    "cursor-background-agents": {
       "command": "node",
       "args": ["/path/to/cursor-agent-mcp/src/index.js"],
       "env": {
