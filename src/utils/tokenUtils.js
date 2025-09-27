@@ -11,6 +11,7 @@ const IV_LENGTH = 12; // GCM standard
 function getKey() {
   if (!config.token.secret) {
     // Derive a process-local key to avoid crashes, but warn in config
+    console.warn('TOKEN_SECRET not set - token-based connections will be ephemeral per process and cannot be revoked across restarts.');
     return crypto.createHash('sha256').update('insecure-default-secret').digest();
   }
   // Hash the provided secret to 32-byte key
@@ -18,14 +19,14 @@ function getKey() {
 }
 
 export function mintTokenFromApiKey(apiKey) {
-  if (!apiKey || typeof apiKey !== 'string') {
+  if (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === '') {
     throw new Error('API key required to mint token');
   }
 
   const ttlMs = config.token.ttlDays * 24 * 60 * 60 * 1000;
   const payload = {
     k: apiKey,
-    exp: Date.now() + ttlMs,
+    exp: ttlMs <= 0 ? Date.now() - 1 : Date.now() + ttlMs, // Immediately expired for zero/negative TTL
   };
 
   const plaintext = Buffer.from(JSON.stringify(payload), 'utf8');
