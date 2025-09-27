@@ -29,15 +29,16 @@ class CursorApiClient {
     const shouldDebug = Boolean(config.logging?.cursorClientDebug);
 
     const sensitiveKey = (key) => {
+      const sensitiveFields = [
+        'secret',
+        'token',
+        'apiKey',
+        'authorization',
+        'password',
+        'prompt',
+      ];
       const lower = key.toLowerCase();
-      return (
-        lower.includes('secret') ||
-        lower.includes('token') ||
-        lower.includes('key') ||
-        lower.includes('authorization') ||
-        lower.includes('password') ||
-        lower.includes('prompt')
-      );
+      return sensitiveFields.some(field => lower === field.toLowerCase());
     };
 
     const sanitize = (value, depth = 0) => {
