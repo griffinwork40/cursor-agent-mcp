@@ -3,11 +3,11 @@
 // to avoid divergence between TS and JS behaviors.
 
 export type CursorClient = {
-  createAgent: (data: any) => Promise<any>;
-  getAgent: (id: string) => Promise<any>;
+  createAgent: (data: { prompt: { text: string }; source: { repository: string }; model: string; pollIntervalMs: number; timeoutMs: number; jitterRatio: number; cancelToken?: string }) => Promise<{ id: string; status: string; target?: { url: string } }>;
+  getAgent: (id: string) => Promise<{ id: string; status: string; target?: { url: string } }>;
 };
 
 import * as impl from './createAndWait.js';
 
-export const createAndWait: (input: any, client: CursorClient) => Promise<any> = impl.createAndWait as any;
+export const createAndWait: (input: { prompt: { text: string }; source: { repository: string }; model: string; pollIntervalMs: number; timeoutMs: number; jitterRatio: number; cancelToken?: string }, client: CursorClient) => Promise<{ content: { text: string }[] }> = impl.createAndWait as any;
 export const cancelWaitToken: (token: string) => void = impl.cancelWaitToken as any;

@@ -5,9 +5,9 @@ beforeAll(async () => {
   mod = await import('../../tools/createAndWait.js');
 });
 
-function makeClient(sequence: any[]) {
-  const createAgent = jest.fn().mockResolvedValue(sequence[0]);
-  const getAgent = jest.fn();
+function makeClient(sequence: { id: string; status: string; target?: { url: string } }[]) {
+  const createAgent = jest.fn<() => Promise<{ id: string; status: string; target?: { url: string } }>>().mockResolvedValue(sequence[0]);
+  const getAgent = jest.fn<(id: string) => Promise<{ id: string; status: string; target?: { url: string } }>>();
   for (let i = 1; i < sequence.length; i += 1) {
     getAgent.mockResolvedValueOnce(sequence[i]);
   }
