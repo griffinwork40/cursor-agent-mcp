@@ -136,7 +136,8 @@ make_mcp_request "tools/call" '{
         "source": {
             "repository": "https://github.com/test/repo"
         },
-        "model": "auto"
+        "model": "default"
+        "model": "default"
     }
 }' "CreateAndWait Minimal"
 

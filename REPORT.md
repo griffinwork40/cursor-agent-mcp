@@ -6,7 +6,7 @@ Summary
 
 Changes
 - Implemented a new MCP tool `createAndWait` with the same request schema as `createAgent` and added polling until terminal status (FINISHED/ERROR/EXPIRED) or 10-minute timeout.
-- Standardized `model` default to 'auto' in both JSON schema and handler for `createAgent`.
+- Standardized `model` default to 'default' in both JSON schema and handler for `createAgent` and `createAndWait`.
 - Enhanced API request/response logging with payload redaction for `secret` fields in `src/utils/cursorClient.js`.
 - Added tests/scripts to reproduce and compare behaviors.
 
@@ -15,7 +15,7 @@ Repro Steps
 2) Minimal payload (createAndWait):
    - prompt.text: "Touch a file hello.txt with greeting"
    - source.repository: "https://github.com/test/repo"
-   - model: "auto"
+   - model: "default"
 3) Hardened payload (createAndWait):
    - Add source.ref: "main"
    - target.autoCreatePr: false
