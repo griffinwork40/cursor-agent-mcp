@@ -1,6 +1,6 @@
 # 🚀 Cursor MCP Server
 
-A **MCP (Model Context Protocol) server** that seamlessly integrates with **Cursor's Background Agents API**. This server enables LLMs to programmatically create, manage, and interact with Cursor's powerful background agents for autonomous code development.
+A **Model Context Protocol (MCP) server** that seamlessly integrates with **Cursor's Background Agents API**. This server enables LLMs to programmatically create, manage, and interact with Cursor's powerful background agents for autonomous code development.
 
 ## ✨ Features
 
@@ -27,7 +27,14 @@ A **MCP (Model Context Protocol) server** that seamlessly integrates with **Curs
 - ESLint code quality checks
 - Security vulnerability scanning
 
-### Quick Install via npm
+## 📦 Installation & Setup
+
+### Prerequisites
+- **Node.js** 18+ 
+- **Cursor IDE** with Background Agents enabled
+- **Valid Cursor API key**
+
+### 🚀 Quick Install via npm (Recommended)
 
 ```bash
 # Install globally
@@ -37,7 +44,7 @@ npm install -g cursor-agent-mcp
 npx cursor-agent-mcp
 ```
 
-### MCP Client Configuration
+### 📝 MCP Client Configuration
 
 Add this to your MCP client configuration (e.g., Claude Desktop's `claude_desktop_config.json`):
 
@@ -56,13 +63,43 @@ Add this to your MCP client configuration (e.g., Claude Desktop's `claude_deskto
 }
 ```
 
-### Development Installation
+### 🛠️ Development Installation
 
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+```bash
+# 1. Clone the repository
+git clone https://github.com/griffinwork40/cursor-agent-mcp.git
+cd cursor-agent-mcp
+
+# 2. Install dependencies
+npm install
+
+# 3. Configure environment
+cp .env.example .env
+# Edit .env and add your CURSOR_API_KEY
+
+# 4. Start the server
+npm start
+```
+
+### Environment Variables
+Create a `.env` file in the project root:
+```env
+# Required
+CURSOR_API_KEY=your_cursor_api_key_here
+
+# Optional
+PORT=3000
+CURSOR_API_URL=https://api.cursor.com
+```
+
+### Development Mode
+```bash
+# Start with auto-reload
+npm run dev
+
+# Run tests
+npm test
+```
 
 ### 🛡️ Branch Protection & Development Workflow
 
@@ -310,12 +347,12 @@ curl -X POST https://your-server.com/ \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
 
-# Should return 10 Cursor agent tools
+# Should return 12 Cursor agent tools
 ```
 
 **Verify in ChatGPT**:
 1. Add the connector with base URL
-2. Look for 9 available tools in the tool picker
+2. Look for 12 available tools in the tool picker
 3. Test with: "List my cursor agents" or "Create a cursor agent for my repo"
 
 ### 🛠️ Development/Local Installation Configuration
@@ -336,88 +373,14 @@ If you're running from source code, use this configuration instead:
 }
 ```
 
-## 📦 Installation & Setup
-
-### Prerequisites
-- **Node.js** 18+ 
-- **Cursor IDE** with Background Agents enabled
-- **Valid Cursor API key**
-
-### 🚀 Quick Install via npm (Recommended)
-
-```bash
-# Install globally
-npm install -g cursor-agent-mcp
-
-# Or use npx (no installation required)
-npx cursor-agent-mcp
-```
-
-### 📝 MCP Client Configuration
-
-Add this to your MCP client configuration (e.g., Claude Desktop's `claude_desktop_config.json`):
-
-```json
-{
-  "mcpServers": {
-    "cursor-background-agents": {
-      "command": "npx",
-      "args": ["cursor-agent-mcp@latest"],
-      "env": {
-        "CURSOR_API_KEY": "your_cursor_api_key_here",
-        "CURSOR_API_URL": "https://api.cursor.com"
-      }
-    }
-  }
-}
-```
-
-### 🛠️ Development Installation
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/griffinwork40/cursor-agent-mcp.git
-cd cursor-agent-mcp
-
-# 2. Install dependencies
-npm install
-
-# 3. Configure environment
-cp .env.example .env
-# Edit .env and add your CURSOR_API_KEY
-
-# 4. Start the server
-npm start
-```
-
-### Environment Variables
-Create a `.env` file in the project root:
-```env
-# Required
-CURSOR_API_KEY=your_cursor_api_key_here
-
-# Optional
-PORT=3000
-CURSOR_API_URL=https://api.cursor.com
-```
-
-### Development Mode
-```bash
-# Start with auto-reload
-npm run dev
-
-# Run tests
-npm test
-```
-
 ## 🌐 Server Endpoints
 
 - **`/mcp`** - MCP protocol endpoint for LLM interaction
 - **`/health`** - Health check endpoint with uptime info
 
-## 🛠️ Available MCP Tools (11 Tools)
+## 🛠️ Available MCP Tools (12 Tools)
 
-This server provides **11 powerful tools** that enable LLMs to fully manage Cursor's Background Agents:
+This server provides **12 powerful tools** that enable LLMs to fully manage Cursor's Background Agents:
 
 ### 🤖 Agent Management Tools
 
@@ -503,7 +466,7 @@ const dashboard = summary.content[1].json;
 - 🔄 Real-time agent updates
 - 📝 Conversation threading
 
-#### 6. `createAndWait` - Create Agent and Wait for Completion
+#### 7. `createAndWait` - Create Agent and Wait for Completion
 **Purpose**: Create an agent and internally poll until it reaches a terminal status.
 **Returns**: `{ finalStatus, agentId, elapsedMs, agent }`
 
@@ -533,9 +496,23 @@ const dashboard = summary.content[1].json;
 }
 ```
 
+#### 8. `cancelCreateAndWait` - Cancel Create and Wait Operation
+**Purpose**: Cancel a running `createAndWait` operation using its cancel token.
+**Features**:
+- 🛑 Cooperative cancellation of long-running operations
+- 🔄 Token-based cancellation system
+- ⚡ Immediate response to cancellation requests
+
+**Example Input**:
+```json
+{
+  "cancelToken": "build-123"
+}
+```
+
 ### 📊 Information & Discovery Tools
 
-#### 7. `getAgentConversation` - View Chat History
+#### 9. `getAgentConversation` - View Chat History
 **Purpose**: Access the complete conversation history of an agent
 **Features**:
 - 💬 Full message history
@@ -543,21 +520,21 @@ const dashboard = summary.content[1].json;
 - 📊 Message count statistics
 - 🔍 Recent message preview
 
-#### 8. `getMe` - API Key Info
+#### 10. `getMe` - API Key Info
 **Purpose**: Retrieve information about the current API key
 **Returns**:
 - 🔑 API key name and creation date
 - 👤 Associated user email
 - 📊 Account status information
 
-#### 9. `listModels` - Available AI Models
+#### 11. `listModels` - Available AI Models
 **Purpose**: Get list of recommended models for background agents
 **Features**:
 - 🤖 All supported AI models
 - 📋 Model recommendations
 - 🎯 Optimized for different tasks
 
-#### 10. `listRepositories` - Accessible Repos
+#### 12. `listRepositories` - Accessible Repos
 **Purpose**: List GitHub repositories accessible to the user
 **Returns**:
 - 📁 Repository names and owners
@@ -565,7 +542,7 @@ const dashboard = summary.content[1].json;
 - 📊 Access permissions
 - 🌐 Direct GitHub links
 
-#### 11. `documentation` - Self-Documenting Usage Helper
+#### 13. `documentation` - Self-Documenting Usage Helper
 **Purpose**: Provide structured usage information for LLMs and clients
 **Features**:
 - 📘 Returns endpoints, auth methods, and protocol version
@@ -887,7 +864,7 @@ npm start
 ### 🔗 API Reference
 Complete API documentation for all MCP tools, including request/response schemas, error codes, and examples:
 - **📖 [API Reference](./docs/api-reference.md)** - Comprehensive tool documentation
-- **🔧 All 10 MCP Tools** - Detailed parameter specifications
+- **🔧 All 12 MCP Tools** - Detailed parameter specifications
 - **🚨 Error Handling** - Complete error code reference
 - **💡 Usage Examples** - Practical implementation examples
 
@@ -903,11 +880,81 @@ Security best practices and configuration guidance:
 ## 🎉 Why Choose This MCP Server?
 
 ✅ **Production Ready** - Comprehensive error handling and validation  
-✅ **Full Feature Coverage** - All 9 Cursor Background Agent API endpoints  
+✅ **Full Feature Coverage** - All 12 Cursor Background Agent API endpoints  
 ✅ **Developer Friendly** - Extensive documentation and examples  
 ✅ **Type Safe** - Zod schema validation for all inputs  
 ✅ **Observable** - Detailed logging and monitoring  
 ✅ **Tested** - Comprehensive test suite included  
 ✅ **Maintained** - Active development and support  
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+#### Server Won't Start
+**Problem**: Server fails to start or crashes immediately
+**Solutions**:
+- ✅ Check Node.js version: `node --version` (requires 18+)
+- ✅ Verify API key: Ensure `CURSOR_API_KEY` is set correctly
+- ✅ Check port availability: Default port 3000 might be in use
+- ✅ Review logs: Check console output for specific error messages
+
+#### Authentication Errors
+**Problem**: `401 Unauthorized` or `Invalid API key` errors
+**Solutions**:
+- ✅ Verify API key format: Should start with `key_`
+- ✅ Check key permissions: Ensure key has Background Agents access
+- ✅ Test key validity: Use `getMe` tool to verify key works
+- ✅ Regenerate key: Create new key in Cursor Settings if needed
+
+#### Agent Creation Failures
+**Problem**: Agents fail to create or return validation errors
+**Solutions**:
+- ✅ Check repository URL: Must be valid GitHub repository
+- ✅ Verify repository access: Ensure API key has access to the repo
+- ✅ Validate prompt text: Cannot be empty, must be meaningful
+- ✅ Check model availability: Use `listModels` to see available options
+
+#### Connection Issues
+**Problem**: MCP client cannot connect to server
+**Solutions**:
+- ✅ Verify server is running: Check `/health` endpoint
+- ✅ Check firewall settings: Ensure port 3000 is accessible
+- ✅ Test local connection: Use `curl http://localhost:3000/health`
+- ✅ Review MCP client config: Ensure correct server URL and command
+
+## ❓ Frequently Asked Questions
+
+### General Questions
+
+**Q: What is the difference between this MCP server and using Cursor directly?**
+A: This MCP server allows you to programmatically control Cursor's background agents through LLMs and automation tools, enabling batch operations, integration with other systems, and automated workflows.
+
+**Q: Do I need a Cursor subscription to use this?**
+A: Yes, you need an active Cursor subscription with Background Agents enabled to use this MCP server.
+
+**Q: Can I use this with other AI models besides Claude?**
+A: Yes, this MCP server works with any MCP-compatible client, including ChatGPT, Codex CLI, and custom applications.
+
+### Technical Questions
+
+**Q: How many agents can I create simultaneously?**
+A: The limit depends on your Cursor subscription tier. Check your Cursor dashboard for current limits.
+
+**Q: What happens if my API key expires?**
+A: The server will return authentication errors. You'll need to update your API key and restart the server.
+
+**Q: Can I run multiple instances of this server?**
+A: Yes, but each instance needs its own port and API key. Be mindful of rate limits.
+
+**Q: Is my code safe when using background agents?**
+A: Yes, agents only have access to repositories you explicitly grant them access to through your API key permissions.
+
+### Getting Help
+
+- 📖 **Documentation**: Check [API Reference](./docs/api-reference.md) for detailed tool documentation
+- 🐛 **Bug Reports**: Open an issue on [GitHub](https://github.com/griffinwork40/cursor-agent-mcp/issues)
+- 💬 **Discussions**: Join [GitHub Discussions](https://github.com/griffinwork40/cursor-agent-mcp/discussions) for questions
+- 🔒 **Security**: Report security issues via [Security Documentation](./docs/SECURITY.md)
 
 **🚀 Ready to supercharge your development workflow with AI-powered background agents!**
