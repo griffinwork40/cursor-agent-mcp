@@ -324,7 +324,7 @@ If you're running from source code, use this configuration instead:
 ```json
 {
   "mcpServers": {
-    "cursor-agents": {
+    "cursor-background-agents": {
       "command": "node",
       "args": ["/path/to/cursor-agent-mcp/src/index.js"],
       "env": {
@@ -937,6 +937,7 @@ Complete API documentation for all MCP tools, including request/response schemas
 - **🔧 All 13 MCP Tools** - Detailed parameter specifications
 - **🚨 Error Handling** - Complete error code reference
 - **💡 Usage Examples** - Practical implementation examples
+- **📋 [Changelog](./CHANGELOG.md)** - Version history and release notes
 
 ### 🔒 Security
 Security best practices and configuration guidance:
@@ -952,6 +953,67 @@ Security best practices and configuration guidance:
 - **🐛 [Issues](https://github.com/griffinwork40/cursor-agent-mcp/issues)** - Report bugs or request features
 
 ---
+
+## 🚨 Troubleshooting
+
+### Common Issues
+
+#### "I don't see any special abilities in Claude"
+- Make sure you **restarted Claude Desktop** completely
+- Check that your **API key is correct** (no extra spaces or characters)
+- Verify you have a **Cursor subscription** (free accounts won't work)
+
+#### "Claude says it can't access Cursor"
+- Double-check your **API key** is valid
+- Make sure you **saved the config file** properly
+- Try **restarting Claude Desktop** again
+
+#### "The config file won't save"
+- Make sure the file is named **exactly** `claude_desktop_config.json`
+- Check you have **permission** to save files in that folder
+- Try using a different text editor
+
+#### "I get an error about npx or node"
+- This usually means the system is downloading the required files
+- **Wait a few minutes** and try again
+- Make sure you have an **internet connection**
+
+#### "Validation Error" messages
+- Check that your input data matches the required schema
+- Ensure all required fields are provided
+- Verify your API key has the necessary permissions
+
+#### "API Error (401): Invalid or missing API key"
+- Verify your `CURSOR_API_KEY` is set correctly in your environment
+- Check that the API key starts with `key_`
+- Ensure the API key hasn't expired
+
+### Getting Help
+
+- **GitHub Issues**: [Report bugs or request features](https://github.com/griffinwork40/cursor-agent-mcp/issues)
+- **Documentation**: Check the [API Reference](./docs/api-reference.md) for detailed tool documentation
+- **Testing**: Use the [testing guide](./TESTING.md) to verify your setup
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md) for details on:
+
+- **Development Setup** - How to get started with local development
+- **Code Standards** - Coding style and conventions
+- **Testing Guidelines** - How to write and run tests
+- **Pull Request Process** - How to submit changes
+- **Issue Reporting** - How to report bugs and request features
+
+### Quick Start for Contributors
+
+1. **Fork the repository** on GitHub
+2. **Clone your fork** locally
+3. **Install dependencies**: `npm install`
+4. **Create a feature branch**: `git checkout -b feature/your-feature-name`
+5. **Make your changes** and test them
+6. **Submit a pull request**
+
+For detailed information, see the [Contributing Guide](./CONTRIBUTING.md).
 
 ## 🎉 Why Choose This MCP Server?
 
