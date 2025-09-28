@@ -9,7 +9,7 @@ import {
 import { config } from './config/index.js';
 import { createTools } from './tools/index.js';
 import { createCursorApiClient, cursorApiClient as defaultCursorClient } from './utils/cursorClient.js';
-import { handleMCPError } from './utils/errorHandler.js';
+import { handleMCPError, AuthenticationError } from './utils/errorHandler.js';
 import { mintTokenFromApiKey, decodeTokenToApiKey } from './utils/tokenUtils.js';
 
 const app = express();
@@ -159,33 +159,55 @@ app.get('/favicon.ico', (req, res) => res.status(204).end());
 const extractApiKey = (req) => {
   // Support zero-storage token in query/header: token=<base64url>
   const token = req.query?.token || req.headers['x-mcp-token'];
-  const tokenKey = token ? decodeTokenToApiKey(token) : null;
-  if (tokenKey) return tokenKey;
+  if (token) {
+    const tokenKey = decodeTokenToApiKey(token);
+    if (tokenKey) {
+      return tokenKey;
+    }
+    // If token exists but decoding failed, don't fall back to other methods
+    // This prevents security issues with expired/invalid tokens
+    return null;
+  }
 
   // Check Authorization header for ChatGPT compatibility (but avoid OAuth Bearer tokens)
   const authHeader = req.headers['authorization'];
   if (authHeader && authHeader.startsWith('Bearer ') && !authHeader.includes('oauth')) {
     const bearerKey = authHeader.replace('Bearer ', '');
     // Only use if it looks like a Cursor API key (starts with 'key_')
-    if (bearerKey.startsWith('key_')) {
+    if (bearerKey.startsWith('key_') && bearerKey.length >= 20) {
       return bearerKey;
     }
   }
 
-  return (
-    req.headers['x-cursor-api-key'] ||
+  // Check other API key sources
+  const apiKey = req.headers['x-cursor-api-key'] ||
     req.headers['x-api-key'] ||
     req.query?.api_key ||
-    req.body?.cursor_api_key ||
-    config.cursor.apiKey // fallback to environment/global key
-  );
+    req.body?.cursor_api_key;
+
+  // Validate API key format if found
+  if (apiKey && apiKey.startsWith('key_') && apiKey.length >= 20) {
+    return apiKey;
+  }
+
+  // Fallback to environment/global key only if no other key was provided
+  if (!apiKey && config.cursor.apiKey) {
+    return config.cursor.apiKey;
+  }
+
+  return null;
 };
 
 // Lazily create tools per request using provided API key (fallback to default client)
 const getToolsForRequest = (req) => {
   const apiKey = extractApiKey(req);
   console.log(`API Key extracted: ${apiKey ? `${apiKey.substring(0, 10)}...` : 'None'}`);
-  const client = apiKey ? createCursorApiClient(apiKey) : defaultCursorClient;
+  
+  if (!apiKey) {
+    throw new AuthenticationError('No valid API key found in request');
+  }
+  
+  const client = createCursorApiClient(apiKey);
   return createTools(client);
 };
 
