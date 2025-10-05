@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Cursor Agent MCP Server provides a Model Context Protocol interface to interact with Cursor's Background Agents API. This server exposes 9 MCP tools that enable LLMs to programmatically create, manage, and monitor background agents for autonomous code development.
+The Cursor Agent MCP Server provides a Model Context Protocol interface to interact with Cursor's Background Agents API. This server exposes 12 MCP tools that enable LLMs to programmatically create, manage, and monitor background agents for autonomous code development.
 
 ### Base Information
 
@@ -51,6 +51,64 @@ CURSOR_API_KEY="your_cursor_api_key_here"
 ## MCP Tools Reference
 
 ### 1. `createAgent`
+### 1a. `createAgentFromTemplate`
+
+Creates a new background agent using a curated template and parameters. Internally validates input and calls `createAgent`.
+
+#### Request Schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "template": { "type": "string", "enum": ["docAudit", "typeCleanup", "bugHunt"] },
+    "params": { "type": "object" },
+    "model": { "type": "string", "default": "auto" },
+    "source": {
+      "type": "object",
+      "properties": {
+        "repository": { "type": "string" },
+        "ref": { "type": "string" }
+      },
+      "required": ["repository"]
+    },
+    "target": {
+      "type": "object",
+      "properties": {
+        "autoCreatePr": { "type": "boolean" },
+        "branchName": { "type": "string" }
+      }
+    },
+    "webhook": {
+      "type": "object",
+      "properties": {
+        "url": { "type": "string" },
+        "secret": { "type": "string" }
+      },
+      "required": ["url"]
+    }
+  },
+  "required": ["template", "params", "source"]
+}
+```
+
+#### Output
+
+```json
+{
+  "agentId": "string",
+  "status": "string",
+  "url": "string",
+  "createdAt": "string",
+  "template": "string"
+}
+```
+
+#### Templates
+- docAudit: `{ docPaths: string[]; guidelines?: string }`
+- typeCleanup: `{ strictMode?: boolean; includeDirs?: string[] }`
+- bugHunt: `{ area: string; flaky?: boolean }`
+
 
 Creates a new background agent to work on a repository.
 
@@ -91,8 +149,8 @@ Creates a new background agent to work on a repository.
     },
     "model": {
       "type": "string",
-      "description": "The LLM to use (defaults to 'auto' if not specified)",
-      "default": "auto"
+      "description": "The LLM to use (defaults to 'default' if not specified)",
+      "default": "default"
     },
     "source": {
       "type": "object",
@@ -147,7 +205,7 @@ Creates a new background agent to work on a repository.
   "prompt": {
     "text": "Fix all TypeScript errors in the project and add proper type definitions"
   },
-  "model": "auto",
+  "model": "default",
   "source": {
     "repository": "https://github.com/user/repo",
     "ref": "main"
@@ -249,7 +307,119 @@ Retrieves all background agents for the authenticated user.
 
 ---
 
-### 3. `getAgent`
+### 3. `summarizeAgents`
+
+Produces an aggregated dashboard of recent agents with optional filters. Filters are applied before computing totals to ensure counts and recent activity align with the requested subset.
+
+#### Request Schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string",
+      "description": "Optional status filter (CREATING, RUNNING, FINISHED, ERROR, EXPIRED)"
+    },
+    "repository": {
+      "type": "string",
+      "description": "Optional repository filter matched against the agent source"
+    },
+    "limit": {
+      "type": "number",
+      "description": "Maximum number of agents to inspect (1-100)"
+    },
+    "cursor": {
+      "type": "string",
+      "description": "Pagination cursor for fetching the next page"
+    }
+  }
+}
+```
+
+#### Example Request
+
+```json
+{
+  "status": "RUNNING",
+  "repository": "company/app"
+}
+```
+
+#### Example Response
+
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "📊 Agent Summary Dashboard\nFilters: status=RUNNING, repository~company/app\nTotal agents: 2\nStatus mix: 🔄 CREATING: 0 | ⚡ RUNNING: 2 | ✅ FINISHED: 0 | ❌ ERROR: 0 | ⏰ EXPIRED: 0\n\n🆕 Recent activity:\n• Hotfix Runner — ⚡ RUNNING (1/15/2024, 10:32:00 AM)\n• Docs Update — ⚡ RUNNING (1/15/2024, 9:58:00 AM)\n\n⏱️ In progress:\n• Hotfix Runner — 34m elapsed\n• Docs Update — 2h 5m elapsed"
+    },
+    {
+      "type": "json",
+      "json": {
+        "filters": {
+          "status": "RUNNING",
+          "repository": "company/app",
+          "limit": null,
+          "cursor": null
+        },
+        "totals": {
+          "totalAgents": 2
+        },
+        "statusCounts": {
+          "CREATING": 0,
+          "RUNNING": 2,
+          "FINISHED": 0,
+          "ERROR": 0,
+          "EXPIRED": 0
+        },
+        "recentAgents": [
+          {
+            "id": "bc_hotfix",
+            "name": "Hotfix Runner",
+            "status": "RUNNING",
+            "repository": "github.com/company/app",
+            "timestamp": 1705314720000
+          },
+          {
+            "id": "bc_docs",
+            "name": "Docs Update",
+            "status": "RUNNING",
+            "repository": "github.com/company/app",
+            "timestamp": 1705311480000
+          }
+        ],
+        "inProgressAgents": [
+          {
+            "id": "bc_hotfix",
+            "name": "Hotfix Runner",
+            "status": "RUNNING",
+            "repository": "github.com/company/app",
+            "startedAt": "2024-01-15T09:58:00.000Z",
+            "ageSeconds": 2040
+          },
+          {
+            "id": "bc_docs",
+            "name": "Docs Update",
+            "status": "RUNNING",
+            "repository": "github.com/company/app",
+            "startedAt": "2024-01-15T08:27:00.000Z",
+            "ageSeconds": 7440
+          }
+        ],
+        "pagination": {
+          "nextCursor": null
+        }
+      }
+    }
+  ]
+}
+```
+
+---
+
+### 4. `getAgent`
 
 Retrieves detailed status and results of a specific background agent.
 
@@ -291,7 +461,7 @@ Retrieves detailed status and results of a specific background agent.
 
 ---
 
-### 4. `deleteAgent`
+### 5. `deleteAgent`
 
 Permanently deletes a background agent.
 
@@ -333,7 +503,7 @@ Permanently deletes a background agent.
 
 ---
 
-### 5. `addFollowup`
+### 6. `addFollowup`
 
 Adds followup instructions to a running background agent.
 
@@ -407,7 +577,100 @@ Adds followup instructions to a running background agent.
 
 ---
 
-### 6. `getAgentConversation`
+### 6. `createAndWait`
+
+Creates a new background agent and waits until it reaches a terminal status.
+
+Terminal statuses: `FINISHED`, `ERROR`, `EXPIRED`.
+
+Provide an optional `cancelToken` to pair the request with the `cancelCreateAndWait` tool for cooperative cancellation.
+
+#### Request Schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "prompt": { "type": "object", "properties": { "text": { "type": "string" } }, "required": ["text"] },
+    "model": { "type": "string", "default": "auto" },
+    "source": { "type": "object", "properties": { "repository": { "type": "string" }, "ref": { "type": "string" } }, "required": ["repository"] },
+    "target": { "type": "object" },
+    "webhook": { "type": "object" },
+    "pollIntervalMs": { "type": "number", "default": 2000 },
+    "timeoutMs": { "type": "number", "default": 600000 },
+    "jitterRatio": { "type": "number", "default": 0.1 },
+    "cancelToken": { "type": "string" }
+  },
+  "required": ["prompt", "source", "model"]
+}
+```
+
+#### Example Request
+
+```json
+{
+  "prompt": { "text": "Refactor utils for readability and add tests" },
+  "source": { "repository": "https://github.com/org/repo", "ref": "main" },
+  "model": "auto",
+  "pollIntervalMs": 1500,
+  "timeoutMs": 900000
+}
+```
+
+#### Example Response
+
+```json
+{
+  "content": [
+    { "type": "text", "text": "✅ createAndWait completed with status: FINISHED" },
+    { "type": "text", "text": "{\n  \"finalStatus\": \"FINISHED\",\n  \"agentId\": \"bc_abc123\",\n  \"elapsedMs\": 84217,\n  \"agent\": { \"id\": \"bc_abc123\", \"status\": \"FINISHED\" }\n}" }
+  ]
+}
+```
+
+---
+
+### 7. `cancelCreateAndWait`
+
+Signals cancellation for a previously issued `createAndWait` call by marking its `cancelToken`.
+
+#### Request Schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "cancelToken": {
+      "type": "string",
+      "description": "The cancelToken originally provided to createAndWait"
+    }
+  },
+  "required": ["cancelToken"]
+}
+```
+
+#### Example Request
+
+```json
+{
+  "cancelToken": "build-123"
+}
+```
+
+#### Example Response
+
+```json
+{
+  "content": [
+    { "type": "text", "text": "🛑 Cancellation requested for createAndWait invocation" },
+    { "type": "text", "text": "\\nData: {\\n  \\\"cancelToken\\\": \\\"build-123\\\"\\n}" }
+  ]
+}
+```
+
+---
+
+### 8. `getAgentConversation`
 
 Retrieves the conversation history of a background agent.
 
@@ -449,7 +712,7 @@ Retrieves the conversation history of a background agent.
 
 ---
 
-### 7. `getMe`
+### 9. `getMe`
 
 Retrieves information about the API key being used for authentication.
 
@@ -483,7 +746,7 @@ Retrieves information about the API key being used for authentication.
 
 ---
 
-### 8. `listModels`
+### 10. `listModels`
 
 Retrieves a list of recommended models for background agents.
 
@@ -517,7 +780,7 @@ Retrieves a list of recommended models for background agents.
 
 ---
 
-### 9. `listRepositories`
+### 11. `listRepositories`
 
 Retrieves a list of GitHub repositories accessible to the authenticated user.
 
@@ -545,6 +808,45 @@ Retrieves a list of GitHub repositories accessible to the authenticated user.
       "type": "text",
       "text": "📁 Accessible Repositories:\n\n1. my-project (user1)\n   🔗 https://github.com/user1/my-project\n\n2. shared-repo (company)\n   🔗 https://github.com/company/shared-repo\n\n📊 Total: 2 repositories"
     }
+  ]
+}
+```
+
+---
+
+### 12. `documentation`
+
+Returns self-describing documentation for this MCP server, including endpoints, authentication, protocol, tool list, and example payloads.
+
+#### Request Schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "format": {
+      "type": "string",
+      "enum": ["markdown", "json"],
+      "default": "markdown",
+      "description": "Preferred response format"
+    }
+  }
+}
+```
+
+#### Example Request
+
+```json
+{ "format": "json" }
+```
+
+#### Example Response
+
+```json
+{
+  "content": [
+    { "type": "text", "text": "📘 Cursor MCP Documentation\n..." },
+    { "type": "text", "text": "{\n  \"name\": \"cursor-background-agents\",\n  \"version\": \"1.0.0\",\n  ...\n}" }
   ]
 }
 ```

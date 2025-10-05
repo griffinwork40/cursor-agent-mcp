@@ -1,3 +1,4 @@
+// Error handling utilities and validation schemas for MCP tool execution.
 import { z } from 'zod';
 
 // Custom error classes
@@ -182,6 +183,8 @@ const webhook = z.object({
   secret: z.string().min(32, 'Webhook secret must be at least 32 characters').max(256, 'Webhook secret too long').optional(),
 });
 
+const agentStatus = z.enum(['CREATING', 'RUNNING', 'FINISHED', 'ERROR', 'EXPIRED']);
+
 export const schemas = {
   imageDimension,
   image,
@@ -192,7 +195,7 @@ export const schemas = {
 
   createAgentRequest: z.object({
     prompt: prompt,
-    model: z.string().min(1, 'Model cannot be empty').default('auto'),
+    model: z.string().min(1, 'Model cannot be empty').default('default'),
     source: source,
     target: target.optional(),
     webhook: webhook.optional(),
@@ -207,7 +210,31 @@ export const schemas = {
     cursor: z.string().min(1).optional(),
   }),
 
+  summarizeAgentsParams: z.object({
+    status: agentStatus.optional(),
+    repository: z.string().min(1, 'Repository filter cannot be empty').optional(),
+    limit: z.number().int().min(1).max(100).optional(),
+    cursor: z.string().min(1).optional(),
+  }),
+
   agentId: z.string().min(1, 'Agent ID cannot be empty'),
+
+  // createAndWait orchestration
+  createAndWaitRequest: z.object({
+    prompt: prompt,
+    model: z.string().min(1, 'Model cannot be empty').default('default'),
+    source: source,
+    target: target.optional(),
+    webhook: webhook.optional(),
+    pollIntervalMs: z.number().int().min(250).max(60_000).default(2000),
+    timeoutMs: z.number().int().min(5_000).max(86_400_000).default(600_000),
+    jitterRatio: z.number().min(0).max(0.5).default(0.1),
+    cancelToken: z.string().min(1).optional(),
+  }),
+
+  cancelCreateAndWaitRequest: z.object({
+    cancelToken: z.string().min(1, 'Cancel token cannot be empty'),
+  }),
 };
 
 // Validation helper
