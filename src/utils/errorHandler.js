@@ -218,6 +218,23 @@ export const schemas = {
   }),
 
   agentId: z.string().min(1, 'Agent ID cannot be empty'),
+
+  // createAndWait orchestration
+  createAndWaitRequest: z.object({
+    prompt: prompt,
+    model: z.string().min(1, 'Model cannot be empty').default('default'),
+    source: source,
+    target: target.optional(),
+    webhook: webhook.optional(),
+    pollIntervalMs: z.number().int().min(250).max(60_000).default(2000),
+    timeoutMs: z.number().int().min(5_000).max(86_400_000).default(600_000),
+    jitterRatio: z.number().min(0).max(0.5).default(0.1),
+    cancelToken: z.string().min(1).optional(),
+  }),
+
+  cancelCreateAndWaitRequest: z.object({
+    cancelToken: z.string().min(1, 'Cancel token cannot be empty'),
+  }),
 };
 
 // Validation helper
