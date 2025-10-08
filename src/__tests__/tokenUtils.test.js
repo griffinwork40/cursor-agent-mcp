@@ -28,7 +28,7 @@ async function importTokenUtils(overrides = {}) {
 let mintTokenFromApiKey;
 let decodeTokenToApiKey;
 
-const TEST_API_KEY = 'test-api-key-12345';
+const TEST_API_KEY = 'key_test-api-key-12345';
 
 describe('Token Utilities', () => {
   beforeEach(async () => {
@@ -76,7 +76,7 @@ describe('Token Utilities', () => {
     });
 
     test('should handle long API keys correctly', () => {
-      const longApiKey = 'a'.repeat(1000);
+      const longApiKey = 'key_' + 'a'.repeat(1000);
 
       expect(() => {
         mintTokenFromApiKey(longApiKey);
@@ -123,7 +123,7 @@ describe('Token Utilities', () => {
     });
 
     test('should handle tokens with special characters in API key', () => {
-      const specialApiKey = 'key-with-special-chars!@#$%^&*()_+-=[]{}|;:,.<>?';
+      const specialApiKey = 'key_with-special-chars!@#$%^&*()_+-=[]{}|;:,.<>?';
 
       const token = mintTokenFromApiKey(specialApiKey);
       const decoded = decodeTokenToApiKey(token);
@@ -132,7 +132,7 @@ describe('Token Utilities', () => {
     });
 
     test('should handle tokens with Unicode characters in API key', () => {
-      const unicodeApiKey = 'key-with-unicode-字符-🚀-💡';
+      const unicodeApiKey = 'key_with-unicode-字符-🚀-💡';
 
       const token = mintTokenFromApiKey(unicodeApiKey);
       const decoded = decodeTokenToApiKey(token);
@@ -169,7 +169,7 @@ describe('Token Utilities', () => {
     });
 
     test('should handle very large API keys', () => {
-      const largeApiKey = 'a'.repeat(10000);
+      const largeApiKey = 'key_' + 'a'.repeat(10000);
 
       expect(() => {
         mintTokenFromApiKey(largeApiKey);

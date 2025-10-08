@@ -126,7 +126,40 @@ make_mcp_request "tools/call" '{
     }
 }' "Test Input Validation (Should Fail)"
 
-# Test 8: Test invalid tool name
+# Test 8: createAndWait minimal
+make_mcp_request "tools/call" '{
+    "name": "createAndWait",
+    "arguments": {
+        "prompt": {
+            "text": "Touch a file hello.txt with greeting"
+        },
+        "source": {
+            "repository": "https://github.com/test/repo"
+        },
+        "model": "auto"
+    }
+}' "CreateAndWait Minimal"
+
+# Test 9: createAndWait hardened
+make_mcp_request "tools/call" '{
+    "name": "createAndWait",
+    "arguments": {
+        "prompt": {
+            "text": "Create a docs/USAGE.md with instructions"
+        },
+        "source": {
+            "repository": "https://github.com/test/repo",
+            "ref": "main"
+        },
+        "target": {
+            "autoCreatePr": false,
+            "branchName": "mcp/test-create-and-wait"
+        },
+        "model": "gpt-4o"
+    }
+}' "CreateAndWait Hardened"
+
+# Test 10: Test invalid tool name
 make_mcp_request "tools/call" '{
     "name": "invalidTool",
     "arguments": {}

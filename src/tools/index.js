@@ -1,11 +1,17 @@
 // Tool factory aggregating Cursor MCP agent operations for the server runtime.
 import { cursorApiClient as defaultCursorClient } from '../utils/cursorClient.js';
-import {
-  handleMCPError,
-  validateInput,
-  createSuccessResponse,
-  schemas,
-} from '../utils/errorHandler.js';
+import { createAgentFromTemplateTool } from './createAgentFromTemplate.js';
+import { handleMCPError, validateInput, createSuccessResponse, schemas } from '../utils/errorHandler.js';
+
+let cachedCreateAndWaitModule;
+
+async function loadCreateAndWaitModule() {
+  if (cachedCreateAndWaitModule) return cachedCreateAndWaitModule;
+
+  cachedCreateAndWaitModule = await import('./createAndWait.js');
+
+  return cachedCreateAndWaitModule;
+}
 
 const statusEmojis = {
   CREATING: '🔄',
@@ -111,7 +117,7 @@ export const createTools = (client = defaultCursorClient) => {
             },
           };
           const result = await client.createAgent(inputWithDefaults);
-        
+
           return createSuccessResponse(
             '✅ Successfully created agent!\n' +
           `📋 ID: ${result.id}\n` +
@@ -129,6 +135,102 @@ export const createTools = (client = defaultCursorClient) => {
           );
         } catch (error) {
           return handleMCPError(error, 'createAgent');
+        }
+      },
+    },
+    {
+      name: 'createAndWait',
+      description: 'Create an agent and wait until it reaches a terminal status (FINISHED/ERROR/EXPIRED)',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          prompt: {
+            type: 'object',
+            properties: {
+              text: { type: 'string', description: 'The task or instructions for the agent to execute' },
+              images: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    data: { type: 'string', description: 'Base64 encoded image data' },
+                    dimension: {
+                      type: 'object',
+                      properties: {
+                        width: { type: 'number' },
+                        height: { type: 'number' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            required: ['text'],
+          },
+          model: { type: 'string', description: 'The LLM to use (defaults to default if not specified)', default: 'default' },
+          source: {
+            type: 'object',
+            properties: {
+              repository: { type: 'string', description: 'The GitHub repository URL' },
+              ref: { type: 'string', description: 'Git ref (branch/tag) to use as the base branch' },
+            },
+            required: ['repository'],
+          },
+          target: {
+            type: 'object',
+            properties: {
+              autoCreatePr: { type: 'boolean', description: 'Whether to automatically create a pull request when the agent completes' },
+              branchName: { type: 'string', description: 'Custom branch name for the agent to create' },
+            },
+          },
+          webhook: {
+            type: 'object',
+            properties: {
+              url: { type: 'string', description: 'URL to receive webhook notifications about agent status changes' },
+              secret: { type: 'string', description: 'Secret key for webhook payload verification' },
+            },
+            required: ['url'],
+          },
+          pollIntervalMs: { type: 'number', description: 'Polling interval in milliseconds', default: 2000 },
+          timeoutMs: { type: 'number', description: 'Maximum time to wait in milliseconds', default: 600000 },
+          jitterRatio: { type: 'number', description: 'Jitter ratio (0–0.5)', default: 0.1 },
+          cancelToken: { type: 'string', description: 'Optional cancellation token' },
+        },
+        required: ['prompt', 'source', 'model'],
+      },
+      handler: async (input) => {
+        try {
+          const mod = await loadCreateAndWaitModule();
+          return await mod.createAndWait(input, client);
+        } catch (error) {
+          return handleMCPError(error, 'createAndWait');
+        }
+      },
+    },
+    {
+      name: 'cancelCreateAndWait',
+      description: 'Request cancellation for a pending createAndWait call identified by a cancelToken',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          cancelToken: {
+            type: 'string',
+            description: 'Cancellation token previously supplied to createAndWait',
+          },
+        },
+        required: ['cancelToken'],
+      },
+      handler: async (input) => {
+        try {
+          const validated = validateInput(schemas.cancelCreateAndWaitRequest, input, 'cancelCreateAndWait');
+          const mod = await loadCreateAndWaitModule();
+          mod.cancelWaitToken(validated.cancelToken);
+          return createSuccessResponse(
+            '🛑 Cancellation requested for createAndWait invocation',
+            { cancelToken: validated.cancelToken },
+          );
+        } catch (error) {
+          return handleMCPError(error, 'cancelCreateAndWait');
         }
       },
     },
@@ -578,6 +680,9 @@ export const createTools = (client = defaultCursorClient) => {
       },
     },
   ];
+
+  // Register high-level templated agent creation tool
+  tools.push(createAgentFromTemplateTool(client));
 
   // Add a self-documentation tool to help LLMs understand how to use this MCP server
   tools.push({

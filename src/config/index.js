@@ -10,6 +10,9 @@ export const config = {
     apiKey: process.env.CURSOR_API_KEY,
     apiUrl: process.env.CURSOR_API_URL || 'https://api.cursor.com',
   },
+  logging: {
+    cursorClientDebug: process.env.CURSOR_CLIENT_DEBUG === 'true',
+  },
   token: {
     secret: process.env.TOKEN_SECRET,
     ttlDays: Number(process.env.TOKEN_TTL_DAYS || 30),
@@ -22,4 +25,5 @@ export const config = {
 
 if (!config.token.secret) {
   console.warn('TOKEN_SECRET not set - token-based connections will be ephemeral per process and cannot be revoked across restarts.');
+  console.warn('For Railway deployment, set TOKEN_SECRET environment variable to a secure random string (32+ characters).');
 }
