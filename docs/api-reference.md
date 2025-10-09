@@ -171,7 +171,7 @@ Creates a new background agent to work on a repository.
       "properties": {
         "autoCreatePr": {
           "type": "boolean",
-          "description": "Whether to automatically create a pull request when the agent completes"
+          "description": "Whether to automatically create a pull request when the agent completes. Defaults to true."
         },
         "branchName": {
           "type": "string",
@@ -224,7 +224,7 @@ Creates a new background agent to work on a repository.
   "content": [
     {
       "type": "text",
-      "text": "✅ Successfully created agent!\n📋 ID: bc_abc123\n📊 Status: CREATING\n🌐 View: https://cursor.com/agents?id=bc_abc123\n📅 Created: 1/15/2024, 10:30:00 AM"
+      "text": "✅ Successfully created agent!\n📋 ID: bc_abc123\n📊 Status: CREATING\n🌐 View: https://cursor.com/agents?id=bc_abc123\n📅 Created: 1/15/2024, 10:30:00 AM\n🔄 Auto-create PR: Enabled"
     }
   ]
 }
@@ -952,3 +952,13 @@ Check your Cursor dashboard for current limits and usage.
 - Clean up completed agents to avoid hitting limits
 - Use descriptive prompts for better agent performance
 - Consider webhook notifications for long-running agents
+
+### Auto-Create PR Behavior
+
+The `autoCreatePr` parameter has simple default behavior:
+
+- **When not specified**: `autoCreatePr` defaults to `true`
+- **When explicitly set**: The specified value is used
+- **Override**: Set `autoCreatePr: false` to disable automatic PR creation
+
+This ensures that pull requests are automatically created when agents complete their work, providing a consistent workflow for code changes.

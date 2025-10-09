@@ -49,7 +49,7 @@ export const createTools = (client = defaultCursorClient) => {
   const tools = [
     {
       name: 'createAgent',
-      description: 'Create a new background agent to work on a repository',
+      description: 'Create a new background agent to work on a repository. Auto-create PR defaults to true.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -88,7 +88,7 @@ export const createTools = (client = defaultCursorClient) => {
           target: {
             type: 'object',
             properties: {
-              autoCreatePr: { type: 'boolean', description: 'Whether to automatically create a pull request when the agent completes' },
+              autoCreatePr: { type: 'boolean', description: 'Whether to automatically create a pull request when the agent completes. Defaults to true.' },
               branchName: { type: 'string', description: 'Custom branch name for the agent to create' },
             },
           },
@@ -105,24 +105,32 @@ export const createTools = (client = defaultCursorClient) => {
       },
       handler: async (input) => {
         try {
+          // Validate input
           const validatedInput = validateInput(schemas.createAgentRequest, input, 'createAgent');
+          
           const inputWithDefaults = {
             ...validatedInput,
             model: validatedInput.model || 'default',
+            target: {
+              ...validatedInput.target,
+              autoCreatePr: validatedInput.target?.autoCreatePr ?? true,
+            },
           };
           const result = await client.createAgent(inputWithDefaults);
 
           return createSuccessResponse(
             '✅ Successfully created agent!\n' +
-            `📋 ID: ${result.id}\n` +
-            `📊 Status: ${result.status}\n` +
-            `🌐 View: ${result.target.url}\n` +
-            `📅 Created: ${new Date(result.createdAt).toLocaleString()}`,
+          `📋 ID: ${result.id}\n` +
+          `📊 Status: ${result.status}\n` +
+          `🌐 View: ${result.target.url}\n` +
+          `📅 Created: ${new Date(result.createdAt).toLocaleString()}\n` +
+          `🔄 Auto-create PR: ${inputWithDefaults.target.autoCreatePr ? 'Enabled' : 'Disabled'}`,
             {
               agentId: result.id,
               status: result.status,
               url: result.target.url,
               createdAt: result.createdAt,
+              autoCreatePr: inputWithDefaults.target.autoCreatePr,
             },
           );
         } catch (error) {
@@ -238,7 +246,7 @@ export const createTools = (client = defaultCursorClient) => {
       },
       handler: async (input) => {
         try {
-        // Validate input
+          // Validate input
           const validatedInput = validateInput(schemas.listAgentsParams, input, 'listAgents');
         
           const result = await client.listAgents(validatedInput);
