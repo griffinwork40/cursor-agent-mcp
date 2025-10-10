@@ -230,7 +230,7 @@ For **OpenAI Platform** and **ChatGPT** integration, you can self-host this MCP 
 
 1. **Server URL**: `https://your-ngrok-url.ngrok-free.app`
 2. **Authentication**: None (server uses global API key)
-3. **Available Tools**: 9 Cursor agent management tools
+3. **Available Tools**: 13 Cursor agent management tools
 
 **API Endpoints Available:**
 - `POST /` - Main MCP protocol endpoint
@@ -310,12 +310,12 @@ curl -X POST https://your-server.com/ \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
 
-# Should return 9 Cursor agent tools
+# Should return 13 Cursor agent tools
 ```
 
 **Verify in ChatGPT**:
 1. Add the connector with base URL
-2. Look for 9 available tools in the tool picker
+2. Look for 13 available tools in the tool picker
 3. Test with: "List my cursor agents" or "Create a cursor agent for my repo"
 
 ### 🛠️ Development/Local Installation Configuration
@@ -324,7 +324,7 @@ If you're running from source code, use this configuration instead:
 ```json
 {
   "mcpServers": {
-    "cursor-agents": {
+    "cursor-background-agents": {
       "command": "node",
       "args": ["/path/to/cursor-agent-mcp/src/index.js"],
       "env": {
@@ -334,60 +334,6 @@ If you're running from source code, use this configuration instead:
     }
   }
 }
-```
-
-## 📦 Installation & Setup
-
-### Prerequisites
-- **Node.js** 18+ 
-- **Cursor IDE** with Background Agents enabled
-- **Valid Cursor API key**
-
-### 🚀 Quick Install via npm (Recommended)
-
-```bash
-# Install globally
-npm install -g cursor-agent-mcp
-
-# Or use npx (no installation required)
-npx cursor-agent-mcp
-```
-
-### 📝 MCP Client Configuration
-
-Add this to your MCP client configuration (e.g., Claude Desktop's `claude_desktop_config.json`):
-
-```json
-{
-  "mcpServers": {
-    "cursor-background-agents": {
-      "command": "npx",
-      "args": ["cursor-agent-mcp@latest"],
-      "env": {
-        "CURSOR_API_KEY": "your_cursor_api_key_here",
-        "CURSOR_API_URL": "https://api.cursor.com"
-      }
-    }
-  }
-}
-```
-
-### 🛠️ Development Installation
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/griffinwork40/cursor-agent-mcp.git
-cd cursor-agent-mcp
-
-# 2. Install dependencies
-npm install
-
-# 3. Configure environment
-cp .env.example .env
-# Edit .env and add your CURSOR_API_KEY
-
-# 4. Start the server
-npm start
 ```
 
 ### Environment Variables
@@ -415,20 +361,47 @@ npm test
 - **`/mcp`** - MCP protocol endpoint for LLM interaction
 - **`/health`** - Health check endpoint with uptime info
 
-## 🛠️ Available MCP Tools (9 Tools)
+## 🛠️ Available MCP Tools (13 Tools)
 
-This server provides **9 powerful tools** that enable LLMs to fully manage Cursor's Background Agents:
+This server provides **13 powerful tools** that enable LLMs to fully manage Cursor's Background Agents:
+
+### 🎯 Auto-Create PR
+
+The `createAgent` tool features **automatic PR creation**:
+
+- **✅ Default Enabled**: `autoCreatePr` defaults to `true` for all agents
+- **🎛️ Override**: Explicitly set `autoCreatePr: false` to disable PR creation
+- **🛡️ Safe Defaults**: Ensures pull requests are created by default
+
+This ensures pull requests are automatically created when agents complete their work, providing a consistent workflow for code changes.
 
 ### 🤖 Agent Management Tools
 
 #### 1. `createAgent` - Create Background Agent
+#### 1a. `createAgentFromTemplate` - Create Agent from Template
+**Purpose**: High-level helper to create an agent using curated templates.
+**Templates**: `docAudit`, `typeCleanup`, `bugHunt`
+
+**Example Input**:
+```json
+{
+  "template": "docAudit",
+  "params": { "docPaths": ["docs/**/*.md"], "guidelines": "Be concise." },
+  "model": "auto",
+  "source": { "repository": "https://github.com/user/repo", "ref": "main" },
+  "target": { "autoCreatePr": true, "branchName": "audit-docs" }
+}
+```
+
+**Behavior**: Validates inputs and composes `createAgent` with a rendered prompt.
+
 **Purpose**: Create a new background agent to work on a repository
 **Key Features**:
 - 📝 Support for text and image prompts
 - 🎯 Custom model selection
 - 🌿 Branch and PR configuration
 - 🔔 Webhook notifications
-- ⚙️ Auto-PR creation
+- ⚙️ Auto-PR creation (defaults to true)
 
 **Example Input**:
 ```json
@@ -436,7 +409,7 @@ This server provides **9 powerful tools** that enable LLMs to fully manage Curso
   "prompt": {
     "text": "Fix all TypeScript errors in the project and add proper type definitions"
   },
-  "model": "auto",
+  "model": "default",
   "source": {
     "repository": "https://github.com/user/repo",
     "ref": "main"
@@ -456,7 +429,30 @@ This server provides **9 powerful tools** that enable LLMs to fully manage Curso
 - 📅 Creation date sorting
 - 🔍 Cursor-based navigation
 
-#### 3. `getAgent` - Get Agent Details
+#### 3. `summarizeAgents` - Aggregated Agent Dashboard
+**Purpose**: Produce a quick dashboard with totals, recent activity, and in-progress timers
+**Highlights**:
+- 📈 Counts agents per status after applying filters
+- 🧭 Lists the five most recent matching agents
+- ⏱️ Shows elapsed time for creating or running agents when available
+- 🧩 Returns structured JSON in the response for downstream automation
+
+Filters are applied before aggregation—use `status` or `repository` (substring match) to focus on specific pipelines without skewing totals.
+
+**Example Call**:
+```javascript
+const summary = await mcp.call('summarizeAgents', {
+  status: 'RUNNING',
+  repository: 'example/repo',
+  limit: 75,
+});
+
+console.log(summary.content[0].text);
+// Access machine-readable aggregates
+const dashboard = summary.content[1].json;
+```
+
+#### 4. `getAgent` - Get Agent Details
 **Purpose**: Retrieve detailed status and results of a specific agent
 **Returns**:
 - 📊 Current status with emoji indicators
@@ -465,14 +461,14 @@ This server provides **9 powerful tools** that enable LLMs to fully manage Curso
 - 🌿 Branch and repository information
 - 📅 Creation and update timestamps
 
-#### 4. `deleteAgent` - Remove Agent
+#### 5. `deleteAgent` - Remove Agent
 **Purpose**: Permanently delete a background agent
 **Features**:
 - ⚠️ Permanent deletion (cannot be undone)
 - 🛡️ Confirmation response
 - 🗑️ Cleanup of associated resources
 
-#### 5. `addFollowup` - Add Instructions
+#### 6. `addFollowup` - Add Instructions
 **Purpose**: Send additional instructions to a running agent
 **Capabilities**:
 - 💬 Text instructions
@@ -480,9 +476,53 @@ This server provides **9 powerful tools** that enable LLMs to fully manage Curso
 - 🔄 Real-time agent updates
 - 📝 Conversation threading
 
+#### 7. `createAndWait` - Create Agent and Wait for Completion
+**Purpose**: Create an agent and internally poll until it reaches a terminal status.
+**Returns**: `{ finalStatus, agentId, elapsedMs, agent }`
+
+**Configurable Options**:
+- `pollIntervalMs` (default 2000)
+- `timeoutMs` (default 600000)
+- `jitterRatio` (default 0.1)
+
+**Example Input**:
+```json
+{
+  "prompt": { "text": "Refactor utils for readability and add tests" },
+  "source": { "repository": "https://github.com/user/repo", "ref": "main" },
+  "model": "auto",
+  "pollIntervalMs": 1500,
+  "timeoutMs": 900000
+}
+```
+
+**Example Output**:
+```json
+{
+  "finalStatus": "FINISHED",
+  "agentId": "bc_abc123",
+  "elapsedMs": 84217,
+  "agent": { "id": "bc_abc123", "status": "FINISHED" }
+}
+```
+
+#### 8. `cancelCreateAndWait` - Cancel Waiting Agent Creation
+**Purpose**: Cancel a running `createAndWait` operation using its cancel token.
+**Features**:
+- 🛑 Cooperative cancellation of long-running operations
+- 🔄 Safe termination without data loss
+- ⏱️ Immediate response to cancellation requests
+
+**Example Input**:
+```json
+{
+  "cancelToken": "build-123"
+}
+```
+
 ### 📊 Information & Discovery Tools
 
-#### 6. `getAgentConversation` - View Chat History
+#### 9. `getAgentConversation` - View Chat History
 **Purpose**: Access the complete conversation history of an agent
 **Features**:
 - 💬 Full message history
@@ -490,27 +530,43 @@ This server provides **9 powerful tools** that enable LLMs to fully manage Curso
 - 📊 Message count statistics
 - 🔍 Recent message preview
 
-#### 7. `getMe` - API Key Info
+#### 10. `getMe` - API Key Info
 **Purpose**: Retrieve information about the current API key
 **Returns**:
 - 🔑 API key name and creation date
 - 👤 Associated user email
 - 📊 Account status information
 
-#### 8. `listModels` - Available AI Models
+#### 11. `listModels` - Available AI Models
 **Purpose**: Get list of recommended models for background agents
 **Features**:
 - 🤖 All supported AI models
 - 📋 Model recommendations
 - 🎯 Optimized for different tasks
 
-#### 9. `listRepositories` - Accessible Repos
+#### 12. `listRepositories` - Accessible Repos
 **Purpose**: List GitHub repositories accessible to the user
 **Returns**:
 - 📁 Repository names and owners
 - 🔗 Full repository URLs
 - 📊 Access permissions
 - 🌐 Direct GitHub links
+
+#### 13. `documentation` - Self-Documenting Usage Helper
+**Purpose**: Provide structured usage information for LLMs and clients
+**Features**:
+- 📘 Returns endpoints, auth methods, and protocol version
+- 🧰 Lists all available tools with input schemas
+- 🧾 Example `tools/list` and `tools/call` payloads
+- 🧩 Supports `format` argument: `markdown` (default) or `json`
+
+**Example Input**:
+```json
+{ "format": "json" }
+```
+
+**Example Output**:
+Human-readable markdown plus a second content item containing structured data.
 
 ## 🚀 Example Usage - Background Agents API
 
@@ -536,7 +592,7 @@ const newAgent = await mcp.call('createAgent', {
     3. Update documentation for new features
     4. Optimize performance bottlenecks`
   },
-  model: 'auto',
+  model: 'default',
   source: {
     repository: 'https://github.com/myuser/my-project',
     ref: 'main'
@@ -580,7 +636,7 @@ console.log('Messages:', conversation.messages.length);
   "prompt": {
     "text": "There's a critical bug in the user authentication flow. Please investigate and fix the login issues reported in GitHub issues #123 and #124."
   },
-  "model": "auto",
+  "model": "default",
   "source": {
     "repository": "https://github.com/company/webapp",
     "ref": "main"
@@ -598,7 +654,7 @@ console.log('Messages:', conversation.messages.length);
   "prompt": {
     "text": "Implement a new dark mode toggle feature with the following requirements:\n- System preference detection\n- Persistent user choice\n- Smooth transitions\n- Accessibility compliance"
   },
-  "model": "auto",
+  "model": "default",
   "source": {
     "repository": "https://github.com/company/frontend",
     "ref": "develop"
@@ -616,7 +672,7 @@ console.log('Messages:', conversation.messages.length);
   "prompt": {
     "text": "Update all documentation files:\n- Add comprehensive API documentation\n- Create setup guides for new developers\n- Add code examples for all public methods\n- Update README with latest features"
   },
-  "model": "auto",
+  "model": "default",
   "source": {
     "repository": "https://github.com/company/api-server"
   },
@@ -633,7 +689,7 @@ console.log('Messages:', conversation.messages.length);
   "prompt": {
     "text": "Improve test coverage by:\n- Adding unit tests for untested components\n- Creating integration tests for API endpoints\n- Adding E2E tests for critical user flows\n- Setting up test data factories"
   },
-  "model": "auto",
+  "model": "default",
   "source": {
     "repository": "https://github.com/company/app"
   },
@@ -664,6 +720,21 @@ for (const agent of allAgents.agents) {
     console.log(`  Messages: ${conversation.messageCount}`);
   }
 }
+```
+
+#### Generate a Dashboard Summary
+```javascript
+const { content } = await mcp.call('summarizeAgents', {
+  repository: 'company/app',
+  status: 'RUNNING',
+});
+
+// Human-readable overview in the first block
+console.log(content[0].text);
+
+// Structured aggregates for automation in the second block
+const dashboard = content[1].json;
+console.log(dashboard.statusCounts.RUNNING, 'agents in progress');
 ```
 
 #### Cleanup Finished Agents
@@ -798,10 +869,166 @@ npm start
 
 ---
 
+## 🔧 Troubleshooting
+
+### Common Issues
+
+#### Authentication Errors
+```bash
+# Error: Invalid or missing API key
+# Solution: Verify your CURSOR_API_KEY is correct
+echo $CURSOR_API_KEY
+```
+
+#### Connection Issues
+```bash
+# Error: Connection refused
+# Solution: Check if server is running
+curl http://localhost:3000/health
+```
+
+#### Tool Not Found
+```bash
+# Error: Tool 'createAgent' not found
+# Solution: Verify MCP client configuration
+npx cursor-agent-mcp --help
+```
+
+### Debug Mode
+```bash
+# Enable debug logging
+DEBUG=* npm start
+
+# Or with environment variable
+NODE_ENV=development npm start
+```
+
+### Health Check
+```bash
+# Check server status
+curl http://localhost:3000/health
+
+# Expected response:
+{
+  "status": "ok",
+  "timestamp": "2025-01-23T10:30:00.000Z",
+  "version": "1.0.5",
+  "uptime": 3600.5
+}
+```
+
+## ❓ Frequently Asked Questions
+
+### Q: How do I get a Cursor API key?
+A: Open Cursor IDE → Settings → Features → Background Agents → Generate API Key
+
+### Q: Can I use this with other MCP clients besides Claude Desktop?
+A: Yes! This server is compatible with any MCP client that supports HTTP transport.
+
+### Q: What's the difference between `createAgent` and `createAndWait`?
+A: `createAgent` returns immediately after creating the agent, while `createAndWait` polls until completion.
+
+### Q: How many agents can I run simultaneously?
+A: This depends on your Cursor subscription tier. Check your account limits in the Cursor dashboard.
+
+### Q: Can I cancel a running agent?
+A: Yes, use the `deleteAgent` tool to stop and remove a running agent.
+
+### Q: Is my API key secure?
+A: The server never logs your API key, but the bundled CLI persists it to `~/.config/cursor-agent-mcp/config.json` by default so it can reuse the credential. Use environment variables if you prefer not to write the key to disk and make sure the config file is stored on a trusted machine with appropriate filesystem permissions.
+
+---
+
+## 📚 Documentation
+
+### 🔗 API Reference
+Complete API documentation for all MCP tools, including request/response schemas, error codes, and examples:
+- **📖 [API Reference](./docs/api-reference.md)** - Comprehensive tool documentation
+- **🔧 All 13 MCP Tools** - Detailed parameter specifications
+- **🚨 Error Handling** - Complete error code reference
+- **💡 Usage Examples** - Practical implementation examples
+- **📋 [Changelog](./CHANGELOG.md)** - Version history and release notes
+
+### 🔒 Security
+Security best practices and configuration guidance:
+- **🛡️ [Security Documentation](./docs/SECURITY.md)** - Comprehensive security guide
+- **🔑 Authentication Model** - API key security and rotation
+- **🔐 Production Deployment** - Secure configuration examples
+- **🚨 Incident Response** - Security monitoring and response procedures
+
+### 📋 Additional Resources
+- **📝 [Contributing Guide](./CONTRIBUTING.md)** - How to contribute to this project
+- **🧪 [Testing Guide](./TESTING.md)** - Testing procedures and examples
+- **📊 [Changelog](./CHANGELOG.md)** - Version history and updates
+- **🐛 [Issues](https://github.com/griffinwork40/cursor-agent-mcp/issues)** - Report bugs or request features
+
+---
+
+## 🚨 Troubleshooting
+
+### Common Issues
+
+#### "I don't see any special abilities in Claude"
+- Make sure you **restarted Claude Desktop** completely
+- Check that your **API key is correct** (no extra spaces or characters)
+- Verify you have a **Cursor subscription** (free accounts won't work)
+
+#### "Claude says it can't access Cursor"
+- Double-check your **API key** is valid
+- Make sure you **saved the config file** properly
+- Try **restarting Claude Desktop** again
+
+#### "The config file won't save"
+- Make sure the file is named **exactly** `claude_desktop_config.json`
+- Check you have **permission** to save files in that folder
+- Try using a different text editor
+
+#### "I get an error about npx or node"
+- This usually means the system is downloading the required files
+- **Wait a few minutes** and try again
+- Make sure you have an **internet connection**
+
+#### "Validation Error" messages
+- Check that your input data matches the required schema
+- Ensure all required fields are provided
+- Verify your API key has the necessary permissions
+
+#### "API Error (401): Invalid or missing API key"
+- Verify your `CURSOR_API_KEY` is set correctly in your environment
+- Check that the API key starts with `key_`
+- Ensure the API key hasn't expired
+
+### Getting Help
+
+- **GitHub Issues**: [Report bugs or request features](https://github.com/griffinwork40/cursor-agent-mcp/issues)
+- **Documentation**: Check the [API Reference](./docs/api-reference.md) for detailed tool documentation
+- **Testing**: Use the [testing guide](./TESTING.md) to verify your setup
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md) for details on:
+
+- **Development Setup** - How to get started with local development
+- **Code Standards** - Coding style and conventions
+- **Testing Guidelines** - How to write and run tests
+- **Pull Request Process** - How to submit changes
+- **Issue Reporting** - How to report bugs and request features
+
+### Quick Start for Contributors
+
+1. **Fork the repository** on GitHub
+2. **Clone your fork** locally
+3. **Install dependencies**: `npm install`
+4. **Create a feature branch**: `git checkout -b feature/your-feature-name`
+5. **Make your changes** and test them
+6. **Submit a pull request**
+
+For detailed information, see the [Contributing Guide](./CONTRIBUTING.md).
+
 ## 🎉 Why Choose This MCP Server?
 
 ✅ **Production Ready** - Comprehensive error handling and validation  
-✅ **Full Feature Coverage** - All 9 Cursor Background Agent API endpoints  
+✅ **Full Feature Coverage** - All 13 Cursor Background Agent API endpoints  
 ✅ **Developer Friendly** - Extensive documentation and examples  
 ✅ **Type Safe** - Zod schema validation for all inputs  
 ✅ **Observable** - Detailed logging and monitoring  
