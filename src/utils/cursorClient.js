@@ -101,8 +101,32 @@ class CursorApiClient {
         const statusText = error.response?.statusText;
         const url = error.config?.url;
         const message = error.message;
-        console.error('API response error:', { status, statusText, url, message });
-        logPayload('Error payload:', error.response?.data);
+        const errorData = error.response?.data;
+        
+        console.error('API response error:', { 
+          status, 
+          statusText, 
+          url, 
+          message,
+          errorCode: errorData?.error?.code,
+          errorMessage: errorData?.error?.message,
+        });
+        logPayload('Error payload:', errorData);
+        
+        // For 500 errors, log more context
+        if (status === 500) {
+          console.error('⚠️  Cursor API returned 500 Internal Server Error');
+          console.error('This usually indicates:');
+          console.error('  1. Cursor API server issue (temporary)');
+          console.error('  2. Invalid request payload format');
+          console.error('  3. Agent limit exceeded (256 active agents)');
+          console.error('  4. Repository access/permission issue');
+          console.error('  5. Invalid API key format');
+          if (errorData) {
+            console.error('Error details from API:', JSON.stringify(errorData, null, 2));
+          }
+        }
+        
         return Promise.reject(error);
       },
     );
@@ -129,6 +153,12 @@ class CursorApiClient {
   // Delete an agent
   async deleteAgent(id) {
     const response = await this.client.delete(`/v0/agents/${id}`);
+    return response.data;
+  }
+
+  // Stop a running agent (pauses execution without deleting)
+  async stopAgent(id) {
+    const response = await this.client.post(`/v0/agents/${id}/stop`);
     return response.data;
   }
 

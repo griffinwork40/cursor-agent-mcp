@@ -89,6 +89,8 @@ export const createTools = (client = defaultCursorClient) => {
             type: 'object',
             properties: {
               autoCreatePr: { type: 'boolean', description: 'Whether to automatically create a pull request when the agent completes. Defaults to true.' },
+              openAsCursorGithubApp: { type: 'boolean', description: 'Whether to open the PR as the Cursor GitHub App' },
+              skipReviewerRequest: { type: 'boolean', description: 'Whether to skip requesting reviewers on the PR' },
               branchName: { type: 'string', description: 'Custom branch name for the agent to create' },
             },
           },
@@ -180,6 +182,8 @@ export const createTools = (client = defaultCursorClient) => {
             type: 'object',
             properties: {
               autoCreatePr: { type: 'boolean', description: 'Whether to automatically create a pull request when the agent completes' },
+              openAsCursorGithubApp: { type: 'boolean', description: 'Whether to open the PR as the Cursor GitHub App' },
+              skipReviewerRequest: { type: 'boolean', description: 'Whether to skip requesting reviewers on the PR' },
               branchName: { type: 'string', description: 'Custom branch name for the agent to create' },
             },
           },
@@ -490,6 +494,35 @@ export const createTools = (client = defaultCursorClient) => {
       },
     },
     {
+      name: 'stopAgent',
+      description: 'Stop a running background agent. This pauses execution without deleting the agent.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', description: 'Unique identifier for the background agent' },
+        },
+        required: ['id'],
+      },
+      handler: async (input) => {
+        try {
+          // Validate input
+          const validatedInput = validateInput(schemas.agentId, input.id, 'stopAgent');
+        
+          const result = await client.stopAgent(validatedInput);
+        
+          return createSuccessResponse(
+            '⏹️ Successfully stopped agent!\n' +
+          `🆔 Agent ID: ${result.id}\n` +
+          `📊 Status: ${result.status}\n` +
+          '💡 The agent has been paused but not deleted.',
+            { agentId: result.id, status: result.status },
+          );
+        } catch (error) {
+          return handleMCPError(error, 'stopAgent');
+        }
+      },
+    },
+    {
       name: 'deleteAgent',
       description: 'Delete a background agent. This action is permanent and cannot be undone',
       inputSchema: {
@@ -640,14 +673,18 @@ export const createTools = (client = defaultCursorClient) => {
         try {
           const result = await client.listModels();
         
-          const modelList = result.models.map((model, index) => 
-            `${index + 1}. ${model}`,
+          // Include 'auto' option for consistency with Cursor UI
+          // 'auto' lets Cursor automatically select the best model
+          const allModels = ['auto', ...result.models];
+        
+          const modelList = allModels.map((model, index) => 
+            `${index + 1}. ${model}${model === 'auto' ? ' (automatic selection)' : ''}`,
           ).join('\n');
         
           return createSuccessResponse(
             `🤖 Available Models:\n\n${modelList}\n\n` +
-          `📊 Total: ${result.models.length} models available`,
-            { models: result.models },
+          `📊 Total: ${allModels.length} options available (${result.models.length} models + auto)`,
+            { models: allModels, apiModels: result.models },
           );
         } catch (error) {
           return handleMCPError(error, 'listModels');

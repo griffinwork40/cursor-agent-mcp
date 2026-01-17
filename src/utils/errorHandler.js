@@ -113,6 +113,22 @@ export function handleMCPError(error, context = '') {
     case 429:
       errorType = new RateLimitError(message);
       break;
+    case 500:
+      // Provide more helpful context for 500 errors
+      const helpfulMessage = message || 'Internal Server Error';
+      const suggestions = [
+        'This may be a temporary Cursor API issue - try again in a few moments',
+        'Check if you\'ve exceeded the 256 active agent limit',
+        'Verify your repository URL is correct and accessible',
+        'Ensure your API key is valid and has proper permissions',
+        'Check the request payload format matches the API requirements',
+      ];
+      errorType = new ApiError(
+        `${helpfulMessage}\n\nPossible causes:\n${suggestions.map(s => `  • ${s}`).join('\n')}`,
+        statusCode,
+        code,
+      );
+      break;
     default:
       errorType = new ApiError(message, statusCode, code);
       break;
