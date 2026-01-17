@@ -1,5 +1,26 @@
 # 🚀 Cursor MCP Server
 
+<!--
+  PROJECT DESCRIPTION:
+  This is an MCP (Model Context Protocol) server that acts as a bridge between LLMs (like Claude, ChatGPT, etc.)
+  and Cursor's Background Agents API. It enables AI assistants to programmatically create, manage, and interact
+  with Cursor's autonomous coding agents that can work on GitHub repositories in the background.
+  
+  Key capabilities:
+  - Create background agents that can autonomously work on code repositories
+  - Manage agent lifecycle (create, monitor, cancel, delete)
+  - Access agent conversation history and status
+  - List accessible repositories and available AI models
+  - Supports both HTTP/MCP protocol and SSE (Server-Sent Events) transports
+  - Can be self-hosted for integration with OpenAI Platform and ChatGPT
+  - Provides 13 comprehensive tools for full agent management
+  
+  Use cases:
+  - Let AI assistants delegate complex coding tasks to Cursor agents
+  - Automate code reviews, bug fixes, feature development, and documentation
+  - Enable LLMs to work with codebases through Cursor's powerful agent system
+-->
+
 A **MCP (Model Context Protocol) server** that seamlessly integrates with **Cursor's Background Agents API**. This server enables LLMs to programmatically create, manage, and interact with Cursor's powerful background agents for autonomous code development.
 
 ## ✨ Features
